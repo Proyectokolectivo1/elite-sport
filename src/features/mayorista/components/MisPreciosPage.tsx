@@ -53,7 +53,7 @@ export function MisPreciosPage() {
   if (!tienda) return null
   return (
     <>
-      <PageHeader eyebrow="Tu catálogo" title="Mis precios" description="Fija el precio al que vendes cada producto en tu sección. Si lo dejas vacío, se muestra el precio al público." />
+      <PageHeader title="Mis precios" description="Fija el precio al que vendes cada producto en tu sección. Si lo dejas vacío, se muestra el precio al público." />
 
       <div className="mb-5 flex flex-wrap items-end gap-3 rounded-md border border-border bg-card p-4">
         <div>
@@ -78,11 +78,11 @@ export function MisPreciosPage() {
                 <TR key={p.id}>
                   <TD className="font-semibold">{p.nombre}</TD>
                   <TD className="text-right tabular-nums text-muted-foreground">{fmt(p.pvp)}</TD>
-                  <TD className="text-right tabular-nums">{costo === null ? '—' : fmt(costo)}</TD>
+                  <TD className="text-right tabular-nums">{costo === null ? 'Sin precio' : fmt(costo)}</TD>
                   <TD>
                     <Input aria-label={`Mi precio de ${p.nombre}`} type="number" min="0" step="0.01" inputMode="decimal" placeholder={String(p.pvp)} className="ml-0 h-9 w-28" value={txt} onChange={(e) => setEdits((x) => ({ ...x, [p.id]: e.target.value }))} />
                   </TD>
-                  <TD className={`text-right tabular-nums ${m && m.monto < 0 ? 'text-destructive' : ''}`}>{m ? `${fmt(m.monto)} · ${m.pct}%` : '—'}</TD>
+                  <TD className={`text-right tabular-nums ${m && m.monto < 0 ? 'text-destructive' : ''}`}>{m ? `${fmt(m.monto)} · ${m.pct}%` : ''}</TD>
                 </TR>
               )
             })}

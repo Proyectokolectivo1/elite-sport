@@ -19,6 +19,8 @@ export function HomePage() {
   usePageMeta(`${tienda.nombre} · Calzado deportivo y urbano en ${ciudad}`, `Catálogo de ${tienda.nombre}: calzado para dama, caballero y niño. Elige tu talla y haz tu pedido por WhatsApp.`)
 
   const destacados = productos.filter((p) => p.destacado).slice(0, 5)
+  // La tarjeta grande solo se usa cuando completa la grilla (1 grande + 4 normales); si no, queda un hueco.
+  const conGrande = destacados.length === 5
   const novedades = productos.slice(0, 8)
   const marcas = [...new Map(productos.flatMap((p) => (p.marca ? [[p.marca.id, p.marca] as const] : []))).values()]
 
@@ -32,7 +34,6 @@ export function HomePage() {
           </>
         )}
         <div className="container-page flex min-h-[26rem] flex-col justify-end gap-8 py-14 md:min-h-[34rem] md:py-20">
-          <p className="eyebrow text-current/70">{tienda.nombre} · {ciudad}</p>
           <h1 className="display-xl max-w-4xl">Hecho para moverte</h1>
           <p className="max-w-md text-current/80">Calzado deportivo y urbano para dama, caballero y niño. Elige tu talla y pide por WhatsApp.</p>
           <div className="flex flex-wrap gap-3">
@@ -48,7 +49,6 @@ export function HomePage() {
             <span className="eyebrow">{g.texto}</span>
             <span className="flex items-end justify-between">
               <span className="font-display text-5xl font-extrabold uppercase leading-none">{g.titulo}</span>
-              <span aria-hidden className="mb-1 h-1 w-8 bg-signal transition-[width] duration-[var(--dur-base)] group-hover:w-14" />
             </span>
           </Link>
         ))}
@@ -59,8 +59,8 @@ export function HomePage() {
           <h2 className="display-lg mb-6">Destacados</h2>
           <div className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-4 md:gap-x-6">
             {destacados.map((p, i) => (
-              <div key={p.id} className={i === 0 ? 'col-span-2 md:row-span-2' : undefined}>
-                <ProductCard to={ruta(`/producto/${p.slug}`)} producto={aTarjeta(p, precio(p))} destacada={i === 0} />
+              <div key={p.id} className={conGrande && i === 0 ? 'col-span-2 md:row-span-2' : undefined}>
+                <ProductCard to={ruta(`/producto/${p.slug}`)} producto={aTarjeta(p, precio(p))} destacada={conGrande && i === 0} />
               </div>
             ))}
           </div>
@@ -69,7 +69,6 @@ export function HomePage() {
 
       {marcas.length > 0 && (
         <section aria-label="Marcas" className="container-page py-10">
-          <p className="eyebrow mb-3">Marcas</p>
           <ul className="flex flex-wrap gap-x-8 gap-y-2 border-y border-border py-5">
             {marcas.map((m) => (
               <li key={m.id}>

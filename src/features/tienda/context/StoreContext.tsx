@@ -92,7 +92,6 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return (
       <main className="grid min-h-dvh place-items-center px-[var(--gutter)]">
         <div className="max-w-md space-y-3">
-          <p className="eyebrow">Error 404</p>
           <h1 className="text-5xl">Esta tienda no está disponible</h1>
           <p className="text-muted-foreground">El enlace puede estar mal escrito o la tienda estar desactivada.</p>
         </div>

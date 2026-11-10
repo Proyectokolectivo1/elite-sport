@@ -73,7 +73,7 @@ export function MiSeccionPage() {
 
   return (
     <>
-      <PageHeader eyebrow="Tu catálogo" title="Mi sección" description="Personaliza cómo ven tus clientes tu catálogo. Los productos y las fotos los administra Elite Sport." />
+      <PageHeader title="Mi sección" description="Personaliza cómo ven tus clientes tu catálogo. Los productos y las fotos los administra Elite Sport." />
       <div className="grid gap-10 xl:grid-cols-[1fr_24rem]">
         <form
           noValidate

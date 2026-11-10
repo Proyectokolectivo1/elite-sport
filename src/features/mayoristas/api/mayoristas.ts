@@ -8,6 +8,7 @@ export interface Mayorista {
   nombre: string
   negocio: string | null
   telefono: string | null
+  correo: string | null
   cedulaRuc: string | null
   ciudad: string | null
   estado: EstadoPerfil
@@ -28,6 +29,7 @@ export async function listarMayoristas(): Promise<Mayorista[]> {
     nombre: x.nombre,
     negocio: x.negocio,
     telefono: x.telefono,
+    correo: x.correo,
     cedulaRuc: x.cedula_ruc,
     ciudad: x.ciudad,
     estado: x.estado,

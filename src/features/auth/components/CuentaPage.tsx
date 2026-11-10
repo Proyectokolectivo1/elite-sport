@@ -1,4 +1,5 @@
-import { Navigate } from 'react-router-dom'
+import { Link, Navigate } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
 import { Logo } from '@/components/layout/Logo'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -24,10 +25,12 @@ export function CuentaPage() {
     <main className="grid min-h-dvh place-items-center px-[var(--gutter)]">
       <div className="max-w-md space-y-4">
         <Logo nombre="Elite Sport" />
-        <p className="eyebrow pt-6">Tu cuenta</p>
-        <h1 className="text-5xl">{m.titulo}</h1>
+        <h1 className="pt-6 text-5xl">{m.titulo}</h1>
         <p className="text-muted-foreground">{m.texto}</p>
-        <Button variant="outline" onClick={() => void cerrarSesion()}>Cerrar sesión</Button>
+        <div className="flex flex-wrap items-center gap-4">
+          <Link to="/" className="inline-flex h-11 items-center gap-2 rounded-md bg-signal px-5 text-[0.8125rem] font-semibold uppercase tracking-[0.08em] text-signal-foreground"><ArrowLeft className="size-4" /> Ir a la tienda</Link>
+          <Button variant="outline" onClick={() => void cerrarSesion()}>Cerrar sesión</Button>
+        </div>
       </div>
     </main>
   )

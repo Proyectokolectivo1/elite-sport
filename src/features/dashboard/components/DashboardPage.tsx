@@ -27,7 +27,7 @@ export function DashboardPage() {
 
   return (
     <>
-      <PageHeader eyebrow="Resumen" title="Hoy en Elite Sport" />
+      <PageHeader title="Hoy en Elite Sport" />
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Dato to="/admin/pedidos" etiqueta="Pedidos nuevos" valor={data?.pedidosNuevos} alerta />
         <Dato to="/admin/mayoristas" etiqueta="Mayoristas por aprobar" valor={data?.mayoristasPendientes} alerta />

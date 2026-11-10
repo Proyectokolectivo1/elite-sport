@@ -43,7 +43,6 @@ export function PanelLayout({ nombre, logoUrl, seccion, nav, acciones, children 
         <div className={cn('flex h-[4.5rem] items-center border-b border-sidebar-border px-5', colapsado && 'justify-center px-0')}>
           {colapsado ? <span aria-hidden className="-skew-x-[18deg] h-6 w-2 bg-signal" /> : <Logo nombre={nombre} logoUrl={logoUrl} />}
         </div>
-        {!colapsado && <p className="eyebrow px-5 pt-5 text-sidebar-foreground/60">{seccion}</p>}
         <nav aria-label={seccion} className="flex-1 space-y-1 overflow-y-auto p-3">
           {nav.map(({ to, label, icon: Icon, end }) => (
             <NavLink
@@ -82,7 +81,7 @@ export function PanelLayout({ nombre, logoUrl, seccion, nav, acciones, children 
           <div className="md:hidden">
             <Logo nombre={nombre} logoUrl={logoUrl} className="text-xl" />
           </div>
-          <p className="eyebrow hidden md:block">{seccion}</p>
+          <span className="hidden md:block" />
           <div className="flex items-center gap-1">
             {acciones}
             <ModeToggle />

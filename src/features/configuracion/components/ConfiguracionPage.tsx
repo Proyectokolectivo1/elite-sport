@@ -11,6 +11,7 @@ import { mensajeError } from '@/lib/errors'
 import { formatMoney } from '@/lib/money'
 import { actualizarConfiguracion } from '../api/configuracion'
 import { configuracionKey, useConfiguracion } from '../hooks/useConfiguracion'
+import { FondoAdmin } from './FondoAdmin'
 import { configuracionSchema, type ConfiguracionValues } from '../schemas'
 
 export function ConfiguracionPage() {
@@ -29,7 +30,7 @@ export function ConfiguracionPage() {
   } = useForm<ConfiguracionValues>({ resolver: zodResolver(configuracionSchema) })
 
   useEffect(() => {
-    if (data) reset({ ...data, whatsapp_principal: data.whatsapp_principal ?? '' })
+    if (data) reset({ nombre_negocio: data.nombre_negocio, ciudad: data.ciudad, moneda_codigo: data.moneda_codigo, moneda_simbolo: data.moneda_simbolo, moneda_decimales: data.moneda_decimales, locale: data.locale, whatsapp_principal: data.whatsapp_principal ?? '' })
   }, [data, reset])
 
   const vista = useWatch({ control })
@@ -42,13 +43,13 @@ export function ConfiguracionPage() {
       locale: vista.locale || 'es-EC',
     })
   } catch {
-    ejemplo = '—'
+    ejemplo = 'Formato no válido'
   }
 
   if (isLoading) return <Skeleton className="h-96 w-full" />
   return (
     <>
-      <PageHeader eyebrow="Negocio" title="Configuración" description="La moneda se aplica a todos los precios del sitio, incluidas las secciones de los mayoristas." />
+      <PageHeader title="Configuración" description="La moneda se aplica a todos los precios del sitio, incluidas las secciones de los mayoristas." />
       <form
         noValidate
         className="max-w-3xl space-y-8"
@@ -103,6 +104,12 @@ export function ConfiguracionPage() {
 
         <Button type="submit" disabled={!isDirty || guardar.isPending}>{guardar.isPending ? 'Guardando…' : 'Guardar cambios'}</Button>
       </form>
+
+      {data && (
+        <div className="mt-12 max-w-4xl border-t border-border pt-8">
+          <FondoAdmin config={data} />
+        </div>
+      )}
     </>
   )
 }

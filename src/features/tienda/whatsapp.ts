@@ -17,7 +17,7 @@ interface Entrada {
 
 /** Mensaje de pedido: la plantilla de la tienda, el detalle, el total y los datos del cliente. */
 export function construirMensaje(e: Entrada): string {
-  const detalle = e.lineas.map((l) => `• ${l.cantidad} × ${l.descripcion} — ${e.formato(l.precio * l.cantidad)}`)
+  const detalle = e.lineas.map((l) => `${l.cantidad} × ${l.descripcion}: ${e.formato(l.precio * l.cantidad)}`)
   return [
     e.plantilla.trim(),
     '',

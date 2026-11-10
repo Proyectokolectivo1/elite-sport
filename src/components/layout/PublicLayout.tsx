@@ -11,6 +11,8 @@ export interface NavItem {
   to: string
   label: string
   end?: boolean
+  /** Se muestra como botón de acento (llamado a la acción). */
+  destacado?: boolean
 }
 
 interface Props {
@@ -71,7 +73,9 @@ export function PublicLayout({
                 to={item.to}
                 end={item.end}
                 className={({ isActive }) =>
-                  cn(
+                  item.destacado
+                    ? 'ml-2 inline-flex h-9 items-center rounded-md border border-signal px-3.5 text-[0.75rem] font-semibold uppercase tracking-[0.1em] text-signal transition-colors hover:bg-signal hover:text-signal-foreground'
+                    : cn(
                     'relative py-1 text-[0.8125rem] font-semibold uppercase tracking-[0.12em] opacity-75 transition-opacity hover:opacity-100',
                     "after:absolute after:inset-x-0 after:-bottom-0.5 after:h-0.5 after:origin-left after:scale-x-0 after:bg-signal after:transition-transform after:duration-[var(--dur-base)] after:content-['']",
                     isActive && 'opacity-100 after:scale-x-100',
@@ -130,7 +134,9 @@ export function PublicLayout({
                 to={item.to}
                 end={item.end}
                 className={({ isActive }) =>
-                  cn('shrink-0 text-[0.75rem] font-semibold uppercase tracking-[0.12em] opacity-70', isActive && 'opacity-100 underline decoration-signal decoration-2 underline-offset-[6px]')
+                  item.destacado
+                    ? 'ml-auto shrink-0 rounded-md bg-signal px-3 py-1 text-[0.6875rem] font-semibold uppercase tracking-[0.1em] text-signal-foreground'
+                    : cn('shrink-0 text-[0.75rem] font-semibold uppercase tracking-[0.12em] opacity-70', isActive && 'opacity-100 underline decoration-signal decoration-2 underline-offset-[6px]')
                 }
               >
                 {item.label}

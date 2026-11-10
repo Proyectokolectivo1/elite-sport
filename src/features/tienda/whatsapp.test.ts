@@ -14,7 +14,7 @@ describe('whatsapp', () => {
       formato: (n) => `$${n.toFixed(2)}`,
     })
     expect(m).toContain('Pedido #12')
-    expect(m).toContain('2 × Runner · Negro · talla 40 — $179.80')
+    expect(m).toContain('2 × Runner · Negro · talla 40: $179.80')
     expect(m).toContain('Total: $179.80')
     expect(m).not.toContain('Nota:')
   })

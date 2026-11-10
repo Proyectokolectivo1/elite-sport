@@ -22,7 +22,6 @@ export function RequireAdmin() {
     return (
       <main className="grid min-h-dvh place-items-center px-[var(--gutter)]">
         <div className="max-w-md space-y-4">
-          <p className="eyebrow">Acceso restringido</p>
           <h1 className="text-5xl">Esta cuenta no es de administración</h1>
           <p className="text-muted-foreground">Ingresa con la cuenta del administrador de Elite Sport.</p>
           <Button variant="solid" onClick={() => void cerrarSesion()}>

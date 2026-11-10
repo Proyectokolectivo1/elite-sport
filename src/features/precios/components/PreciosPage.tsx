@@ -84,7 +84,7 @@ function FilaEspecial({ p, mayoristaId, actual }: { p: ProductoResumen; mayorist
           )}
         </div>
       </TD>
-      <TD className="text-right">{efectivo === null ? '—' : <Price amount={efectivo} size="sm" />}</TD>
+      <TD className="text-right">{efectivo === null ? 'Sin precio' : <Price amount={efectivo} size="sm" />}</TD>
       <TD className="text-right">
         <Button
           size="sm"
@@ -136,7 +136,7 @@ export function PreciosPage() {
   const [tab, setTab] = useState<'base' | 'mayorista'>('base')
   return (
     <>
-      <PageHeader eyebrow="Catálogo" title="Precios" description="El precio mayorista nunca se muestra al público: solo lo ven los mayoristas aprobados." />
+      <PageHeader title="Precios" description="El precio mayorista nunca se muestra al público: solo lo ven los mayoristas aprobados." />
       <Tabs className="mb-6" value={tab} onChange={setTab} tabs={[{ id: 'base', label: 'Precios base' }, { id: 'mayorista', label: 'Por mayorista' }]} />
       {tab === 'base' && (isLoading ? <Skeleton className="h-64 w-full" /> : data.length === 0 ? <EmptyState title="Sin productos" description="Crea productos para fijar sus precios." /> : (
         <Table>

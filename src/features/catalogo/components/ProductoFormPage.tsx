@@ -114,7 +114,7 @@ export function ProductoFormPage() {
       <Link to="/admin/productos" className="mb-4 inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="size-4" /> Productos
       </Link>
-      <PageHeader eyebrow="Catálogo" title={id ? (producto?.nombre ?? 'Producto') : 'Nuevo producto'} />
+      <PageHeader title={id ? (producto?.nombre ?? 'Producto') : 'Nuevo producto'} />
 
       {id && (
         <Tabs

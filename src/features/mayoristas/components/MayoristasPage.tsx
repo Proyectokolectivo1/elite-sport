@@ -30,7 +30,7 @@ export function MayoristasPage() {
 
   return (
     <>
-      <PageHeader eyebrow="Red de ventas" title="Mayoristas" description="Al aprobar a un mayorista se activa su sección de tienda. Suspenderlo la desactiva." />
+      <PageHeader title="Mayoristas" description="Al aprobar a un mayorista se activa su sección de tienda. Suspenderlo la desactiva." />
       <Tabs
         className="mb-6"
         value={filtro}
@@ -57,8 +57,8 @@ export function MayoristasPage() {
                   {m.negocio || m.nombre}
                   <span className="block text-xs font-normal text-muted-foreground">{m.nombre}{m.cedulaRuc ? ` · ${m.cedulaRuc}` : ''}</span>
                 </TD>
-                <TD>{m.telefono ?? '—'}</TD>
-                <TD>{m.ciudad ?? '—'}</TD>
+                <TD>{m.telefono ?? 'Sin dato'}{m.correo && <a href={`mailto:${m.correo}`} className="block break-all text-xs text-muted-foreground underline-offset-4 hover:underline">{m.correo}</a>}</TD>
+                <TD>{m.ciudad ?? 'Sin dato'}</TD>
                 <TD>
                   <Badge variant={TONO[m.estado]}>{ESTADOS[m.estado]}</Badge>
                   {m.slug && m.estado === 'aprobado' && <Link to={`/t/${m.slug}`} className="mt-1 block text-xs underline underline-offset-4">/t/{m.slug}</Link>}

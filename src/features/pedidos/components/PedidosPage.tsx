@@ -92,7 +92,7 @@ export function PedidosPage() {
 
   return (
     <>
-      <PageHeader eyebrow="Ventas" title="Pedidos" description="Confirmar un pedido descuenta el stock; cancelarlo lo repone." />
+      <PageHeader title="Pedidos" description="Confirmar un pedido descuenta el stock; cancelarlo lo repone." />
       <div className="mb-4 grid gap-3 sm:grid-cols-[1fr_12rem_12rem]">
         <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar por número, cliente u origen" aria-label="Buscar pedidos" />
         <Select value={tipo} onChange={(e) => setTipo(e.target.value)} aria-label="Filtrar por tipo">

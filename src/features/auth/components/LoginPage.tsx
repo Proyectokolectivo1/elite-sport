@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Navigate, useLocation } from 'react-router-dom'
+import { Link, Navigate, useLocation } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { FieldError, Input, Label } from '@/components/ui/input'
 import { Logo } from '@/components/layout/Logo'
@@ -11,15 +12,13 @@ import { useAuth } from '../hooks/AuthProvider'
 import { loginSchema, type LoginValues } from '../schemas'
 
 interface Props {
-  /** Texto sobre el título. */
-  eyebrow?: string
   /** Destino si no se llegó desde otra ruta. */
   destinoPorDefecto?: string
   /** Enlace secundario bajo el formulario (ej. registro). */
   pie?: React.ReactNode
 }
 
-export function LoginPage({ eyebrow = 'Administración', destinoPorDefecto = '/admin', pie }: Props) {
+export function LoginPage({ destinoPorDefecto = '/admin', pie }: Props) {
   const { session, cargando } = useAuth()
   const location = useLocation()
   const [error, setError] = useState<string | null>(null)
@@ -52,9 +51,9 @@ export function LoginPage({ eyebrow = 'Administración', destinoPorDefecto = '/a
           <div className="md:hidden">
             <Logo nombre="Elite Sport" />
           </div>
+          <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" /> Volver a la tienda</Link>
           <div>
-            <p className="eyebrow">{eyebrow}</p>
-            <h1 className="mt-1 text-5xl">Ingresar</h1>
+            <h1 className="text-5xl">Ingresar</h1>
           </div>
           <div>
             <Label htmlFor="email">Correo</Label>

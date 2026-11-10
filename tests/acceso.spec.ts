@@ -1,6 +1,23 @@
 import { expect, test } from '@playwright/test'
 
 test.describe('rutas protegidas y registro', () => {
+  test('la tienda se puede recorrer completa sin cuenta ni ingreso', async ({ page }) => {
+    for (const ruta of ['/', '/catalogo', '/producto/runner-pro-veloz']) {
+      await page.goto(ruta)
+      await page.waitForLoadState('networkidle')
+      expect(new URL(page.url()).pathname, ruta).toBe(ruta)
+      await expect(page.getByRole('banner')).toBeVisible()
+    }
+  })
+
+  test('las pantallas de ingreso permiten volver a la tienda', async ({ page }) => {
+    for (const ruta of ['/admin/login', '/ingresar', '/registro']) {
+      await page.goto(ruta)
+      await page.getByRole('link', { name: /Volver a la tienda/ }).click()
+      await expect(page).toHaveURL(/localhost:\d+\/$/)
+    }
+  })
+
   test('/admin sin sesión redirige al ingreso de administración', async ({ page }) => {
     await page.goto('/admin/productos')
     await expect(page).toHaveURL(/\/admin\/login/)

@@ -64,7 +64,7 @@ export default function App() {
             path="/ingresar"
             element={
               <ThemeProvider>
-                <LoginPage eyebrow="Mayoristas" destinoPorDefecto="/cuenta" pie={<p className="text-sm text-muted-foreground">¿Aún no tienes cuenta? <Link to="/registro" className="text-foreground underline underline-offset-4">Solicítala</Link></p>} />
+                <LoginPage destinoPorDefecto="/cuenta" pie={<p className="text-sm text-muted-foreground">¿Aún no tienes cuenta? <Link to="/registro" className="text-foreground underline underline-offset-4">Solicítala</Link></p>} />
               </ThemeProvider>
             }
           />

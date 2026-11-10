@@ -9,6 +9,6 @@ for (const ruta of RUTAS) {
     await page.waitForLoadState('networkidle')
     const r = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze()
     const graves = r.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical')
-    expect(graves.map((v) => `${v.id}: ${v.nodes.length} nodo(s) — ${v.help}`)).toEqual([])
+    expect(graves.map((v) => `${v.id}: ${v.nodes.length} nodo(s): ${v.help}`)).toEqual([])
   })
 }

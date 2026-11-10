@@ -166,7 +166,7 @@ export function PedirPage() {
 
   return (
     <>
-      <PageHeader eyebrow="Compra al administrador" title="Pedir mercancía" description="Precio mayorista, sin pedido mínimo. El stock se descuenta cuando el administrador confirma tu pedido." />
+      <PageHeader title="Pedir mercancía" description="Precio mayorista, sin pedido mínimo. El stock se descuenta cuando el administrador confirma tu pedido." />
       {isLoading ? <Skeleton className="h-64 w-full" /> : filas.length === 0 ? (
         <EmptyState title="Aún no hay productos con precio mayorista" description="El administrador los irá habilitando." />
       ) : (

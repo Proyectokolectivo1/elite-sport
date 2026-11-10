@@ -30,14 +30,20 @@ export type Database = {
         Row: {
           actualizado_en: string; ciudad: string; id: number; locale: string; moneda_codigo: string
           moneda_decimales: number; moneda_simbolo: string; nombre_negocio: string; whatsapp_principal: string | null
+          fondo_activo: boolean; fondo_video_url: string | null; fondo_video_movil_url: string | null
+          fondo_poster_url: string | null; fondo_opacidad: number
         }
         Insert: {
           actualizado_en?: string; ciudad?: string; id?: number; locale?: string; moneda_codigo?: string
           moneda_decimales?: number; moneda_simbolo?: string; nombre_negocio?: string; whatsapp_principal?: string | null
+          fondo_activo?: boolean; fondo_video_url?: string | null; fondo_video_movil_url?: string | null
+          fondo_poster_url?: string | null; fondo_opacidad?: number
         }
         Update: {
           actualizado_en?: string; ciudad?: string; id?: number; locale?: string; moneda_codigo?: string
           moneda_decimales?: number; moneda_simbolo?: string; nombre_negocio?: string; whatsapp_principal?: string | null
+          fondo_activo?: boolean; fondo_video_url?: string | null; fondo_video_movil_url?: string | null
+          fondo_poster_url?: string | null; fondo_opacidad?: number
         }
         Relationships: []
       }
@@ -140,15 +146,15 @@ export type Database = {
       }
       perfiles: {
         Row: {
-          cedula_ruc: string | null; ciudad: string | null; creado_en: string; estado: Enum<'estado_perfil'>
+          cedula_ruc: string | null; ciudad: string | null; correo: string | null; creado_en: string; estado: Enum<'estado_perfil'>
           id: string; negocio: string | null; nombre: string; rol: Enum<'rol_usuario'>; telefono: string | null
         }
         Insert: {
-          cedula_ruc?: string | null; ciudad?: string | null; creado_en?: string; estado?: Enum<'estado_perfil'>
+          cedula_ruc?: string | null; ciudad?: string | null; correo?: string | null; creado_en?: string; estado?: Enum<'estado_perfil'>
           id: string; negocio?: string | null; nombre?: string; rol?: Enum<'rol_usuario'>; telefono?: string | null
         }
         Update: {
-          cedula_ruc?: string | null; ciudad?: string | null; creado_en?: string; estado?: Enum<'estado_perfil'>
+          cedula_ruc?: string | null; ciudad?: string | null; correo?: string | null; creado_en?: string; estado?: Enum<'estado_perfil'>
           id?: string; negocio?: string | null; nombre?: string; rol?: Enum<'rol_usuario'>; telefono?: string | null
         }
         Relationships: []

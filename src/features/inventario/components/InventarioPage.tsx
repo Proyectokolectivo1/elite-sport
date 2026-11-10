@@ -25,7 +25,7 @@ export function InventarioPage() {
 
   return (
     <>
-      <PageHeader eyebrow="Inventario central" title="Inventario" description="Un solo inventario para todas las ventas. Solo cambia con ingresos, ajustes y pedidos confirmados." />
+      <PageHeader title="Inventario" description="Un solo inventario para todas las ventas. Solo cambia con ingresos, ajustes y pedidos confirmados." />
       <Tabs className="mb-6" tabs={[...TABS]} value={actual} onChange={cambiar} />
       {actual === 'existencias' && <ExistenciasTab />}
       {actual === 'ingreso' && <IngresoForm productoInicial={params.get('producto') ?? undefined} />}

@@ -31,6 +31,19 @@ test.describe('tienda pública', () => {
     await expect(page.getByRole('heading', { name: /no está disponible/i })).toBeVisible()
   })
 
+  test('el encabezado invita a solicitar ser mayorista y lleva al formulario', async ({ page }) => {
+    await page.goto('/')
+    await page.getByRole('banner').getByRole('link', { name: 'Ser mayorista' }).click()
+    await expect(page).toHaveURL(/\/registro/)
+    await expect(page.getByRole('heading', { name: /Solicita tu cuenta/i })).toBeVisible()
+  })
+
+  test('el pie ofrece solicitar cuenta e ingresar como mayorista', async ({ page }) => {
+    await page.goto('/')
+    await expect(page.getByRole('contentinfo').getByRole('link', { name: 'Solicitar ser mayorista' })).toBeVisible()
+    await expect(page.getByRole('contentinfo').getByRole('link', { name: 'Ingreso de mayoristas' })).toBeVisible()
+  })
+
   test('sin scroll horizontal', async ({ page }) => {
     for (const ruta of ['/', '/catalogo', '/registro', '/ingresar']) {
       await page.goto(ruta)

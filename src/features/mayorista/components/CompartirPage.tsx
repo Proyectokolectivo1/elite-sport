@@ -34,7 +34,7 @@ export function CompartirPage() {
   if (!tienda) return null
   return (
     <>
-      <PageHeader eyebrow="Tu catálogo" title="Compartir" description="Envía este enlace por WhatsApp o redes, o imprime el código QR para tu local." />
+      <PageHeader title="Compartir" description="Envía este enlace por WhatsApp o redes, o imprime el código QR para tu local." />
       <div className="grid max-w-3xl gap-8 sm:grid-cols-[1fr_16rem]">
         <div className="space-y-4">
           <p className="eyebrow">Enlace de tu sección</p>

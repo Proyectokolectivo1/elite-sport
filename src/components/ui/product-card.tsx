@@ -29,16 +29,9 @@ interface Props {
   nivel?: 2 | 3
 }
 
-/** Marcador cuando un producto aún no tiene foto: silueta neutra, nunca una imagen falsa. */
+/** Producto sin foto: un bloque liso con el texto, sin dibujos. */
 function SinImagen() {
-  return (
-    <div className="grid size-full place-items-center bg-muted text-muted-foreground">
-      <svg viewBox="0 0 120 60" className="w-1/2" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" aria-hidden>
-        <path d="M6 44c0-6 3-10 9-11l14-3 10-14c2-3 6-3 8 0l6 9c3 5 9 8 15 9l30 5c6 1 12 5 12 11v3H6z" />
-        <path d="M6 50h108" />
-      </svg>
-    </div>
-  )
+  return <div className="grid size-full place-items-center bg-muted text-sm text-muted-foreground">Sin foto</div>
 }
 
 /** Tarjeta de producto: la foto manda, el texto acompaña. */

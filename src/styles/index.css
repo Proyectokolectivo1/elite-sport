@@ -102,8 +102,7 @@
     padding-inline: var(--gutter);
   }
   .eyebrow {
-    @apply font-sans text-[0.6875rem] font-semibold uppercase text-muted-foreground;
-    letter-spacing: 0.18em;
+    @apply font-sans text-[0.8125rem] font-medium text-muted-foreground;
   }
   .display-xl {
     @apply font-display font-extrabold uppercase;
@@ -116,4 +115,17 @@
     font-size: clamp(2.25rem, 6vw, 4.5rem);
     line-height: 0.92;
   }
+}
+
+/* Fondo en movimiento: las superficies de marca dejan ver el video a través de un velo con desenfoque. */
+html[data-fondo='on'] .bg-brand {
+  background-color: color-mix(in oklab, var(--brand-primary) 62%, transparent);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+/* La portada deja ver a la persona sin desenfoque; solo cabecera y pie llevan vidrio. */
+html[data-fondo='on'] section.bg-brand {
+  background-color: color-mix(in oklab, var(--brand-primary) 28%, transparent);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }

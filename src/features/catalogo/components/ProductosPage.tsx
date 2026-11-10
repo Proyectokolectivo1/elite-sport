@@ -28,7 +28,6 @@ export function ProductosPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Catálogo"
         title="Productos"
         description="Modelos, fotos por color y precios. El stock se maneja desde Inventario."
         actions={

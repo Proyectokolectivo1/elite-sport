@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Link, Navigate } from 'react-router-dom'
+import { ArrowLeft } from 'lucide-react'
 import { Logo } from '@/components/layout/Logo'
 import { Button } from '@/components/ui/button'
 import { FieldError, Input, Label } from '@/components/ui/input'
@@ -50,7 +51,6 @@ export function RegistroPage() {
     return (
       <main className="grid min-h-dvh place-items-center px-[var(--gutter)]">
         <div className="max-w-md space-y-3">
-          <p className="eyebrow">Casi listo</p>
           <h1 className="text-5xl">Confirma tu correo</h1>
           <p className="text-muted-foreground">Te enviamos un enlace. Al confirmarlo, ingresa y verás el estado de tu solicitud. El administrador la revisará.</p>
           <Link to="/ingresar" className="inline-block underline underline-offset-4">Ir a ingresar</Link>
@@ -65,19 +65,15 @@ export function RegistroPage() {
         <Logo nombre="Elite Sport" />
         <div className="space-y-5">
           <p className="display-lg max-w-md">Vende calzado sin armar tu propia tienda.</p>
-          <ul className="max-w-sm space-y-2 text-current/80">
-            <li>Pide al precio mayorista, sin mínimo de compra.</li>
-            <li>Tu sección con tu logo, tus colores y tu WhatsApp.</li>
-            <li>Tú pones el precio de venta; las fotos y el catálogo ya están.</li>
-          </ul>
+          <p className="max-w-sm text-current/80">Pides al precio mayorista, sin mínimo. Armas tu propia sección con tu logo, tus colores y tu WhatsApp, y fijas tus precios sobre el catálogo que ya está listo.</p>
         </div>
       </section>
       <section className="flex items-center px-[var(--gutter)] py-12">
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="mx-auto w-full max-w-xl space-y-5">
           <div className="lg:hidden"><Logo nombre="Elite Sport" /></div>
+          <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" /> Volver a la tienda</Link>
           <div>
-            <p className="eyebrow">Mayoristas</p>
-            <h1 className="mt-1 text-5xl">Solicita tu cuenta</h1>
+            <h1 className="text-5xl">Solicita tu cuenta</h1>
             <p className="mt-2 text-sm text-muted-foreground">El administrador revisa cada solicitud antes de activar tu acceso.</p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">

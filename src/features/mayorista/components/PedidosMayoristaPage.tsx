@@ -58,7 +58,7 @@ export function PedidosMayoristaPage() {
 
   return (
     <>
-      <PageHeader eyebrow="Seguimiento" title="Pedidos" />
+      <PageHeader title="Pedidos" />
       <Tabs className="mb-6" value={tab} onChange={setTab} tabs={[{ id: 'compras', label: `Mis compras (${compras.length})` }, { id: 'ventas', label: `Pedidos de mi tienda (${ventas.length})` }]} />
       {tab === 'ventas' && <p className="mb-4 text-sm text-muted-foreground">Son los pedidos que tus clientes te enviaron desde tu sección. No descuentan el inventario de Elite Sport: tú los atiendes con tu propio abastecimiento.</p>}
       {isLoading ? <Skeleton className="h-40 w-full" /> : lista.length === 0 ? (
