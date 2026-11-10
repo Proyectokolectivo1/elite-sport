@@ -1,0 +1,102 @@
+import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
+import { Plus } from 'lucide-react'
+import { Badge } from '@/components/ui/badge'
+import { buttonVariants } from '@/components/ui/button'
+import { EmptyState } from '@/components/ui/empty-state'
+import { Input, Select } from '@/components/ui/input'
+import { PageHeader } from '@/components/ui/page-header'
+import { Price } from '@/components/ui/price'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Table, TBody, TD, TH, THead, TR } from '@/components/ui/table'
+import { cn } from '@/lib/utils'
+import { useProductos } from '../hooks/useCatalogo'
+import { GRUPOS } from '../schemas'
+
+export function ProductosPage() {
+  const { data, isLoading, error } = useProductos()
+  const [q, setQ] = useState('')
+  const [grupo, setGrupo] = useState('')
+
+  const filtrados = useMemo(() => {
+    const t = q.trim().toLowerCase()
+    return (data ?? []).filter(
+      (p) => (!grupo || p.grupo === grupo) && (!t || `${p.nombre} ${p.marca ?? ''} ${p.categoria ?? ''}`.toLowerCase().includes(t)),
+    )
+  }, [data, q, grupo])
+
+  return (
+    <>
+      <PageHeader
+        eyebrow="Catálogo"
+        title="Productos"
+        description="Modelos, fotos por color y precios. El stock se maneja desde Inventario."
+        actions={
+          <Link to="/admin/productos/nuevo" className={cn(buttonVariants())}>
+            <Plus /> Nuevo producto
+          </Link>
+        }
+      />
+
+      <div className="mb-4 grid gap-3 sm:grid-cols-[1fr_12rem]">
+        <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar por nombre, marca o categoría" aria-label="Buscar productos" />
+        <Select value={grupo} onChange={(e) => setGrupo(e.target.value)} aria-label="Filtrar por grupo">
+          <option value="">Todos los grupos</option>
+          {GRUPOS.map((g) => (
+            <option key={g.value} value={g.value}>{g.label}</option>
+          ))}
+        </Select>
+      </div>
+
+      {isLoading && <Skeleton className="h-64 w-full" />}
+      {error && <p role="alert" className="text-destructive">No se pudieron cargar los productos.</p>}
+      {data && filtrados.length === 0 && (
+        <EmptyState
+          title={data.length === 0 ? 'Aún no hay productos' : 'Sin resultados'}
+          description={data.length === 0 ? 'Crea el primero para empezar a vender.' : 'Prueba con otra búsqueda.'}
+        />
+      )}
+      {filtrados.length > 0 && (
+        <Table>
+          <THead>
+            <TR>
+              <TH>Producto</TH>
+              <TH>Grupo</TH>
+              <TH className="text-right">PVP</TH>
+              <TH className="text-right">Mayorista</TH>
+              <TH className="text-right">Stock</TH>
+              <TH>Estado</TH>
+            </TR>
+          </THead>
+          <TBody>
+            {filtrados.map((p) => (
+              <TR key={p.id}>
+                <TD>
+                  <Link to={`/admin/productos/${p.id}`} className="flex items-center gap-3 font-semibold hover:underline">
+                    <span className="size-11 shrink-0 overflow-hidden rounded-sm bg-muted">
+                      {p.imagen && <img src={p.imagen} alt="" className="size-full object-cover" loading="lazy" />}
+                    </span>
+                    <span>
+                      {p.nombre}
+                      <span className="block text-xs font-normal text-muted-foreground">{[p.marca, p.categoria].filter(Boolean).join(' · ')}</span>
+                    </span>
+                  </Link>
+                </TD>
+                <TD className="capitalize">{p.grupo === 'nino' ? 'niño' : p.grupo}</TD>
+                <TD className="text-right"><Price amount={p.precio_publico} size="sm" /></TD>
+                <TD className="text-right">{p.precio_mayorista === null ? <span className="text-muted-foreground">Sin precio</span> : <Price amount={p.precio_mayorista} size="sm" />}</TD>
+                <TD className="text-right tabular-nums">{p.stock_total}</TD>
+                <TD>
+                  <div className="flex gap-1.5">
+                    <Badge variant={p.activo ? 'success' : 'neutral'}>{p.activo ? 'Activo' : 'Oculto'}</Badge>
+                    {p.destacado && <Badge variant="signal">Destacado</Badge>}
+                  </div>
+                </TD>
+              </TR>
+            ))}
+          </TBody>
+        </Table>
+      )}
+    </>
+  )
+}

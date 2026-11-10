@@ -1,0 +1,10 @@
+node_modules
+dist
+dist-e2e
+.env
+.env.local
+*.log
+.vercel
+playwright-report
+test-results
+.DS_Store
