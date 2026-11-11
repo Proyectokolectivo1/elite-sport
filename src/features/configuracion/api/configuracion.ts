@@ -46,7 +46,7 @@ const MAX_MB = 25
 export async function subirMedioFondo(tipo: MedioFondo, archivo: File | Blob): Promise<string> {
   if (!MIME[tipo].includes(archivo.type)) throw new Error(tipo === 'poster' ? 'La imagen debe ser JPG, PNG o WebP.' : 'El video debe ser MP4 o WebM.')
   if (archivo.size > MAX_MB * 1024 * 1024) throw new Error(`El archivo pesa más de ${MAX_MB} MB.`)
-  const ext = archivo.type.split('/')[1]
+  const ext = archivo.type === 'image/jpeg' ? 'jpg' : archivo.type.split('/')[1]
   const ruta = `fondo/${tipo}-${crypto.randomUUID()}.${ext}`
   const { error } = await supabase.storage.from('medios').upload(ruta, archivo, { contentType: archivo.type, cacheControl: '31536000' })
   if (error) throw error

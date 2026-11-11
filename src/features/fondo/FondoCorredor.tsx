@@ -15,7 +15,8 @@ interface ConexionNavigator extends Navigator {
 
 function usaPocosDatos(): boolean {
   const c = (navigator as ConexionNavigator).connection
-  return !!c && (c.saveData === true || c.effectiveType === 'slow-2g' || c.effectiveType === '2g')
+  // Un video de varios MB no se descarga con ahorro de datos ni en 2G o 3G: ahí se ve solo la imagen fija.
+  return !!c && (c.saveData === true || c.effectiveType === 'slow-2g' || c.effectiveType === '2g' || c.effectiveType === '3g')
 }
 
 /**
@@ -27,6 +28,26 @@ export function FondoCorredor({ video, videoMovil, poster, opacidad }: FondoConf
   const [movil, setMovil] = useState(() => window.matchMedia('(max-width: 767px)').matches)
   const [quieto] = useState(() => window.matchMedia('(prefers-reduced-motion: reduce)').matches || usaPocosDatos())
   const [listo, setListo] = useState(false)
+  // El video se pide cuando la página ya terminó de cargar y el navegador está libre, para no competir con lo importante.
+  const [cargar, setCargar] = useState(false)
+
+  useEffect(() => {
+    if (quieto) return
+    let cancelado = false
+    const ir = () => {
+      if (!cancelado) setCargar(true)
+    }
+    const arrancar = () => {
+      if ('requestIdleCallback' in window) window.requestIdleCallback(ir, { timeout: 3000 })
+      else setTimeout(ir, 1500)
+    }
+    if (document.readyState === 'complete') arrancar()
+    else window.addEventListener('load', arrancar, { once: true })
+    return () => {
+      cancelado = true
+      window.removeEventListener('load', arrancar)
+    }
+  }, [quieto])
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 767px)')
@@ -73,7 +94,7 @@ export function FondoCorredor({ video, videoMovil, poster, opacidad }: FondoConf
   // Cada imagen o video se pide una sola vez; el video móvil es más ligero.
   return (
     <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden bg-background">
-      {src && !quieto && (
+      {src && !quieto && cargar && (
         <video
           key={src}
           ref={ref}

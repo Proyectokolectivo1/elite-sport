@@ -6,6 +6,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { usePageMeta } from '@/lib/meta'
 import { cn } from '@/lib/utils'
 import { useStore } from '../context/StoreContext'
+import { useOpciones } from '@/features/catalogo/hooks/useCatalogo'
+import { useProductosPagina } from '../hooks/useProductosTienda'
 import { aTarjeta } from '../tarjeta'
 
 const GRUPOS = [
@@ -15,14 +17,18 @@ const GRUPOS = [
 ]
 
 export function HomePage() {
-  const { tienda, productos, precio, ruta, ciudad, cargando } = useStore()
+  const { tienda, ruta, ciudad, tiendaPrecios } = useStore()
   usePageMeta(`${tienda.nombre} · Calzado deportivo y urbano en ${ciudad}`, `Catálogo de ${tienda.nombre}: calzado para dama, caballero y niño. Elige tu talla y haz tu pedido por WhatsApp.`)
 
-  const destacados = productos.filter((p) => p.destacado).slice(0, 5)
+  // Solo se piden los pocos productos que se ven en la portada, no todo el catálogo.
+  const destacadosQ = useProductosPagina('destacados', tiendaPrecios, { destacado: true }, 5)
+  const novedadesQ = useProductosPagina('novedades', tiendaPrecios, { orden: 'novedades' }, 8)
+  const { data: marcas = [] } = useOpciones('marcas')
+  const destacados = destacadosQ.data?.productos ?? []
+  const novedades = novedadesQ.data?.productos ?? []
+  const cargando = novedadesQ.isLoading
   // La tarjeta grande solo se usa cuando completa la grilla (1 grande + 4 normales); si no, queda un hueco.
   const conGrande = destacados.length === 5
-  const novedades = productos.slice(0, 8)
-  const marcas = [...new Map(productos.flatMap((p) => (p.marca ? [[p.marca.id, p.marca] as const] : []))).values()]
 
   return (
     <>
@@ -60,7 +66,7 @@ export function HomePage() {
           <div className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-4 md:gap-x-6">
             {destacados.map((p, i) => (
               <div key={p.id} className={conGrande && i === 0 ? 'col-span-2 md:row-span-2' : undefined}>
-                <ProductCard to={ruta(`/producto/${p.slug}`)} producto={aTarjeta(p, precio(p))} destacada={conGrande && i === 0} />
+                <ProductCard to={ruta(`/producto/${p.slug}`)} producto={aTarjeta(p)} destacada={conGrande && i === 0} />
               </div>
             ))}
           </div>
@@ -87,12 +93,12 @@ export function HomePage() {
               <div key={i}><Skeleton className="aspect-[4/5]" /><Skeleton className="mt-3 h-4 w-2/3" /></div>
             ))}
           </div>
-        ) : productos.length === 0 ? (
+        ) : novedades.length === 0 ? (
           <EmptyState title="Pronto tendremos productos" description="Estamos preparando el catálogo. Vuelve en unos días." />
         ) : (
           <div className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-4 md:gap-x-6">
             {novedades.map((p) => (
-              <ProductCard key={p.id} to={ruta(`/producto/${p.slug}`)} producto={aTarjeta(p, precio(p))} />
+              <ProductCard key={p.id} to={ruta(`/producto/${p.slug}`)} producto={aTarjeta(p)} />
             ))}
           </div>
         )}

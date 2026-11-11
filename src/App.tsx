@@ -3,14 +3,25 @@ import { Link, Navigate, Route, Routes } from 'react-router-dom'
 // La tienda pública va en el paquete principal: así la portada no espera cadenas de descargas.
 import { StoreShell } from '@/features/tienda/components/StoreShell'
 import { HomePage } from '@/features/tienda/components/HomePage'
-import { CatalogoPage } from '@/features/tienda/components/CatalogoPage'
-import { ProductoPage } from '@/features/tienda/components/ProductoPage'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
 import { AuthProvider } from '@/features/auth/hooks/AuthProvider'
 import { RequireMayorista } from '@/features/auth/components/RequireMayorista'
 import { RequireAdmin } from '@/features/auth/components/RequireAdmin'
 import { useConfiguracion } from '@/features/configuracion/hooks/useConfiguracion'
 
+// Catálogo y ficha van aparte de la portada y se descargan en segundo plano apenas el navegador queda libre.
+const cargarCatalogo = () => import('@/features/tienda/components/CatalogoPage').then((m) => ({ default: m.CatalogoPage }))
+const cargarProducto = () => import('@/features/tienda/components/ProductoPage').then((m) => ({ default: m.ProductoPage }))
+const CatalogoPage = lazy(cargarCatalogo)
+const ProductoPage = lazy(cargarProducto)
+if (typeof window !== 'undefined') {
+  const precargar = () => {
+    void cargarCatalogo()
+    void cargarProducto()
+  }
+  if ('requestIdleCallback' in window) window.requestIdleCallback(precargar, { timeout: 4000 })
+  else setTimeout(precargar, 2000)
+}
 const DesignSystemPage = lazy(() => import('@/features/sistema-diseno/DesignSystemPage').then((m) => ({ default: m.DesignSystemPage })))
 const LoginPage = lazy(() => import('@/features/auth/components/LoginPage').then((m) => ({ default: m.LoginPage })))
 const AdminLayout = lazy(() => import('@/features/admin/AdminLayout').then((m) => ({ default: m.AdminLayout })))

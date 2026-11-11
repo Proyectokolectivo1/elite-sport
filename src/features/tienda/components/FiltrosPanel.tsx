@@ -1,12 +1,16 @@
-import { useMemo } from 'react'
 import { Button } from '@/components/ui/button'
-import { Input, Label, Select } from '@/components/ui/input'
+import { Input, Label } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
-import type { ProductoPublico } from '../api/tienda'
 import { contarFiltros, FILTROS_VACIOS, type Filtros } from '../filtros'
 
+interface OpcionNombre {
+  id: string
+  nombre: string
+}
+
 interface Props {
-  productos: ProductoPublico[]
+  opciones: { marcas: OpcionNombre[]; estilos: OpcionNombre[]; categorias: OpcionNombre[]; tallas: string[] }
   filtros: Filtros
   onChange: (f: Filtros) => void
 }
@@ -18,25 +22,8 @@ const GRUPOS = [
   { id: 'nino', label: 'Niño' },
 ] as const
 
-function unicos(items: ({ id: string; nombre: string } | null)[]) {
-  return [...new Map(items.flatMap((i) => (i ? [[i.id, i] as const] : []))).values()].sort((a, b) => a.nombre.localeCompare(b.nombre))
-}
-
-export function FiltrosPanel({ productos, filtros, onChange }: Props) {
+export function FiltrosPanel({ opciones, filtros, onChange }: Props) {
   const set = (parcial: Partial<Filtros>) => onChange({ ...filtros, ...parcial })
-
-  const opciones = useMemo(() => {
-    const delGrupo = filtros.grupo ? productos.filter((p) => p.grupo === filtros.grupo) : productos
-    const tallas = [...new Map(delGrupo.flatMap((p) => p.variantes).filter((v) => v.stock > 0).map((v) => [v.talla, v.orden])).entries()]
-      .sort((a, b) => a[1] - b[1])
-      .map(([t]) => t)
-    return {
-      marcas: unicos(productos.map((p) => p.marca)),
-      estilos: unicos(productos.map((p) => p.estilo)),
-      categorias: unicos(productos.map((p) => p.categoria)),
-      tallas,
-    }
-  }, [productos, filtros.grupo])
 
   return (
     <div className="space-y-7">

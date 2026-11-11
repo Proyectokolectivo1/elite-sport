@@ -1,4 +1,5 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import type { ImagenOptimizada } from '@/lib/imagen'
 import {
   actualizarPrecios,
   actualizarProducto,
@@ -10,6 +11,7 @@ import {
   listarImagenes,
   listarOpciones,
   listarProductosAdmin,
+  listarProductosAdminPagina,
   listarTallas,
   listarVariantes,
   obtenerProducto,
@@ -29,6 +31,17 @@ export const catalogoKeys = {
 }
 
 export const useProductos = () => useQuery({ queryKey: catalogoKeys.productos, queryFn: listarProductosAdmin })
+/** Lista del admin por lotes (scroll infinito). */
+export const useProductosPaginados = (f: { q: string; grupo: string }) =>
+  useInfiniteQuery({
+    queryKey: ['productos-admin', f],
+    initialPageParam: 0,
+    queryFn: ({ pageParam }) => listarProductosAdminPagina(f, pageParam),
+    getNextPageParam: (ultima, paginas) => {
+      const cargados = paginas.reduce((s, p) => s + p.productos.length, 0)
+      return cargados < ultima.total && ultima.productos.length > 0 ? cargados : undefined
+    },
+  })
 export const useProducto = (id: string | undefined) =>
   useQuery({ queryKey: catalogoKeys.producto(id ?? ''), queryFn: () => obtenerProducto(id as string), enabled: !!id })
 export const useImagenes = (id: string) => useQuery({ queryKey: catalogoKeys.imagenes(id), queryFn: () => listarImagenes(id) })
@@ -56,6 +69,7 @@ export function useGuardarProducto(id?: string) {
     },
     onSuccess: (productoId) => {
       void qc.invalidateQueries({ queryKey: catalogoKeys.productos })
+      void qc.invalidateQueries({ queryKey: ['productos-admin'] })
       void qc.invalidateQueries({ queryKey: catalogoKeys.producto(productoId) })
     },
   })
@@ -80,8 +94,8 @@ export function useActualizarPrecios() {
 export function useSubirImagenes(productoId: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async (v: { color: string; blobs: Blob[]; ordenInicial: number }) => {
-      for (let i = 0; i < v.blobs.length; i++) await subirImagen(productoId, v.color, v.blobs[i], v.ordenInicial + i)
+    mutationFn: async (v: { color: string; imagenes: ImagenOptimizada[]; ordenInicial: number }) => {
+      for (let i = 0; i < v.imagenes.length; i++) await subirImagen(productoId, v.color, v.imagenes[i], v.ordenInicial + i)
     },
     onSettled: () => {
       void qc.invalidateQueries({ queryKey: catalogoKeys.imagenes(productoId) })

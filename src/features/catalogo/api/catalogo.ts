@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase'
+import { extensionDeTipo, type ImagenOptimizada } from '@/lib/imagen'
 import { slugify } from '@/lib/slug'
 import type { Enums, Tables } from '@/types/database'
 
@@ -31,7 +32,7 @@ export async function crearOpcion(tabla: TablaOpciones, nombre: string): Promise
 }
 
 export async function listarTallas(): Promise<Talla[]> {
-  const { data, error } = await supabase.from('tallas').select('*').order('orden')
+  const { data, error } = await supabase.from('tallas').select('id, grupo, etiqueta, orden').order('orden')
   if (error) throw error
   return data
 }
@@ -53,7 +54,7 @@ export interface ProductoResumen {
 
 export async function listarProductosAdmin(): Promise<ProductoResumen[]> {
   const [prods, may, vars, imgs] = await Promise.all([
-    supabase.from('productos').select('*, marcas(nombre), categorias(nombre)').order('creado_en', { ascending: false }),
+    supabase.from('productos').select('id, nombre, slug, grupo, precio_publico, activo, destacado, marcas(nombre), categorias(nombre)').order('creado_en', { ascending: false }),
     supabase.from('precios_mayorista').select('producto_id, precio'),
     supabase.from('variantes_producto').select('producto_id, stock'),
     supabase.from('imagenes_producto').select('producto_id, url, orden').order('orden'),
@@ -80,6 +81,62 @@ export async function listarProductosAdmin(): Promise<ProductoResumen[]> {
     stock_total: stock.get(p.id) ?? 0,
     imagen: imagen.get(p.id) ?? null,
   }))
+}
+
+export const LOTE_ADMIN = 20
+
+export interface PaginaProductosAdmin {
+  productos: ProductoResumen[]
+  total: number
+}
+
+/** Una página de la lista del admin (filtrada en el servidor), pidiendo solo las columnas que se muestran. */
+export async function listarProductosAdminPagina(f: { q: string; grupo: string }, desde: number, limite = LOTE_ADMIN): Promise<PaginaProductosAdmin> {
+  let consulta = supabase
+    .from('productos')
+    .select('id, nombre, slug, grupo, precio_publico, activo, destacado, marcas(nombre), categorias(nombre)', { count: 'exact' })
+    .order('creado_en', { ascending: false })
+    .order('id')
+    .range(desde, desde + limite - 1)
+  if (f.grupo) consulta = consulta.eq('grupo', f.grupo as GrupoTalla)
+  const texto = f.q.trim().replace(/[%_]/g, '')
+  if (texto) consulta = consulta.ilike('nombre', `%${texto}%`)
+  const prods = await consulta
+  if (prods.error) throw prods.error
+  const filas = prods.data ?? []
+  if (filas.length === 0) return { productos: [], total: prods.count ?? 0 }
+
+  const ids = filas.map((p) => p.id)
+  const [may, vars, imgs] = await Promise.all([
+    supabase.from('precios_mayorista').select('producto_id, precio').in('producto_id', ids),
+    supabase.from('variantes_producto').select('producto_id, stock').in('producto_id', ids),
+    supabase.from('imagenes_producto').select('producto_id, url, url_miniatura, orden').in('producto_id', ids).order('orden'),
+  ])
+  for (const r of [may, vars, imgs]) if (r.error) throw r.error
+
+  const precioMay = new Map((may.data ?? []).map((m) => [m.producto_id, m.precio]))
+  const stock = new Map<string, number>()
+  for (const v of vars.data ?? []) stock.set(v.producto_id, (stock.get(v.producto_id) ?? 0) + v.stock)
+  const imagen = new Map<string, string>()
+  for (const i of imgs.data ?? []) if (!imagen.has(i.producto_id)) imagen.set(i.producto_id, i.url_miniatura ?? i.url)
+
+  return {
+    total: prods.count ?? filas.length,
+    productos: filas.map((p) => ({
+      id: p.id,
+      nombre: p.nombre,
+      slug: p.slug,
+      grupo: p.grupo,
+      precio_publico: p.precio_publico,
+      precio_mayorista: precioMay.get(p.id) ?? null,
+      activo: p.activo,
+      destacado: p.destacado,
+      marca: p.marcas?.nombre ?? null,
+      categoria: p.categorias?.nombre ?? null,
+      stock_total: stock.get(p.id) ?? 0,
+      imagen: imagen.get(p.id) ?? null,
+    })),
+  }
 }
 
 export interface ProductoDetalle extends Producto {
@@ -156,36 +213,52 @@ export async function eliminarProducto(id: string): Promise<void> {
 export async function listarImagenes(productoId: string): Promise<ImagenProducto[]> {
   const { data, error } = await supabase
     .from('imagenes_producto')
-    .select('*')
+    .select('id, producto_id, color, url, url_miniatura, orden')
     .eq('producto_id', productoId)
     .order('orden')
   if (error) throw error
   return data
 }
 
-export async function subirImagen(productoId: string, color: string, blob: Blob, orden: number): Promise<void> {
-  const ruta = `${productoId}/${crypto.randomUUID()}.webp`
-  const { error: errSubida } = await supabase.storage.from('productos').upload(ruta, blob, {
-    contentType: 'image/webp',
-    cacheControl: '31536000',
+/** Sube la foto grande y su miniatura (ya convertidas a WebP) y registra ambas. Se guardan con caché de un año. */
+export async function subirImagen(productoId: string, color: string, img: ImagenOptimizada, orden: number): Promise<void> {
+  const base = `${productoId}/${crypto.randomUUID()}`
+  const rutaGrande = `${base}.${extensionDeTipo(img.principal.type)}`
+  const rutaMini = `${base}-m.${extensionDeTipo(img.miniatura.type)}`
+  const almacen = supabase.storage.from('productos')
+  const opciones = (b: Blob) => ({ contentType: b.type, cacheControl: '31536000' })
+
+  const g = await almacen.upload(rutaGrande, img.principal, opciones(img.principal))
+  if (g.error) throw g.error
+  const m = await almacen.upload(rutaMini, img.miniatura, opciones(img.miniatura))
+  if (m.error) {
+    await almacen.remove([rutaGrande])
+    throw m.error
+  }
+  const { error } = await supabase.from('imagenes_producto').insert({
+    producto_id: productoId,
+    color: color.trim(),
+    url: almacen.getPublicUrl(rutaGrande).data.publicUrl,
+    url_miniatura: almacen.getPublicUrl(rutaMini).data.publicUrl,
+    orden,
   })
-  if (errSubida) throw errSubida
-  const { data } = supabase.storage.from('productos').getPublicUrl(ruta)
-  const { error } = await supabase
-    .from('imagenes_producto')
-    .insert({ producto_id: productoId, color: color.trim(), url: data.publicUrl, orden })
   if (error) {
-    await supabase.storage.from('productos').remove([ruta])
+    await almacen.remove([rutaGrande, rutaMini])
     throw error
   }
+}
+
+function rutaEnAlmacen(url: string | null): string | null {
+  const marca = '/object/public/productos/'
+  const i = url ? url.indexOf(marca) : -1
+  return url && i >= 0 ? url.slice(i + marca.length) : null
 }
 
 export async function eliminarImagen(imagen: ImagenProducto): Promise<void> {
   const { error } = await supabase.from('imagenes_producto').delete().eq('id', imagen.id)
   if (error) throw error
-  const marca = '/object/public/productos/'
-  const i = imagen.url.indexOf(marca)
-  if (i >= 0) await supabase.storage.from('productos').remove([imagen.url.slice(i + marca.length)])
+  const rutas = [rutaEnAlmacen(imagen.url), rutaEnAlmacen(imagen.url_miniatura)].filter((r): r is string => !!r)
+  if (rutas.length > 0) await supabase.storage.from('productos').remove(rutas)
 }
 
 /** Intercambia el orden de dos imágenes. */

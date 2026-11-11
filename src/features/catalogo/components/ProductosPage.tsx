@@ -1,29 +1,29 @@
-import { useMemo, useState } from 'react'
+import { useDeferredValue, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { buttonVariants } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
-import { Input, Select } from '@/components/ui/input'
+import { Input } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
 import { PageHeader } from '@/components/ui/page-header'
 import { Price } from '@/components/ui/price'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TBody, TD, TH, THead, TR } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
-import { useProductos } from '../hooks/useCatalogo'
+import { useCentinela } from '@/lib/useCentinela'
+import { useProductosPaginados } from '../hooks/useCatalogo'
 import { GRUPOS } from '../schemas'
 
 export function ProductosPage() {
-  const { data, isLoading, error } = useProductos()
   const [q, setQ] = useState('')
   const [grupo, setGrupo] = useState('')
-
-  const filtrados = useMemo(() => {
-    const t = q.trim().toLowerCase()
-    return (data ?? []).filter(
-      (p) => (!grupo || p.grupo === grupo) && (!t || `${p.nombre} ${p.marca ?? ''} ${p.categoria ?? ''}`.toLowerCase().includes(t)),
-    )
-  }, [data, q, grupo])
+  const busqueda = useDeferredValue(q)
+  const consulta = useProductosPaginados({ q: busqueda, grupo })
+  const filtrados = useMemo(() => consulta.data?.pages.flatMap((p) => p.productos) ?? [], [consulta.data])
+  const total = consulta.data?.pages[0]?.total ?? 0
+  const { isLoading, error, hasNextPage, isFetchingNextPage, fetchNextPage } = consulta
+  const centinela = useCentinela(() => void fetchNextPage(), !!hasNextPage && !isFetchingNextPage)
 
   return (
     <>
@@ -49,10 +49,10 @@ export function ProductosPage() {
 
       {isLoading && <Skeleton className="h-64 w-full" />}
       {error && <p role="alert" className="text-destructive">No se pudieron cargar los productos.</p>}
-      {data && filtrados.length === 0 && (
+      {!isLoading && filtrados.length === 0 && (
         <EmptyState
-          title={data.length === 0 ? 'Aún no hay productos' : 'Sin resultados'}
-          description={data.length === 0 ? 'Crea el primero para empezar a vender.' : 'Prueba con otra búsqueda.'}
+          title={!busqueda && !grupo ? 'Aún no hay productos' : 'Sin resultados'}
+          description={!busqueda && !grupo ? 'Crea el primero para empezar a vender.' : 'Prueba con otra búsqueda.'}
         />
       )}
       {filtrados.length > 0 && (
@@ -95,6 +95,11 @@ export function ProductosPage() {
             ))}
           </TBody>
         </Table>
+      )}
+      {filtrados.length > 0 && (
+        <div ref={centinela} className="mt-6 flex justify-center text-sm text-muted-foreground" aria-live="polite">
+          {isFetchingNextPage ? 'Cargando más…' : hasNextPage ? `Mostrando ${filtrados.length} de ${total}` : `${total} ${total === 1 ? 'producto' : 'productos'}`}
+        </div>
       )}
     </>
   )

@@ -6,7 +6,7 @@ import { InputSugerencias, Label } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from '@/components/ui/toast'
 import { mensajeError } from '@/lib/errors'
-import { comprimirImagen } from '@/lib/imagen'
+import { optimizarImagen } from '@/lib/imagen'
 import { useEliminarImagen, useImagenes, useIntercambiarOrden, useSubirImagenes, useVariantes } from '../hooks/useCatalogo'
 
 export function ImagenesProducto({ productoId }: { productoId: string }) {
@@ -34,10 +34,10 @@ export function ImagenesProducto({ productoId }: { productoId: string }) {
     }
     setProcesando(true)
     try {
-      const blobs = await Promise.all([...files].map((f) => comprimirImagen(f)))
+      const optimizadas = await Promise.all([...files].map((f) => optimizarImagen(f)))
       const ordenInicial = imagenes.reduce((m, i) => Math.max(m, i.orden), -1) + 1
-      await subir.mutateAsync({ color, blobs, ordenInicial })
-      toast.success(blobs.length === 1 ? 'Imagen subida' : `${blobs.length} imágenes subidas`)
+      await subir.mutateAsync({ color, imagenes: optimizadas, ordenInicial })
+      toast.success(optimizadas.length === 1 ? 'Imagen subida' : `${optimizadas.length} imágenes subidas`)
     } catch (e) {
       toast.error(mensajeError(e))
     } finally {
@@ -60,7 +60,7 @@ export function ImagenesProducto({ productoId }: { productoId: string }) {
           </Button>
         </div>
       </div>
-      <p className="-mt-5 text-xs text-muted-foreground">Se reducen y convierten a WebP automáticamente. La primera foto de cada color es la principal.</p>
+      <p className="-mt-5 text-xs text-muted-foreground">Se convierten a WebP y se reducen automáticamente (foto grande y miniatura) antes de subirlas. La primera foto de cada color es la principal.</p>
 
       {isLoading && <Skeleton className="h-48 w-full" />}
       {!isLoading && porColor.length === 0 && <EmptyState title="Sin fotos todavía" description="Sube fotos por color. Los mayoristas las reutilizan en su sección." />}
@@ -71,7 +71,7 @@ export function ImagenesProducto({ productoId }: { productoId: string }) {
           <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
             {lista.map((img, idx) => (
               <li key={img.id} className="group relative overflow-hidden rounded-xl border border-border bg-muted">
-                <img src={img.url} alt={`${c}, foto ${idx + 1}`} className="aspect-[4/5] w-full object-cover" loading="lazy" />
+                <img src={img.url_miniatura ?? img.url} alt={`${c}, foto ${idx + 1}`} width={240} height={300} decoding="async" className="aspect-[4/5] w-full object-cover" loading="lazy" />
                 <div className="absolute inset-x-0 bottom-0 flex justify-between bg-black/65 p-1 text-white">
                   <span className="flex">
                     <Button type="button" size="icon-sm" variant="ghost" className="text-white hover:bg-white/15" aria-label="Mover antes" disabled={idx === 0 || mover.isPending} onClick={() => mover.mutate({ a: img, b: lista[idx - 1] })}>

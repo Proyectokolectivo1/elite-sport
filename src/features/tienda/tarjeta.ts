@@ -10,12 +10,13 @@ export function textoTallas(p: ProductoPublico): string | undefined {
   return unicas.length === 1 ? `Talla ${unicas[0]}` : `Tallas ${unicas[0]} a ${unicas[unicas.length - 1]}`
 }
 
-export function aTarjeta(p: ProductoPublico, precio: number): ProductCardData {
+export function aTarjeta(p: ProductoPublico): ProductCardData {
   return {
     nombre: p.nombre,
     marca: p.marca?.nombre,
-    imagenUrl: p.imagenes[0]?.url,
-    precio,
+    // Las tarjetas usan la miniatura (480 px); las fotos antiguas sin miniatura caen a la grande.
+    imagenUrl: p.imagenes[0]?.miniatura ?? p.imagenes[0]?.url,
+    precio: p.precio,
     tallas: textoTallas(p),
     agotado: p.variantes.length > 0 && totalStock(p) === 0,
     destacado: p.destacado,

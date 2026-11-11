@@ -9,6 +9,7 @@ import { SizeSelector, type TallaOpcion } from '@/components/ui/size-selector'
 import { usePageMeta } from '@/lib/meta'
 import { cn } from '@/lib/utils'
 import { useCarritoStore } from '../carrito/carritoStore'
+import { useProductoPorSlug, useProductosPagina } from '../hooks/useProductosTienda'
 import { useStore } from '../context/StoreContext'
 import { aTarjeta } from '../tarjeta'
 
@@ -18,8 +19,16 @@ export function ProductoPage() {
 }
 
 function ProductoVista({ slug: productoSlug }: { slug: string | undefined }) {
-  const { productos, precio, ruta, clave, setCarritoAbierto, tienda, cargando } = useStore()
-  const producto = productos.find((p) => p.slug === productoSlug)
+  const { ruta, clave, setCarritoAbierto, tienda, tiendaPrecios } = useStore()
+  // Solo se pide este producto (no todo el catálogo), con su precio en la tienda activa.
+  const { data: producto, isLoading: cargando } = useProductoPorSlug(productoSlug, tiendaPrecios)
+  const { data: relacionadosQ } = useProductosPagina(
+    `relacionados-${producto?.id}`,
+    tiendaPrecios,
+    producto?.categoria ? { categoria: producto.categoria.id } : { grupo: producto?.grupo },
+    5,
+    !!producto,
+  )
 
   const colores = useMemo(() => {
     if (!producto) return []
@@ -53,7 +62,7 @@ function ProductoVista({ slug: productoSlug }: { slug: string | undefined }) {
     )
   }
 
-  const pr = precio(producto)
+  const pr = producto.precio
   const fotosColor = producto.imagenes.filter((i) => i.color === color)
   const fotos = fotosColor.length > 0 ? fotosColor : producto.imagenes
   const variantesColor = producto.variantes.filter((v) => v.color === color)
@@ -69,16 +78,14 @@ function ProductoVista({ slug: productoSlug }: { slug: string | undefined }) {
       nombre: producto.nombre,
       color: variante.color,
       talla: variante.talla,
-      imagen: fotos[0]?.url ?? null,
+      imagen: fotos[0]?.miniatura ?? fotos[0]?.url ?? null,
       precio: pr,
       stock: variante.stock,
     })
     setCarritoAbierto(true)
   }
 
-  const relacionados = productos
-    .filter((p) => p.id !== producto.id && (p.categoria?.id === producto.categoria?.id || p.grupo === producto.grupo))
-    .slice(0, 4)
+  const relacionados = (relacionadosQ?.productos ?? []).filter((p) => p.id !== producto.id).slice(0, 4)
 
   return (
     <div className="container-page py-8 md:py-12">
@@ -89,14 +96,14 @@ function ProductoVista({ slug: productoSlug }: { slug: string | undefined }) {
       <div className="grid gap-8 md:grid-cols-[1.2fr_1fr] md:gap-14">
         <div>
           <div className="aspect-[4/5] overflow-hidden rounded-md bg-muted">
-            {fotos[foto] ? <img src={fotos[foto].url} alt={`${producto.nombre}, ${color}`} className="size-full object-cover" /> : <div className="grid size-full place-items-center text-sm text-muted-foreground">Foto próximamente</div>}
+            {fotos[foto] ? <img src={fotos[foto].url} alt={`${producto.nombre}, ${color}`} width={800} height={1000} decoding="async" fetchPriority="high" className="size-full object-cover" /> : <div className="grid size-full place-items-center text-sm text-muted-foreground">Foto próximamente</div>}
           </div>
           {fotos.length > 1 && (
             <ul className="mt-3 grid grid-cols-5 gap-2">
               {fotos.map((f, i) => (
                 <li key={f.url}>
                   <button type="button" aria-label={`Ver foto ${i + 1}`} aria-pressed={foto === i} onClick={() => setFoto(i)} className={cn('block aspect-square w-full overflow-hidden rounded-md border-2', foto === i ? 'border-foreground' : 'border-transparent opacity-70 hover:opacity-100')}>
-                    <img src={f.url} alt="" className="size-full object-cover" loading="lazy" />
+                    <img src={f.miniatura ?? f.url} alt="" width={160} height={160} decoding="async" className="size-full object-cover" loading="lazy" />
                   </button>
                 </li>
               ))}
@@ -143,7 +150,7 @@ function ProductoVista({ slug: productoSlug }: { slug: string | undefined }) {
         <section className="mt-16">
           <h2 className="display-lg mb-6">También te puede gustar</h2>
           <div className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-4 md:gap-x-6">
-            {relacionados.map((p) => <ProductCard key={p.id} to={ruta(`/producto/${p.slug}`)} producto={aTarjeta(p, precio(p))} />)}
+            {relacionados.map((p) => <ProductCard key={p.id} to={ruta(`/producto/${p.slug}`)} producto={aTarjeta(p)} />)}
           </div>
         </section>
       )}

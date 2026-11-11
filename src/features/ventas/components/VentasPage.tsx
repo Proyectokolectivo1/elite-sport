@@ -119,7 +119,7 @@ export function VentasPage() {
                       className={cn('flex w-full items-center justify-between gap-3 rounded-xl border p-3 text-left transition-colors', elegido === p.id ? 'border-foreground bg-card' : 'border-border hover:border-foreground')}
                     >
                       <span className="flex min-w-0 items-center gap-3">
-                        <span className="size-12 shrink-0 overflow-hidden rounded-lg bg-muted">{p.imagenes[0] && <img src={p.imagenes[0].url} alt="" className="size-full object-cover" loading="lazy" />}</span>
+                        <span className="size-12 shrink-0 overflow-hidden rounded-lg bg-muted">{p.imagenes[0] && <img src={p.imagenes[0].miniatura ?? p.imagenes[0].url} alt="" className="size-full object-cover" loading="lazy" decoding="async" width={96} height={96} />}</span>
                         <span className="min-w-0">
                           <span className="block truncate font-semibold">{p.nombre}</span>
                           <span className="block text-xs text-muted-foreground">{fmt(p.pvp)} · {stock === 0 ? 'agotado' : `${stock} pares`}</span>

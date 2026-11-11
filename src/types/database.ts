@@ -63,9 +63,9 @@ export type Database = {
         ]
       }
       imagenes_producto: {
-        Row: { color: string; id: string; orden: number; producto_id: string; url: string }
-        Insert: { color: string; id?: string; orden?: number; producto_id: string; url: string }
-        Update: { color?: string; id?: string; orden?: number; producto_id?: string; url?: string }
+        Row: { color: string; id: string; orden: number; producto_id: string; url: string; url_miniatura: string | null }
+        Insert: { color: string; id?: string; orden?: number; producto_id: string; url: string; url_miniatura?: string | null }
+        Update: { color?: string; id?: string; orden?: number; producto_id?: string; url?: string; url_miniatura?: string | null }
         Relationships: [
           { foreignKeyName: 'imagenes_producto_producto_id_fkey'; columns: ['producto_id']; isOneToOne: false; referencedRelation: 'productos'; referencedColumns: ['id'] },
         ]
@@ -248,6 +248,14 @@ export type Database = {
     }
     Views: { [_ in never]: never }
     Functions: {
+      buscar_productos: {
+        Args: {
+          p_tienda_id?: string; p_q?: string; p_grupo?: Enum<'grupo_talla'>; p_marca?: string; p_estilo?: string
+          p_categoria?: string; p_talla?: string; p_min?: number; p_max?: number; p_destacado?: boolean
+          p_orden?: string; p_limite?: number; p_desde?: number
+        }
+        Returns: { id: string; precio: number; total: number }[]
+      }
       actualizar_estado_pedido_cliente: { Args: { p_estado: Enum<'estado_pedido'>; p_pedido: string }; Returns: undefined }
       actividad_mayorista: {
         Args: { p_id?: string }

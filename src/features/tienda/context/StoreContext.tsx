@@ -3,11 +3,13 @@ import { useQuery } from '@tanstack/react-query'
 import { useParams } from 'react-router-dom'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useConfiguracion } from '@/features/configuracion/hooks/useConfiguracion'
-import { obtenerCatalogoPublico, obtenerPreciosTienda, obtenerTienda, type ProductoPublico, type Tienda } from '../api/tienda'
+import { obtenerTienda, type Tienda } from '../api/tienda'
 
 interface StoreValue {
   tienda: Tienda
   esPrincipal: boolean
+  /** Tienda cuyos precios aplican: null en la principal (PVP), el id de la tienda en una sección de mayorista. Estable mientras carga, para no repetir consultas. */
+  tiendaPrecios: string | null
   /** Clave del carrito: "principal" o el slug del mayorista. */
   clave: string
   /** Construye rutas dentro de la tienda: ruta('/catalogo') -> "/catalogo" o "/t/slug/catalogo". */
@@ -15,11 +17,6 @@ interface StoreValue {
   /** Número de WhatsApp que recibe los pedidos. */
   whatsapp: string | null
   ciudad: string
-  productos: ProductoPublico[]
-  /** true mientras llega el catálogo (para mostrar esqueletos y no saltar el diseño). */
-  cargando: boolean
-  /** Precio de la tienda activa: el del mayorista si lo fijó, si no el PVP. */
-  precio: (p: ProductoPublico) => number
   carritoAbierto: boolean
   setCarritoAbierto: (abierto: boolean) => void
 }
@@ -51,34 +48,23 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const tiendaQ = useQuery({ queryKey: ['tienda', slug ?? 'principal'], queryFn: () => obtenerTienda(slug ?? null), staleTime: 60_000 })
   // En la tienda principal no se espera a la red para mostrar la portada.
   const tienda = tiendaQ.data ?? (slug ? undefined : tiendaQ.isLoading ? PRINCIPAL_INICIAL : undefined)
-  const preciosQ = useQuery({
-    queryKey: ['precios-tienda', tienda?.id],
-    queryFn: () => obtenerPreciosTienda(tienda?.id as string),
-    enabled: !!tienda && !tienda.es_principal,
-    staleTime: 60_000,
-  })
-  const catalogoQ = useQuery({ queryKey: ['catalogo-publico'], queryFn: obtenerCatalogoPublico, staleTime: 60_000 })
-
   const base = slug ? `/t/${slug}` : ''
   const ruta = useCallback((path: string) => `${base}${path}` || '/', [base])
 
   const value = useMemo<StoreValue | null>(() => {
     if (!tienda) return null
-    const propios = preciosQ.data ?? {}
     return {
       tienda,
       esPrincipal: tienda.es_principal,
+      tiendaPrecios: tienda.es_principal ? null : tienda.id,
       clave: tienda.es_principal ? 'principal' : tienda.slug,
       ruta,
       whatsapp: tienda.es_principal ? (tienda.whatsapp ?? config?.whatsapp_principal ?? null) : tienda.whatsapp,
       ciudad: config?.ciudad ?? 'Guayaquil',
-      productos: catalogoQ.data ?? [],
-      cargando: catalogoQ.isLoading,
-      precio: (p) => propios[p.id] ?? p.pvp,
       carritoAbierto,
       setCarritoAbierto,
     }
-  }, [tienda, preciosQ.data, catalogoQ.data, catalogoQ.isLoading, config, ruta, carritoAbierto])
+  }, [tienda, config, ruta, carritoAbierto])
 
   if (tiendaQ.isLoading && !tienda) {
     return (

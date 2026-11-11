@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react'
+import { memo, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import { Badge } from '@/components/ui/badge'
 import { Price } from '@/components/ui/price'
@@ -35,13 +35,13 @@ function SinImagen() {
 }
 
 /** Tarjeta de producto: la foto manda, el texto acompaña. */
-export function ProductCard({ producto, to, destacada, className, footer, nivel = 3 }: Props) {
+export const ProductCard = memo(function ProductCard({ producto, to, destacada, className, footer, nivel = 3 }: Props) {
   const Titulo = nivel === 2 ? 'h2' : 'h3'
   return (
     <Link
       to={to}
       className={cn(
-        'group relative flex flex-col outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring',
+        'group relative flex flex-col [contain-intrinsic-size:auto_420px] [content-visibility:auto] outline-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring',
         className,
       )}
     >
@@ -51,6 +51,9 @@ export function ProductCard({ producto, to, destacada, className, footer, nivel 
             src={producto.imagenUrl}
             alt={producto.nombre}
             loading="lazy"
+            decoding="async"
+            width={400}
+            height={500}
             className="size-full object-cover transition-transform duration-[var(--dur-slow)] ease-[var(--ease-out)] group-hover:scale-[1.04]"
           />
         ) : (
@@ -81,4 +84,4 @@ export function ProductCard({ producto, to, destacada, className, footer, nivel 
       {footer}
     </Link>
   )
-}
+})

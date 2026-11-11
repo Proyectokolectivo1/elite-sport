@@ -25,7 +25,7 @@ export interface PedidoFila {
 export async function listarPedidos(): Promise<PedidoFila[]> {
   const { data, error } = await supabase
     .from('pedidos')
-    .select('*, tiendas(nombre), perfiles(nombre, negocio)')
+    .select('id, numero, tipo, estado, cliente_nombre, cliente_telefono, cliente_correo, cliente_direccion, cliente_documento, metodo_pago, total, moneda, nota, creado_en, tiendas(nombre), perfiles(nombre, negocio)')
     .order('creado_en', { ascending: false })
     .limit(300)
   if (error) throw error

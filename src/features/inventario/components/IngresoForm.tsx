@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { FieldError, Input, InputSugerencias, Label, Select, Textarea } from '@/components/ui/input'
+import { FieldError, Input, InputSugerencias, Label, Textarea } from '@/components/ui/input'
+import { Select } from '@/components/ui/select'
 import { Table, TBody, TD, TH, THead, TR } from '@/components/ui/table'
 import { toast } from '@/components/ui/toast'
 import { useProductos, useTallas, useVariantes } from '@/features/catalogo/hooks/useCatalogo'

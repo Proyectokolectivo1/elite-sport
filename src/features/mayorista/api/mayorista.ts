@@ -1,3 +1,4 @@
+import { extensionDeTipo } from '@/lib/imagen'
 import { supabase } from '@/lib/supabase'
 import type { Tables } from '@/types/database'
 import type { Especial } from '../precio'
@@ -25,8 +26,8 @@ export async function actualizarMiTienda(id: string, v: MiTiendaEntrada): Promis
 }
 
 export async function subirImagenTienda(tiendaId: string, tipo: 'logo' | 'banner', blob: Blob): Promise<void> {
-  const ruta = `${tiendaId}/${tipo}-${crypto.randomUUID()}.webp`
-  const { error: e1 } = await supabase.storage.from('tiendas').upload(ruta, blob, { contentType: 'image/webp', cacheControl: '31536000' })
+  const ruta = `${tiendaId}/${tipo}-${crypto.randomUUID()}.${extensionDeTipo(blob.type)}`
+  const { error: e1 } = await supabase.storage.from('tiendas').upload(ruta, blob, { contentType: blob.type, cacheControl: '31536000' })
   if (e1) throw e1
   const { data } = supabase.storage.from('tiendas').getPublicUrl(ruta)
   const { error } = await supabase.from('tiendas').update(tipo === 'logo' ? { logo_url: data.publicUrl } : { banner_url: data.publicUrl }).eq('id', tiendaId)

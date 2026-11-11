@@ -1,4 +1,4 @@
-import type { GrupoTalla, ProductoPublico } from './api/tienda'
+import type { FiltrosBusqueda, GrupoTalla, ProductoPublico } from './api/tienda'
 
 export type Orden = 'novedades' | 'precio-asc' | 'precio-desc' | 'nombre'
 
@@ -63,25 +63,7 @@ export function totalStock(p: ProductoPublico): number {
   return p.variantes.reduce((s, v) => s + v.stock, 0)
 }
 
-/** Filtra y ordena. `precio` resuelve el precio de la tienda activa (PVP o el del mayorista). */
-export function filtrarProductos(productos: ProductoPublico[], f: Filtros, precio: (p: ProductoPublico) => number): ProductoPublico[] {
-  const q = f.q.trim().toLowerCase()
-  const lista = productos.filter((p) => {
-    if (f.grupo && p.grupo !== f.grupo) return false
-    if (f.marca && p.marca?.id !== f.marca) return false
-    if (f.estilo && p.estilo?.id !== f.estilo) return false
-    if (f.categoria && p.categoria?.id !== f.categoria) return false
-    if (f.talla && !p.variantes.some((v) => v.talla === f.talla && v.stock > 0)) return false
-    const pr = precio(p)
-    if (f.min !== null && pr < f.min) return false
-    if (f.max !== null && pr > f.max) return false
-    if (q && !`${p.nombre} ${p.marca?.nombre ?? ''} ${p.categoria?.nombre ?? ''} ${p.estilo?.nombre ?? ''}`.toLowerCase().includes(q)) return false
-    return true
-  })
-  const ord = [...lista]
-  if (f.orden === 'precio-asc') ord.sort((a, b) => precio(a) - precio(b))
-  else if (f.orden === 'precio-desc') ord.sort((a, b) => precio(b) - precio(a))
-  else if (f.orden === 'nombre') ord.sort((a, b) => a.nombre.localeCompare(b.nombre))
-  else ord.sort((a, b) => b.creadoEn.localeCompare(a.creadoEn))
-  return ord
+/** Filtros de la URL en el formato que entiende la búsqueda del servidor. */
+export function filtrosAServidor(f: Filtros): FiltrosBusqueda {
+  return { q: f.q, grupo: f.grupo, marca: f.marca, estilo: f.estilo, categoria: f.categoria, talla: f.talla, min: f.min, max: f.max, orden: f.orden }
 }

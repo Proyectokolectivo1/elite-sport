@@ -21,7 +21,7 @@ export interface Mayorista {
 
 export async function listarMayoristas(): Promise<Mayorista[]> {
   const [p, t, act] = await Promise.all([
-    supabase.from('perfiles').select('*').eq('rol', 'mayorista').order('creado_en', { ascending: false }),
+    supabase.from('perfiles').select('id, nombre, negocio, telefono, correo, cedula_ruc, ciudad, estado, creado_en, motivo_estado').eq('rol', 'mayorista').order('creado_en', { ascending: false }),
     supabase.from('tiendas').select('propietario_id, slug').not('propietario_id', 'is', null),
     supabase.rpc('actividad_mayorista'),
   ])

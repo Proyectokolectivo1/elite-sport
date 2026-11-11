@@ -1,53 +1,69 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { SlidersHorizontal, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
-import { Select } from '@/components/ui/input'
-import { Skeleton } from '@/components/ui/skeleton'
+import { Select } from '@/components/ui/select'
 import { ProductCard } from '@/components/ui/product-card'
 import { Sheet, SheetClose, SheetContent, SheetTrigger } from '@/components/ui/sheet'
+import { Skeleton } from '@/components/ui/skeleton'
+import { useOpciones, useTallas } from '@/features/catalogo/hooks/useCatalogo'
 import { usePageMeta } from '@/lib/meta'
+import { useCentinela } from '@/lib/useCentinela'
 import { useStore } from '../context/StoreContext'
-import { contarFiltros, filtrarProductos, filtrosAUrl, filtrosDesdeUrl, type Filtros, type Orden } from '../filtros'
+import { contarFiltros, filtrosAServidor, filtrosAUrl, filtrosDesdeUrl, type Filtros, type Orden } from '../filtros'
+import { LOTE_CATALOGO, useProductosInfinitos } from '../hooks/useProductosTienda'
 import { aTarjeta } from '../tarjeta'
 import { FiltrosPanel } from './FiltrosPanel'
 
-const PAGINA = 12
+function EsqueletoTarjetas({ cantidad }: { cantidad: number }) {
+  return (
+    <>
+      {Array.from({ length: cantidad }, (_, i) => (
+        <div key={i}>
+          <Skeleton className="aspect-[4/5]" />
+          <Skeleton className="mt-3 h-4 w-2/3" />
+        </div>
+      ))}
+    </>
+  )
+}
 
 export function CatalogoPage() {
-  const { tienda, productos, precio, ruta, cargando } = useStore()
+  const { tienda, ruta, tiendaPrecios } = useStore()
   const [params, setParams] = useSearchParams()
   const filtros = useMemo(() => filtrosDesdeUrl(params), [params])
   usePageMeta(`Catálogo · ${tienda.nombre}`, `Calzado de ${tienda.nombre}. Filtra por talla, marca, estilo y precio.`)
 
-  const resultados = useMemo(() => filtrarProductos(productos, filtros, precio), [productos, filtros, precio])
-  const firma = params.toString()
-  // Al cambiar los filtros se vuelve a la primera página.
-  const [pagina, setPagina] = useState({ firma, n: PAGINA })
-  const visibles = pagina.firma === firma ? pagina.n : PAGINA
-  const centinela = useRef<HTMLDivElement>(null)
+  // Los productos se piden al servidor por lotes (con sus filtros) a medida que la persona baja.
+  const consulta = useProductosInfinitos(tiendaPrecios, useMemo(() => filtrosAServidor(filtros), [filtros]))
+  const productos = useMemo(() => consulta.data?.pages.flatMap((p) => p.productos) ?? [], [consulta.data])
+  const total = consulta.data?.pages[0]?.total ?? 0
+  const { hasNextPage, isFetchingNextPage, fetchNextPage } = consulta
+  const centinela = useCentinela(() => void fetchNextPage(), !!hasNextPage && !isFetchingNextPage)
 
-  useEffect(() => {
-    const el = centinela.current
-    if (!el || visibles >= resultados.length) return
-    const obs = new IntersectionObserver((e) => e[0].isIntersecting && setPagina((p) => ({ firma, n: (p.firma === firma ? p.n : PAGINA) + PAGINA })), { rootMargin: '400px' })
-    obs.observe(el)
-    return () => obs.disconnect()
-  }, [visibles, resultados.length, firma])
+  // Opciones de los filtros: listas pequeñas y cacheadas, independientes de cuántos productos haya.
+  const { data: marcas = [] } = useOpciones('marcas')
+  const { data: estilos = [] } = useOpciones('estilos')
+  const { data: categorias = [] } = useOpciones('categorias')
+  const { data: todasTallas = [] } = useTallas()
+  const tallas = useMemo(() => {
+    const delGrupo = filtros.grupo ? todasTallas.filter((t) => t.grupo === filtros.grupo) : todasTallas
+    return [...new Map(delGrupo.map((t) => [t.etiqueta, t.orden])).entries()].sort((a, b) => a[1] - b[1]).map(([e]) => e)
+  }, [todasTallas, filtros.grupo])
 
   function cambiar(f: Filtros) {
     setParams(filtrosAUrl(f), { replace: true })
   }
 
   const activos = contarFiltros(filtros)
-  const panel = <FiltrosPanel productos={productos} filtros={filtros} onChange={cambiar} />
+  const panel = <FiltrosPanel opciones={{ marcas, estilos, categorias, tallas }} filtros={filtros} onChange={cambiar} />
 
   return (
     <div className="container-page py-8 md:py-12">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="eyebrow">{resultados.length} {resultados.length === 1 ? 'producto' : 'productos'}</p>
+          <p className="eyebrow">{consulta.isLoading ? 'Cargando' : `${total} ${total === 1 ? 'producto' : 'productos'}`}</p>
           <h1 className="display-lg mt-1">{filtros.q ? `“${filtros.q}”` : 'Catálogo'}</h1>
           {filtros.q && (
             <button type="button" className="mt-2 inline-flex items-center gap-1 text-sm text-muted-foreground underline underline-offset-4" onClick={() => cambiar({ ...filtros, q: '' })}>
@@ -66,7 +82,7 @@ export function CatalogoPage() {
             <SheetTrigger render={<Button variant="outline" className="lg:hidden" />}>
               <SlidersHorizontal /> Filtros{activos > 0 ? ` (${activos})` : ''}
             </SheetTrigger>
-            <SheetContent side="bottom" title="Filtros" footer={<SheetClose render={<Button className="w-full" />}>Ver {resultados.length} resultados</SheetClose>}>
+            <SheetContent side="bottom" title="Filtros" footer={<SheetClose render={<Button className="w-full" />}>Ver {total} resultados</SheetClose>}>
               {panel}
             </SheetContent>
           </Sheet>
@@ -78,13 +94,13 @@ export function CatalogoPage() {
           <div className="sticky top-28">{panel}</div>
         </aside>
         <div>
-          {cargando ? (
+          {consulta.isLoading ? (
             <div className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 md:gap-x-6">
-              {Array.from({ length: 6 }, (_, i) => (
-                <div key={i}><Skeleton className="aspect-[4/5]" /><Skeleton className="mt-3 h-4 w-2/3" /></div>
-              ))}
+              <EsqueletoTarjetas cantidad={LOTE_CATALOGO / 2} />
             </div>
-          ) : resultados.length === 0 ? (
+          ) : consulta.isError ? (
+            <EmptyState title="No pudimos cargar el catálogo" description="Revisa tu conexión e inténtalo de nuevo." action={<Button variant="outline" onClick={() => void consulta.refetch()}>Reintentar</Button>} />
+          ) : productos.length === 0 ? (
             <EmptyState
               title="No encontramos ese calzado"
               description="Prueba con otra talla o quita algún filtro."
@@ -93,15 +109,16 @@ export function CatalogoPage() {
           ) : (
             <>
               <div className="grid grid-cols-2 gap-x-4 gap-y-8 md:grid-cols-3 md:gap-x-6">
-                {resultados.slice(0, visibles).map((p) => (
-                  <ProductCard key={p.id} nivel={2} to={ruta(`/producto/${p.slug}`)} producto={aTarjeta(p, precio(p))} />
+                {productos.map((p) => (
+                  <ProductCard key={p.id} nivel={2} to={ruta(`/producto/${p.slug}`)} producto={aTarjeta(p)} />
                 ))}
+                {isFetchingNextPage && <EsqueletoTarjetas cantidad={3} />}
               </div>
-              {visibles < resultados.length && (
-                <div ref={centinela} className="mt-10 flex justify-center">
-                  <Button variant="outline" onClick={() => setPagina({ firma, n: visibles + PAGINA })}>Mostrar más</Button>
-                </div>
-              )}
+              {/* Centinela del scroll infinito: al acercarse, se pide el siguiente lote. */}
+              <div ref={centinela} className="mt-10 flex justify-center" aria-live="polite">
+                {hasNextPage && !isFetchingNextPage && <Button variant="outline" onClick={() => void fetchNextPage()}>Mostrar más</Button>}
+                {!hasNextPage && productos.length > LOTE_CATALOGO && <p className="text-sm text-muted-foreground">Viste los {total} productos.</p>}
+              </div>
             </>
           )}
         </div>

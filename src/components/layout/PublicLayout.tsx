@@ -1,9 +1,8 @@
-import { useState, type FormEvent, type ReactNode } from 'react'
+import { lazy, Suspense, useState, type FormEvent, type ReactNode } from 'react'
 import { Link, NavLink, Outlet } from 'react-router-dom'
 import { Menu, Search, ShoppingBag, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Sheet, SheetContent } from '@/components/ui/sheet'
 import { Logo } from '@/components/layout/Logo'
 import { ModeToggle } from '@/components/layout/ModeToggle'
 import { cn } from '@/lib/utils'
@@ -16,10 +15,10 @@ export interface NavItem {
   destacado?: boolean
 }
 
-export interface MenuSeccion {
-  titulo: string
-  items: { to: string; label: string; detalle?: string }[]
-}
+import type { MenuSeccion } from './MenuLateral'
+
+// El menú (y la librería de diálogos) se descarga la primera vez que se abre, no con la portada.
+const MenuLateral = lazy(() => import('./MenuLateral').then((m) => ({ default: m.MenuLateral })))
 
 interface Props {
   /** Nombre y logo de la tienda activa (principal o de un mayorista). */
@@ -53,6 +52,8 @@ export function PublicLayout({
 }: Props) {
   const [buscando, setBuscando] = useState(false)
   const [menuAbierto, setMenuAbierto] = useState(false)
+  const [menuCargado, setMenuCargado] = useState(false)
+  if (menuAbierto && !menuCargado) setMenuCargado(true)
   const [q, setQ] = useState('')
 
   function enviar(e: FormEvent) {
@@ -161,28 +162,10 @@ export function PublicLayout({
         )}
       </header>
 
-      {menu.length > 0 && (
-        <Sheet open={menuAbierto} onOpenChange={setMenuAbierto}>
-          <SheetContent side="right" title="Menú">
-            <nav aria-label="Menú" className="space-y-8">
-              {menu.map((sec) => (
-                <section key={sec.titulo}>
-                  <h2 className="mb-3 text-lg text-muted-foreground">{sec.titulo}</h2>
-                  <ul className="divide-y divide-border border-y border-border">
-                    {sec.items.map((it) => (
-                      <li key={it.to + it.label}>
-                        <Link to={it.to} onClick={() => setMenuAbierto(false)} className="block py-3.5 hover:opacity-70">
-                          <span className="block text-[1.0625rem] font-semibold">{it.label}</span>
-                          {it.detalle && <span className="mt-0.5 block text-sm text-muted-foreground">{it.detalle}</span>}
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              ))}
-            </nav>
-          </SheetContent>
-        </Sheet>
+      {menu.length > 0 && menuCargado && (
+        <Suspense fallback={null}>
+          <MenuLateral abierto={menuAbierto} onCambio={setMenuAbierto} secciones={menu} />
+        </Suspense>
       )}
 
       <main id="contenido" className="flex-1">

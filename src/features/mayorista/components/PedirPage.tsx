@@ -39,7 +39,7 @@ function ElegirTallas({ producto, costo, onCerrar }: { producto: ProductoPublico
     for (const v of producto.variantes) {
       const n = Math.floor(Number(cant[v.id]) || 0)
       if (n > 0 && v.stock > 0) {
-        agregar(CLAVE, { varianteId: v.id, productoId: producto.id, nombre: producto.nombre, color: v.color, talla: v.talla, imagen: producto.imagenes.find((i) => i.color === v.color)?.url ?? producto.imagenes[0]?.url ?? null, precio: costo, stock: v.stock }, n)
+        agregar(CLAVE, { varianteId: v.id, productoId: producto.id, nombre: producto.nombre, color: v.color, talla: v.talla, imagen: (producto.imagenes.find((i) => i.color === v.color) ?? producto.imagenes[0])?.miniatura ?? (producto.imagenes.find((i) => i.color === v.color) ?? producto.imagenes[0])?.url ?? null, precio: costo, stock: v.stock }, n)
       }
     }
     toast.success('Agregado a tu pedido')
@@ -209,7 +209,7 @@ export function PedirPage() {
               <li key={p.id}>
                 <button type="button" disabled={stock === 0} onClick={() => setElegido(p)} className="group w-full text-left disabled:opacity-50">
                   <div className="aspect-[4/5] overflow-hidden rounded-md bg-muted">
-                    {p.imagenes[0] && <img src={p.imagenes[0].url} alt="" loading="lazy" className="size-full object-cover transition-transform duration-[var(--dur-slow)] group-hover:scale-[1.03]" />}
+                    {p.imagenes[0] && <img src={p.imagenes[0].miniatura ?? p.imagenes[0].url} alt="" loading="lazy" decoding="async" width={400} height={500} className="size-full object-cover transition-transform duration-[var(--dur-slow)] group-hover:scale-[1.03]" />}
                   </div>
                   <p className="mt-2 truncate font-semibold">{p.nombre}</p>
                   <p className="flex items-baseline justify-between text-sm">
