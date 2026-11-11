@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { FieldError, Input, Label, Select, Textarea } from '@/components/ui/input'
+import { FieldError, Input, InputSugerencias, Label, Select, Textarea } from '@/components/ui/input'
 import { Table, TBody, TD, TH, THead, TR } from '@/components/ui/table'
 import { toast } from '@/components/ui/toast'
 import { useProductos, useTallas, useVariantes } from '@/features/catalogo/hooks/useCatalogo'
@@ -10,17 +10,6 @@ import { calcularLineas, paresPorCaja, totalUnidades } from '../calculo'
 import { useCurvas, useRegistrarIngreso } from '../hooks/useInventario'
 
 type Tipo = 'caja' | 'unidad'
-
-function ColoresDe({ productoId }: { productoId: string }) {
-  const { data = [] } = useVariantes(productoId)
-  return (
-    <datalist id="colores-ingreso">
-      {[...new Set(data.map((v) => v.color))].map((c) => (
-        <option key={c} value={c} />
-      ))}
-    </datalist>
-  )
-}
 
 export function IngresoForm({ productoInicial }: { productoInicial?: string }) {
   const { data: productos = [] } = useProductos()
@@ -39,6 +28,8 @@ export function IngresoForm({ productoInicial }: { productoInicial?: string }) {
   const [referencia, setReferencia] = useState('')
   const [nota, setNota] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const { data: variantesProducto = [] } = useVariantes(productoId)
+  const coloresProducto = [...new Set(variantesProducto.map((v) => v.color))]
 
   const producto = productos.find((p) => p.id === productoId)
   const tallasGrupo = useMemo(() => tallas.filter((t) => t.grupo === producto?.grupo), [tallas, producto?.grupo])
@@ -137,8 +128,7 @@ export function IngresoForm({ productoInicial }: { productoInicial?: string }) {
         </div>
         <div>
           <Label htmlFor="ing-color">Color</Label>
-          <Input id="ing-color" list="colores-ingreso" value={color} onChange={(e) => setColor(e.target.value)} placeholder="Ej. Negro" />
-          {productoId && <ColoresDe productoId={productoId} />}
+          <InputSugerencias id="ing-color" value={color} onChange={setColor} opciones={coloresProducto} placeholder="Ej. Negro" />
         </div>
         {tipo === 'caja' && (
           <>

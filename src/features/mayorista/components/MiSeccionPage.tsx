@@ -135,7 +135,7 @@ export function MiSeccionPage() {
 
         <aside aria-label="Vista previa" className="self-start">
           <p className="eyebrow mb-2">Vista previa</p>
-          <div className="overflow-hidden rounded-md border border-border" style={{ ['--brand-primary' as string]: tokens.primary, ['--brand-primary-fg' as string]: tokens.primaryFg, ['--brand-accent' as string]: tokens.accent, ['--brand-accent-fg' as string]: tokens.accentFg }}>
+          <div className="overflow-hidden rounded-xl border border-border" style={{ ['--brand-primary' as string]: tokens.primary, ['--brand-primary-fg' as string]: tokens.primaryFg, ['--brand-accent' as string]: tokens.accent, ['--brand-accent-fg' as string]: tokens.accentFg }}>
             <div className="flex h-14 items-center bg-brand px-4 text-brand-foreground"><Logo nombre={vista.nombre || tienda.nombre} logoUrl={tienda.logo_url} /></div>
             <div className="relative bg-brand px-4 pb-8 pt-10 text-brand-foreground">
               {tienda.banner_url && <img src={tienda.banner_url} alt="" className="absolute inset-0 size-full object-cover opacity-40" />}

@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils'
 /** Tabla con scroll horizontal propio para que nunca rompa el ancho de página en móvil. */
 export function Table({ className, ...props }: HTMLAttributes<HTMLTableElement>) {
   return (
-    <div className="w-full overflow-x-auto rounded-md border border-border bg-card">
+    <div className="w-full overflow-x-auto rounded-xl border border-border bg-card">
       <table className={cn('w-full min-w-[32rem] border-collapse text-left text-sm', className)} {...props} />
     </div>
   )

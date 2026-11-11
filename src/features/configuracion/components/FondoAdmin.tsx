@@ -55,7 +55,7 @@ function Medio({ tipo, config }: { tipo: MedioFondo; config: Configuracion }) {
 
   const info = INFO[tipo]
   return (
-    <div className="rounded-md border border-border bg-card p-4">
+    <div className="rounded-xl border border-border bg-card p-4">
       <p className="font-semibold">{info.titulo}</p>
       <p className="mt-1 text-xs text-muted-foreground">{info.ayuda}</p>
       <div className="mt-3 flex items-center gap-3">

@@ -51,7 +51,7 @@ function ElegirTallas({ producto, costo, onCerrar }: { producto: ProductoPublico
           ))}
         </div>
       )}
-      <ul className="divide-y divide-border rounded-md border border-border">
+      <ul className="divide-y divide-border rounded-xl border border-border">
         {filas.map((v) => (
           <li key={v.id} className="flex items-center justify-between gap-3 p-3">
             <span className="tabular-nums"><strong className="text-lg">{v.talla}</strong> <span className="text-sm text-muted-foreground">· {v.stock > 0 ? `${v.stock} disponibles` : 'agotada'}</span></span>

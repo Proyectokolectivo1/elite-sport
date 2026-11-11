@@ -38,7 +38,7 @@ export function CompartirPage() {
       <div className="grid max-w-3xl gap-8 sm:grid-cols-[1fr_16rem]">
         <div className="space-y-4">
           <p className="eyebrow">Enlace de tu sección</p>
-          <p className="break-all rounded-md border border-border bg-card p-4 font-mono text-sm">{enlace}</p>
+          <p className="break-all rounded-xl border border-border bg-card p-4 font-mono text-sm">{enlace}</p>
           <div className="flex flex-wrap gap-2">
             <Button onClick={() => void copiar()}><Copy /> Copiar enlace</Button>
             <a href={enlace} target="_blank" rel="noopener noreferrer" className="inline-flex h-11 items-center gap-2 rounded-md border border-foreground/30 px-5 text-[0.8125rem] font-semibold uppercase tracking-[0.08em] hover:border-foreground"><ExternalLink className="size-4" /> Abrir</a>
@@ -46,7 +46,7 @@ export function CompartirPage() {
           {!tienda.activa && <p className="text-sm text-warning">Tu sección está desactivada. Comunícate con Elite Sport.</p>}
         </div>
         <div>
-          {qr ? <img src={qr} alt={`Código QR de ${enlace}`} className="w-full rounded-md border border-border" /> : <Skeleton className="aspect-square w-full" />}
+          {qr ? <img src={qr} alt={`Código QR de ${enlace}`} className="w-full rounded-xl border border-border" /> : <Skeleton className="aspect-square w-full" />}
           {qr && <a href={qr} download={`qr-${tienda.slug}.png`} className="mt-2 block text-center text-sm underline underline-offset-4">Descargar QR</a>}
         </div>
       </div>

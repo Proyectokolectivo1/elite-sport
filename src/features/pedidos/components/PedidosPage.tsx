@@ -51,7 +51,7 @@ function Detalle({ pedido, onCerrar }: { pedido: PedidoFila; onCerrar: () => voi
       </dl>
 
       {isLoading ? <Skeleton className="h-24 w-full" /> : (
-        <ul className="divide-y divide-border rounded-md border border-border">
+        <ul className="divide-y divide-border rounded-xl border border-border">
           {lineas.map((l) => (
             <li key={l.id} className="flex items-start justify-between gap-3 p-3 text-sm">
               <span>{l.descripcion}<span className="block text-xs text-muted-foreground">{l.cantidad} × {fmt(l.precio)}</span></span>

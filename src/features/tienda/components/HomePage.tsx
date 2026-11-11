@@ -45,7 +45,7 @@ export function HomePage() {
 
       <section aria-label="Categorías por grupo" className="container-page grid gap-3 py-10 sm:grid-cols-3">
         {GRUPOS.map((g) => (
-          <Link key={g.id} to={ruta(`/catalogo?g=${g.id}`)} className="group flex h-36 flex-col justify-between rounded-md border border-border bg-card p-5 transition-colors hover:border-foreground md:h-44">
+          <Link key={g.id} to={ruta(`/catalogo?g=${g.id}`)} className="group flex h-36 flex-col justify-between rounded-xl border border-border bg-card p-5 transition-colors hover:border-foreground md:h-44">
             <span className="eyebrow">{g.texto}</span>
             <span className="flex items-end justify-between">
               <span className="font-display text-5xl font-extrabold uppercase leading-none">{g.titulo}</span>

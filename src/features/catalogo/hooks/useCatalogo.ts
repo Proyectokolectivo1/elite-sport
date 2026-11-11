@@ -32,7 +32,7 @@ export const useProductos = () => useQuery({ queryKey: catalogoKeys.productos, q
 export const useProducto = (id: string | undefined) =>
   useQuery({ queryKey: catalogoKeys.producto(id ?? ''), queryFn: () => obtenerProducto(id as string), enabled: !!id })
 export const useImagenes = (id: string) => useQuery({ queryKey: catalogoKeys.imagenes(id), queryFn: () => listarImagenes(id) })
-export const useVariantes = (id: string) => useQuery({ queryKey: catalogoKeys.variantes(id), queryFn: () => listarVariantes(id) })
+export const useVariantes = (id: string) => useQuery({ queryKey: catalogoKeys.variantes(id), queryFn: () => listarVariantes(id), enabled: !!id })
 export const useOpciones = (t: TablaOpciones) => useQuery({ queryKey: catalogoKeys.opciones(t), queryFn: () => listarOpciones(t), staleTime: 60_000 })
 export const useTallas = () => useQuery({ queryKey: catalogoKeys.tallas, queryFn: listarTallas, staleTime: 10 * 60_000 })
 

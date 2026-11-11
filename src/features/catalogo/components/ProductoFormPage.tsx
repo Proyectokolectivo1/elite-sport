@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
@@ -61,8 +61,11 @@ export function ProductoFormPage() {
     register,
     handleSubmit,
     reset,
+    control,
     formState: { errors, isDirty },
   } = useForm<ProductoValues>({ resolver: zodResolver(productoSchema), defaultValues: VACIO })
+
+  const sel = useWatch({ control })
 
   useEffect(() => {
     if (!producto) return
@@ -139,16 +142,16 @@ export function ProductoFormPage() {
             </div>
             <div>
               <Label htmlFor="grupo">Grupo de tallas</Label>
-              <Select id="grupo" disabled={!!producto} {...register('grupo')}>
+              <Select id="grupo" disabled={!!producto} value={sel.grupo} {...register('grupo')}>
                 {GRUPOS.map((g) => (
                   <option key={g.value} value={g.value}>{g.label}</option>
                 ))}
               </Select>
               {producto && <p className="mt-1 text-xs text-muted-foreground">No se puede cambiar: define las tallas del inventario.</p>}
             </div>
-            <SelectOpcion id="marca" tabla="marcas" etiqueta="Marca" {...register('marca_id')} />
-            <SelectOpcion id="categoria" tabla="categorias" etiqueta="Categoría" {...register('categoria_id')} />
-            <SelectOpcion id="estilo" tabla="estilos" etiqueta="Estilo" {...register('estilo_id')} />
+            <SelectOpcion id="marca" value={sel.marca_id} tabla="marcas" etiqueta="Marca" {...register('marca_id')} />
+            <SelectOpcion id="categoria" value={sel.categoria_id} tabla="categorias" etiqueta="Categoría" {...register('categoria_id')} />
+            <SelectOpcion id="estilo" value={sel.estilo_id} tabla="estilos" etiqueta="Estilo" {...register('estilo_id')} />
             <div className="sm:col-span-2">
               <Label htmlFor="descripcion">Descripción</Label>
               <Textarea id="descripcion" {...register('descripcion')} />

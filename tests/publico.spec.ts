@@ -12,7 +12,7 @@ test.describe('tienda pública', () => {
   test('los filtros del catálogo viven en la URL', async ({ page }) => {
     await page.goto('/catalogo?g=caballero&orden=precio-asc')
     await expect(page.getByRole('heading', { level: 1, name: 'Catálogo' })).toBeVisible()
-    await expect(page.getByLabel('Ordenar')).toHaveValue('precio-asc')
+    await expect(page.getByRole('combobox', { name: 'Ordenar' })).toContainText('menor a mayor')
   })
 
   test('el público nunca consulta el precio mayorista', async ({ page }) => {
@@ -36,6 +36,18 @@ test.describe('tienda pública', () => {
     await page.getByRole('banner').getByRole('link', { name: 'Ser mayorista' }).click()
     await expect(page).toHaveURL(/\/registro/)
     await expect(page.getByRole('heading', { name: /Solicita tu cuenta/i })).toBeVisible()
+  })
+
+  test('las listas desplegables usan la tipografía y los bordes de la tienda', async ({ page }) => {
+    await page.goto('/catalogo')
+    await page.getByRole('combobox', { name: 'Ordenar' }).click()
+    const lista = page.getByRole('listbox')
+    await expect(lista).toBeVisible()
+    const estilo = await lista.locator('..').evaluate((e) => ({ fuente: getComputedStyle(e).fontFamily, radio: parseFloat(getComputedStyle(e).borderTopLeftRadius) }))
+    expect(estilo.fuente).toContain('Inter')
+    expect(estilo.radio).toBeGreaterThanOrEqual(12)
+    await page.getByRole('option', { name: 'Precio: mayor a menor' }).click()
+    await expect(page).toHaveURL(/orden=precio-desc/)
   })
 
   test('el menú separa la tienda, los mayoristas y la administración', async ({ page }) => {

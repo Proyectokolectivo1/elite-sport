@@ -10,7 +10,7 @@ import { obtenerResumen } from '../api/dashboard'
 
 function Dato({ to, etiqueta, valor, alerta }: { to: string; etiqueta: string; valor: number | undefined; alerta?: boolean }) {
   return (
-    <Link to={to} className="group rounded-md border border-border bg-card p-5 transition-colors hover:border-foreground">
+    <Link to={to} className="group rounded-xl border border-border bg-card p-5 transition-colors hover:border-foreground">
       <p className="eyebrow">{etiqueta}</p>
       {valor === undefined ? <Skeleton className="mt-3 h-12 w-16" /> : (
         <p className={cn('mt-2 font-display text-6xl font-extrabold leading-none tabular-nums', alerta && valor > 0 && 'text-warning')}>{valor}</p>
@@ -38,7 +38,7 @@ export function DashboardPage() {
       <section className="mt-10">
         <h2 className="mb-4 text-3xl">Pedidos por atender</h2>
         {nuevos.length === 0 ? <p className="text-sm text-muted-foreground">No hay pedidos nuevos.</p> : (
-          <ul className="divide-y divide-border rounded-md border border-border bg-card">
+          <ul className="divide-y divide-border rounded-xl border border-border bg-card">
             {nuevos.map((p) => (
               <li key={p.id}>
                 <Link to="/admin/pedidos" className="flex items-center justify-between gap-3 p-4 hover:bg-muted/50">

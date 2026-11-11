@@ -49,7 +49,7 @@ export function CurvasTab() {
         {!isLoading && curvas.length === 0 && <EmptyState title="Aún no hay surtidos" description="Guarda el surtido típico de tus cajas para ingresarlas más rápido." />}
         <ul className="space-y-3">
           {curvas.map((c) => (
-            <li key={c.id} className="flex items-start justify-between gap-4 rounded-md border border-border bg-card p-4">
+            <li key={c.id} className="flex items-start justify-between gap-4 rounded-xl border border-border bg-card p-4">
               <div>
                 <p className="font-semibold">{c.nombre}</p>
                 <p className="eyebrow mt-0.5 capitalize">{c.grupo === 'nino' ? 'niño' : c.grupo} · {c.detalle.reduce((s, d) => s + d.pares, 0)} pares</p>
@@ -69,7 +69,7 @@ export function CurvasTab() {
         </ul>
       </section>
 
-      <section className="space-y-4 self-start rounded-md border border-border bg-card p-5">
+      <section className="space-y-4 self-start rounded-xl border border-border bg-card p-5">
         <h2 className="text-3xl">Nuevo surtido</h2>
         <div>
           <Label htmlFor="cv-nombre">Nombre</Label>

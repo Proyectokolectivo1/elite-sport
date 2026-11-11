@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from 'react'
 import { ArrowLeft, ArrowRight, Trash2, Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
-import { Input, Label } from '@/components/ui/input'
+import { InputSugerencias, Label } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from '@/components/ui/toast'
 import { mensajeError } from '@/lib/errors'
@@ -51,12 +51,7 @@ export function ImagenesProducto({ productoId }: { productoId: string }) {
       <div className="grid max-w-3xl items-end gap-3 sm:grid-cols-[1fr_auto]">
         <div>
           <Label htmlFor="color-img">Color de las fotos</Label>
-          <Input id="color-img" list="colores-producto" value={color} onChange={(e) => setColor(e.target.value)} placeholder="Ej. Negro, Blanco hueso" />
-          <datalist id="colores-producto">
-            {colores.map((c) => (
-              <option key={c} value={c} />
-            ))}
-          </datalist>
+          <InputSugerencias id="color-img" value={color} onChange={setColor} opciones={colores} placeholder="Ej. Negro, Blanco hueso" />
         </div>
         <div>
           <input ref={inputRef} type="file" accept="image/jpeg,image/png,image/webp,image/avif" multiple hidden onChange={(e) => void onArchivos(e.target.files)} />
@@ -75,7 +70,7 @@ export function ImagenesProducto({ productoId }: { productoId: string }) {
           <h3 className="mb-3 text-2xl">{c}</h3>
           <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
             {lista.map((img, idx) => (
-              <li key={img.id} className="group relative overflow-hidden rounded-md border border-border bg-muted">
+              <li key={img.id} className="group relative overflow-hidden rounded-xl border border-border bg-muted">
                 <img src={img.url} alt={`${c}, foto ${idx + 1}`} className="aspect-[4/5] w-full object-cover" loading="lazy" />
                 <div className="absolute inset-x-0 bottom-0 flex justify-between bg-black/65 p-1 text-white">
                   <span className="flex">

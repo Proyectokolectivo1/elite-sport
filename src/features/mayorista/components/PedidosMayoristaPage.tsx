@@ -23,7 +23,7 @@ function Fila({ p, puedeCancelar }: { p: PedidoFila; puedeCancelar: boolean }) {
   const moneda = useMoneyStore((s) => s.config)
   const fmt = (n: number) => formatMoney(n, moneda)
   return (
-    <li className="rounded-md border border-border bg-card">
+    <li className="rounded-xl border border-border bg-card">
       <button type="button" aria-expanded={abierto} onClick={() => setAbierto((a) => !a)} className="flex w-full items-center justify-between gap-3 p-4 text-left">
         <span>
           <strong className="tabular-nums">#{p.numero}</strong> · {p.cliente}

@@ -55,7 +55,7 @@ export function Toaster() {
         <div
           key={t.id}
           role={t.tone === 'error' ? 'alert' : 'status'}
-          className="pointer-events-auto flex w-full max-w-sm items-stretch overflow-hidden rounded-md border border-border bg-popover text-popover-foreground shadow-md animate-in fade-in slide-in-from-bottom-2 duration-200"
+          className="pointer-events-auto flex w-full max-w-sm items-stretch overflow-hidden rounded-xl border border-border bg-popover text-popover-foreground shadow-md animate-in fade-in slide-in-from-bottom-2 duration-200"
         >
           <span aria-hidden className={cn('w-1 shrink-0', bar[t.tone])} />
           <p className="flex-1 px-3.5 py-3 text-sm">{t.message}</p>

@@ -55,7 +55,7 @@ export function MisPreciosPage() {
     <>
       <PageHeader title="Mis precios" description="Fija el precio al que vendes cada producto en tu sección. Si lo dejas vacío, se muestra el precio al público." />
 
-      <div className="mb-5 flex flex-wrap items-end gap-3 rounded-md border border-border bg-card p-4">
+      <div className="mb-5 flex flex-wrap items-end gap-3 rounded-xl border border-border bg-card p-4">
         <div>
           <label htmlFor="pct" className="eyebrow mb-1.5 block">Margen sobre mi costo (%)</label>
           <Input id="pct" type="number" min="0" step="1" inputMode="decimal" className="w-32" value={pct} onChange={(e) => setPct(e.target.value)} placeholder="Ej. 35" />
@@ -90,7 +90,7 @@ export function MisPreciosPage() {
         </Table>
       )}
 
-      <div className="sticky bottom-20 z-20 mt-5 flex items-center justify-between gap-3 rounded-md border border-border bg-popover p-3 shadow-md md:bottom-4">
+      <div className="sticky bottom-20 z-20 mt-5 flex items-center justify-between gap-3 rounded-xl border border-border bg-popover p-3 shadow-md md:bottom-4">
         <p className="text-sm text-muted-foreground">{cambios.length === 0 ? 'Sin cambios pendientes.' : `${cambios.length} ${cambios.length === 1 ? 'cambio' : 'cambios'} sin guardar.`}</p>
         <div className="flex gap-2">
           <Button variant="ghost" disabled={Object.keys(edits).length === 0} onClick={() => setEdits({})}>Descartar</Button>
