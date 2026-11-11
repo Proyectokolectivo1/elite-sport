@@ -91,6 +91,9 @@ export async function crearPedidoPublico(v: {
   esPrincipal: boolean
   nombre: string
   telefono: string
+  correo: string
+  direccion: string
+  documento: string
   nota: string
   items: { variante_id: string; cantidad: number }[]
 }): Promise<PedidoCreado> {
@@ -101,6 +104,9 @@ export async function crearPedidoPublico(v: {
     p_items: v.items,
     p_tienda_id: v.esPrincipal ? undefined : (v.tiendaId ?? undefined),
     p_nota: v.nota || undefined,
+    p_cliente_correo: v.correo,
+    p_cliente_direccion: v.direccion,
+    p_cliente_documento: v.documento,
   })
   if (error) throw error
   const r = data as { id: string; numero: number; total: number }

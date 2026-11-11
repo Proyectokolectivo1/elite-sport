@@ -30,7 +30,7 @@ export function ConfiguracionPage() {
   } = useForm<ConfiguracionValues>({ resolver: zodResolver(configuracionSchema) })
 
   useEffect(() => {
-    if (data) reset({ nombre_negocio: data.nombre_negocio, ciudad: data.ciudad, moneda_codigo: data.moneda_codigo, moneda_simbolo: data.moneda_simbolo, moneda_decimales: data.moneda_decimales, locale: data.locale, whatsapp_principal: data.whatsapp_principal ?? '' })
+    if (data) reset({ nombre_negocio: data.nombre_negocio, ciudad: data.ciudad, moneda_codigo: data.moneda_codigo, moneda_simbolo: data.moneda_simbolo, moneda_decimales: data.moneda_decimales, locale: data.locale, whatsapp_principal: data.whatsapp_principal ?? '', mayorista_dias_inactividad: data.mayorista_dias_inactividad })
   }, [data, reset])
 
   const vista = useWatch({ control })
@@ -72,6 +72,16 @@ export function ConfiguracionPage() {
             <Input id="c-wa" inputMode="tel" placeholder="593991234567" aria-invalid={!!errors.whatsapp_principal} {...register('whatsapp_principal')} />
             <FieldError>{errors.whatsapp_principal?.message}</FieldError>
             <p className="mt-1 text-xs text-muted-foreground">Recibe los pedidos de la tienda principal. Con código de país, sin espacios ni signos.</p>
+          </div>
+        </fieldset>
+
+        <fieldset className="grid gap-4 sm:grid-cols-2">
+          <legend className="mb-4 text-3xl font-display font-bold uppercase">Mayoristas</legend>
+          <div className="sm:col-span-2">
+            <Label htmlFor="c-dias">Días sin pedidos antes de bloquear</Label>
+            <Input id="c-dias" type="number" min="7" max="365" step="1" className="max-w-40" aria-invalid={!!errors.mayorista_dias_inactividad} {...register('mayorista_dias_inactividad', { valueAsNumber: true })} />
+            <FieldError>{errors.mayorista_dias_inactividad?.message}</FieldError>
+            <p className="mt-1 text-xs text-muted-foreground">Si un mayorista no hace un pedido a Elite Sport en este plazo, su sección y su panel se bloquean solos. Tú lo reactivas con "Aprobar" y el plazo vuelve a empezar.</p>
           </div>
         </fieldset>
 

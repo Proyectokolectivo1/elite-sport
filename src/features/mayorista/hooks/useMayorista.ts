@@ -8,6 +8,7 @@ import {
   guardarPreciosTienda,
   listarCostos,
   listarPreciosTienda,
+  obtenerMiPlazo,
   obtenerMiTienda,
   quitarImagenTienda,
   subirImagenTienda,
@@ -74,4 +75,10 @@ export function useCrearPedidoMayorista() {
 export function useCancelarMiPedido() {
   const qc = useQueryClient()
   return useMutation({ mutationFn: cancelarMiPedido, onSuccess: () => qc.invalidateQueries({ queryKey: ['mis-pedidos'] }) })
+}
+
+export function useMiPlazo() {
+  const { session } = useAuth()
+  const id = session?.user.id
+  return useQuery({ queryKey: ['mi-plazo', id], queryFn: obtenerMiPlazo, enabled: !!id })
 }

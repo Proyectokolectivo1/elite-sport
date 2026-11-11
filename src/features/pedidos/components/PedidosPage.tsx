@@ -13,7 +13,7 @@ import { formatMoney, useMoneyStore } from '@/lib/money'
 import type { EstadoPedido, PedidoFila, TipoPedido } from '../api/pedidos'
 import { useAccionPedido, useDetallePedido, usePedidos } from '../hooks/usePedidos'
 
-const TIPOS: Record<TipoPedido, string> = { minorista: 'Público', mayorista: 'Mayorista', lead_tienda: 'Tienda de mayorista' }
+const TIPOS: Record<TipoPedido, string> = { minorista: 'Público', mayorista: 'Mayorista', lead_tienda: 'Tienda de mayorista', mostrador: 'Venta en tienda' }
 const ESTADOS: Record<EstadoPedido, string> = { nuevo: 'Nuevo', confirmado: 'Confirmado', entregado: 'Entregado', cancelado: 'Cancelado' }
 const TONO: Record<EstadoPedido, 'signal' | 'warning' | 'success' | 'neutral'> = { nuevo: 'signal', confirmado: 'warning', entregado: 'success', cancelado: 'neutral' }
 const fecha = new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium', timeStyle: 'short' })
@@ -38,12 +38,17 @@ function Detalle({ pedido, onCerrar }: { pedido: PedidoFila; onCerrar: () => voi
   }
 
   const afectaStock = pedido.tipo !== 'lead_tienda'
+  const esMostrador = pedido.tipo === 'mostrador'
   const tel = pedido.telefono.replace(/[^\d]/g, '')
   return (
     <div className="space-y-5">
       <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
         <div><dt className="eyebrow">Cliente</dt><dd className="mt-0.5 font-semibold">{pedido.cliente}</dd></div>
-        <div><dt className="eyebrow">Teléfono</dt><dd className="mt-0.5"><a className="underline underline-offset-4" href={`https://wa.me/${tel}`} target="_blank" rel="noreferrer">{pedido.telefono}</a></dd></div>
+        <div><dt className="eyebrow">Celular</dt><dd className="mt-0.5"><a className="underline underline-offset-4" href={`https://wa.me/${tel}`} target="_blank" rel="noreferrer">{pedido.telefono}</a></dd></div>
+        {pedido.documento && <div><dt className="eyebrow">Cédula o RUC</dt><dd className="mt-0.5">{pedido.documento}</dd></div>}
+        {pedido.correo && <div><dt className="eyebrow">Correo</dt><dd className="mt-0.5 break-all"><a className="underline underline-offset-4" href={`mailto:${pedido.correo}`}>{pedido.correo}</a></dd></div>}
+        {pedido.direccion && <div className="col-span-2"><dt className="eyebrow">Dirección de entrega</dt><dd className="mt-0.5">{pedido.direccion}</dd></div>}
+        {pedido.metodoPago && <div><dt className="eyebrow">Pago</dt><dd className="mt-0.5 capitalize">{pedido.metodoPago}</dd></div>}
         <div><dt className="eyebrow">Tipo</dt><dd className="mt-0.5">{TIPOS[pedido.tipo]}</dd></div>
         <div><dt className="eyebrow">Origen</dt><dd className="mt-0.5">{pedido.origen}</dd></div>
         <div className="col-span-2"><dt className="eyebrow">Fecha</dt><dd className="mt-0.5">{fecha.format(new Date(pedido.creadoEn))}</dd></div>
@@ -65,11 +70,11 @@ function Detalle({ pedido, onCerrar }: { pedido: PedidoFila; onCerrar: () => voi
       {!afectaStock && <p className="rounded-md bg-muted p-3 text-sm text-muted-foreground">Es una venta de la tienda de un mayorista: no afecta el inventario central.</p>}
 
       <div className="flex flex-wrap gap-2">
-        {pedido.estado === 'nuevo' && afectaStock && <Button disabled={accion.isPending} onClick={() => ejecutar('confirmar')}>Confirmar y descontar stock</Button>}
+        {pedido.estado === 'nuevo' && afectaStock && !esMostrador && <Button disabled={accion.isPending} onClick={() => ejecutar('confirmar')}>Confirmar y descontar stock</Button>}
         {pedido.estado === 'confirmado' && <Button variant="solid" disabled={accion.isPending} onClick={() => ejecutar('entregar')}>Marcar entregado</Button>}
-        {(pedido.estado === 'nuevo' || pedido.estado === 'confirmado') && (
+        {(pedido.estado === 'nuevo' || pedido.estado === 'confirmado' || (esMostrador && pedido.estado === 'entregado')) && (
           <Button variant="outline" disabled={accion.isPending} onClick={() => ejecutar('cancelar')}>
-            {pedido.estado === 'confirmado' ? 'Cancelar y reponer stock' : 'Cancelar'}
+            {pedido.estado === 'confirmado' || esMostrador ? 'Anular y reponer stock' : 'Cancelar'}
           </Button>
         )}
       </div>

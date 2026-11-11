@@ -17,6 +17,7 @@ export interface DatosRegistro {
   cedula_ruc: string
   telefono: string
   ciudad: string
+  direccion: string
 }
 
 /** Crea la cuenta; un trigger genera el perfil en estado "pendiente". Devuelve true si ya hay sesión (sin confirmar correo). */

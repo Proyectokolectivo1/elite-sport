@@ -15,6 +15,7 @@ import { useCambiarEstado, useMayoristas } from '../hooks/useMayoristas'
 const ESTADOS: Record<EstadoPerfil, string> = { pendiente: 'Pendiente', aprobado: 'Aprobado', rechazado: 'Rechazado', suspendido: 'Suspendido' }
 const TONO: Record<EstadoPerfil, 'signal' | 'success' | 'destructive' | 'warning'> = { pendiente: 'signal', aprobado: 'success', rechazado: 'destructive', suspendido: 'warning' }
 const fecha = new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium' })
+const diasHasta = (iso: string) => Math.ceil((new Date(iso).getTime() - Date.now()) / 86_400_000)
 
 export function MayoristasPage() {
   const { data = [], isLoading } = useMayoristas()
@@ -48,7 +49,7 @@ export function MayoristasPage() {
       {filas.length > 0 && (
         <Table>
           <THead>
-            <TR><TH>Negocio</TH><TH>Contacto</TH><TH>Ciudad</TH><TH>Estado</TH><TH>Registro</TH><TH><span className="sr-only">Acciones</span></TH></TR>
+            <TR><TH>Negocio</TH><TH>Contacto</TH><TH>Ciudad</TH><TH>Estado</TH><TH>Pedidos</TH><TH><span className="sr-only">Acciones</span></TH></TR>
           </THead>
           <TBody>
             {filas.map((m) => (
@@ -60,10 +61,21 @@ export function MayoristasPage() {
                 <TD>{m.telefono ?? 'Sin dato'}{m.correo && <a href={`mailto:${m.correo}`} className="block break-all text-xs text-muted-foreground underline-offset-4 hover:underline">{m.correo}</a>}</TD>
                 <TD>{m.ciudad ?? 'Sin dato'}</TD>
                 <TD>
-                  <Badge variant={TONO[m.estado]}>{ESTADOS[m.estado]}</Badge>
+                  <Badge variant={TONO[m.estado]}>{m.estado === 'suspendido' && m.motivo === 'inactividad' ? 'Inactivo' : ESTADOS[m.estado]}</Badge>
                   {m.slug && m.estado === 'aprobado' && <Link to={`/t/${m.slug}`} className="mt-1 block text-xs underline underline-offset-4">/t/{m.slug}</Link>}
                 </TD>
-                <TD className="whitespace-nowrap text-muted-foreground">{fecha.format(new Date(m.creadoEn))}</TD>
+                <TD className="whitespace-nowrap text-muted-foreground">
+                  {m.estado === 'aprobado' && m.venceEn ? (
+                    <>
+                      {m.ultimoPedido ? `Último: ${fecha.format(new Date(m.ultimoPedido))}` : 'Sin pedidos aún'}
+                      <span className={`block text-xs ${diasHasta(m.venceEn) <= 7 ? 'text-warning' : ''}`}>Se bloquea en {Math.max(0, diasHasta(m.venceEn))} días</span>
+                    </>
+                  ) : m.estado === 'suspendido' && m.motivo === 'inactividad' ? (
+                    <span className="text-xs">Bloqueado por no hacer pedidos</span>
+                  ) : (
+                    fecha.format(new Date(m.creadoEn))
+                  )}
+                </TD>
                 <TD>
                   <div className="flex justify-end gap-2">
                     {(m.estado === 'pendiente' || m.estado === 'rechazado' || m.estado === 'suspendido') && (

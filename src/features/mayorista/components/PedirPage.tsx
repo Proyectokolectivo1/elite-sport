@@ -1,15 +1,19 @@
 import { useMemo, useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { useQuery } from '@tanstack/react-query'
 import { Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
-import { FieldError, Input, Label, Textarea } from '@/components/ui/input'
+import { FieldError, Input } from '@/components/ui/input'
 import { PageHeader } from '@/components/ui/page-header'
 import { Price } from '@/components/ui/price'
 import { Sheet, SheetContent } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from '@/components/ui/toast'
 import { useAuth } from '@/features/auth/hooks/AuthProvider'
+import { CamposCliente } from '@/features/pedidos/components/CamposCliente'
+import { DATOS_CLIENTE_VACIOS, datosClienteSchema, datosDesdePerfil, type DatosCliente } from '@/features/pedidos/datosCliente'
 import { useConfiguracion } from '@/features/configuracion/hooks/useConfiguracion'
 import { obtenerCatalogoPublico, type ProductoPublico } from '@/features/tienda/api/tienda'
 import { totalCarrito, unidadesCarrito, useCarritoStore, type ItemCarrito } from '@/features/tienda/carrito/carritoStore'
@@ -78,21 +82,47 @@ function RevisarPedido({ abierto, onCambio }: { abierto: boolean; onCambio: (o: 
   const moneda = useMoneyStore((s) => s.config)
   const fmt = (n: number) => formatMoney(n, moneda)
   const crear = useCrearPedidoMayorista()
-  const [nombre, setNombre] = useState(perfil?.nombre ?? '')
-  const [telefono, setTelefono] = useState(perfil?.telefono ?? '')
-  const [nota, setNota] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [hecho, setHecho] = useState<{ numero: number; url: string | null } | null>(null)
 
-  async function enviar() {
-    if (nombre.trim().length < 2) return setError('Ingresa tu nombre.')
-    if (!/^[0-9+() -]{7,20}$/.test(telefono.trim())) return setError('Ingresa un teléfono válido.')
+  // Los datos del mayorista se rellenan solos desde su cuenta; puede cambiarlos para este pedido.
+  const valoresPerfil = useMemo(() => datosDesdePerfil(perfil), [perfil])
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<DatosCliente>({ resolver: zodResolver(datosClienteSchema), defaultValues: DATOS_CLIENTE_VACIOS, values: valoresPerfil })
+
+  async function enviar(v: DatosCliente) {
     setError(null)
     try {
-      const r = await crear.mutateAsync({ nombre: nombre.trim(), telefono: telefono.trim(), nota, items: items.map((i) => ({ variante_id: i.varianteId, cantidad: i.cantidad })) })
+      const r = await crear.mutateAsync({
+        nombre: v.nombre,
+        telefono: v.telefono,
+        correo: v.correo,
+        direccion: v.direccion,
+        documento: v.documento,
+        nota: v.nota,
+        items: items.map((i) => ({ variante_id: i.varianteId, cantidad: i.cantidad })),
+      })
       const admin = config?.whatsapp_principal
       const url = admin
-        ? urlWhatsApp(admin, construirMensaje({ plantilla: 'Hola, acabo de enviar un pedido mayorista:', numero: r.numero, nombre: nombre.trim(), telefono: telefono.trim(), nota, lineas: items.map((i) => ({ descripcion: `${i.nombre} · ${i.color} · talla ${i.talla}`, cantidad: i.cantidad, precio: i.precio })), total: r.total, formato: fmt }))
+        ? urlWhatsApp(
+            admin,
+            construirMensaje({
+              plantilla: 'Hola, acabo de enviar un pedido mayorista:',
+              numero: r.numero,
+              nombre: v.nombre,
+              telefono: v.telefono,
+              correo: v.correo,
+              direccion: v.direccion,
+              documento: v.documento,
+              nota: v.nota,
+              lineas: items.map((i) => ({ descripcion: `${i.nombre} · ${i.color} · talla ${i.talla}`, cantidad: i.cantidad, precio: i.precio })),
+              total: r.total,
+              formato: fmt,
+            }),
+          )
         : null
       vaciar(CLAVE)
       setHecho({ numero: r.numero, url })
@@ -112,7 +142,7 @@ function RevisarPedido({ abierto, onCambio }: { abierto: boolean; onCambio: (o: 
         ) : items.length === 0 ? (
           <EmptyState title="Tu pedido está vacío" description="Elige productos y sus tallas." />
         ) : (
-          <div className="space-y-6">
+          <form noValidate onSubmit={handleSubmit(enviar)} className="space-y-6">
             <ul className="divide-y divide-border">
               {items.map((i) => (
                 <li key={i.varianteId} className="flex items-center gap-3 py-3 first:pt-0">
@@ -130,17 +160,19 @@ function RevisarPedido({ abierto, onCambio }: { abierto: boolean; onCambio: (o: 
               ))}
             </ul>
             <div className="space-y-4 border-t border-border pt-5">
-              <div><Label htmlFor="p-nombre">Nombre</Label><Input id="p-nombre" value={nombre} onChange={(e) => setNombre(e.target.value)} /></div>
-              <div><Label htmlFor="p-tel">Teléfono</Label><Input id="p-tel" type="tel" value={telefono} onChange={(e) => setTelefono(e.target.value)} /></div>
-              <div><Label htmlFor="p-nota">Nota (opcional)</Label><Textarea id="p-nota" className="min-h-20" value={nota} onChange={(e) => setNota(e.target.value)} /></div>
+              <div>
+                <h3 className="text-2xl">Datos del pedido</h3>
+                <p className="mt-1 text-sm text-muted-foreground">Vienen de tu cuenta. Cámbialos si este pedido va a otra dirección o a nombre de otra persona.</p>
+              </div>
+              <CamposCliente register={register} errors={errors} prefijo="pedido" />
             </div>
             <div className="flex items-end justify-between border-t border-border pt-4">
               <span className="eyebrow">Total</span>
               <span className="font-display text-4xl font-bold tabular-nums">{fmt(totalCarrito(items))}</span>
             </div>
             <FieldError>{error ?? undefined}</FieldError>
-            <Button size="lg" className="w-full" disabled={crear.isPending} onClick={() => void enviar()}>{crear.isPending ? 'Enviando…' : 'Enviar pedido al administrador'}</Button>
-          </div>
+            <Button type="submit" size="lg" className="w-full" disabled={crear.isPending}>{crear.isPending ? 'Enviando…' : 'Enviar pedido al administrador'}</Button>
+          </form>
         )}
       </SheetContent>
     </Sheet>

@@ -1,4 +1,4 @@
-import { ClipboardList, LayoutDashboard, LogOut, Package, Settings, Tag, Truck, Users } from 'lucide-react'
+import { ClipboardList, LayoutDashboard, LogOut, Package, Settings, Store, Tag, Truck, Users } from 'lucide-react'
 import { PanelLayout, type PanelNavItem } from '@/components/layout/PanelLayout'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
 import { Button } from '@/components/ui/button'
@@ -8,6 +8,7 @@ import { useConfiguracion } from '@/features/configuracion/hooks/useConfiguracio
 
 const NAV: PanelNavItem[] = [
   { to: '/admin', label: 'Resumen', icon: LayoutDashboard, end: true },
+  { to: '/admin/ventas', label: 'Ventas', icon: Store },
   { to: '/admin/pedidos', label: 'Pedidos', icon: ClipboardList },
   { to: '/admin/productos', label: 'Productos', icon: Package },
   { to: '/admin/inventario', label: 'Inventario', icon: Truck },

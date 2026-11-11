@@ -31,19 +31,19 @@ export type Database = {
           actualizado_en: string; ciudad: string; id: number; locale: string; moneda_codigo: string
           moneda_decimales: number; moneda_simbolo: string; nombre_negocio: string; whatsapp_principal: string | null
           fondo_activo: boolean; fondo_video_url: string | null; fondo_video_movil_url: string | null
-          fondo_poster_url: string | null; fondo_opacidad: number
+          fondo_poster_url: string | null; fondo_opacidad: number; mayorista_dias_inactividad: number
         }
         Insert: {
           actualizado_en?: string; ciudad?: string; id?: number; locale?: string; moneda_codigo?: string
           moneda_decimales?: number; moneda_simbolo?: string; nombre_negocio?: string; whatsapp_principal?: string | null
           fondo_activo?: boolean; fondo_video_url?: string | null; fondo_video_movil_url?: string | null
-          fondo_poster_url?: string | null; fondo_opacidad?: number
+          fondo_poster_url?: string | null; fondo_opacidad?: number; mayorista_dias_inactividad?: number
         }
         Update: {
           actualizado_en?: string; ciudad?: string; id?: number; locale?: string; moneda_codigo?: string
           moneda_decimales?: number; moneda_simbolo?: string; nombre_negocio?: string; whatsapp_principal?: string | null
           fondo_activo?: boolean; fondo_video_url?: string | null; fondo_video_movil_url?: string | null
-          fondo_poster_url?: string | null; fondo_opacidad?: number
+          fondo_poster_url?: string | null; fondo_opacidad?: number; mayorista_dias_inactividad?: number
         }
         Relationships: []
       }
@@ -116,16 +116,19 @@ export type Database = {
       }
       pedidos: {
         Row: {
+          cliente_correo: string | null; cliente_direccion: string | null; cliente_documento: string | null; metodo_pago: 'efectivo' | 'transferencia' | 'tarjeta' | null
           cliente_nombre: string; cliente_telefono: string; creado_en: string; estado: Enum<'estado_pedido'>
           id: string; mayorista_id: string | null; moneda: string; nota: string | null; numero: number
           stock_descontado: boolean; tienda_id: string | null; tipo: Enum<'tipo_pedido'>; total: number
         }
         Insert: {
+          cliente_correo?: string | null; cliente_direccion?: string | null; cliente_documento?: string | null; metodo_pago?: 'efectivo' | 'transferencia' | 'tarjeta' | null
           cliente_nombre: string; cliente_telefono: string; creado_en?: string; estado?: Enum<'estado_pedido'>
           id?: string; mayorista_id?: string | null; moneda: string; nota?: string | null; numero?: never
           stock_descontado?: boolean; tienda_id?: string | null; tipo: Enum<'tipo_pedido'>; total?: number
         }
         Update: {
+          cliente_correo?: string | null; cliente_direccion?: string | null; cliente_documento?: string | null; metodo_pago?: 'efectivo' | 'transferencia' | 'tarjeta' | null
           cliente_nombre?: string; cliente_telefono?: string; creado_en?: string; estado?: Enum<'estado_pedido'>
           id?: string; mayorista_id?: string | null; moneda?: string; nota?: string | null; numero?: never
           stock_descontado?: boolean; tienda_id?: string | null; tipo?: Enum<'tipo_pedido'>; total?: number
@@ -146,16 +149,16 @@ export type Database = {
       }
       perfiles: {
         Row: {
-          cedula_ruc: string | null; ciudad: string | null; correo: string | null; creado_en: string; estado: Enum<'estado_perfil'>
-          id: string; negocio: string | null; nombre: string; rol: Enum<'rol_usuario'>; telefono: string | null
+          aprobado_en: string | null; cedula_ruc: string | null; ciudad: string | null; correo: string | null; creado_en: string; direccion: string | null; estado: Enum<'estado_perfil'>
+          id: string; motivo_estado: string | null; negocio: string | null; nombre: string; rol: Enum<'rol_usuario'>; telefono: string | null
         }
         Insert: {
-          cedula_ruc?: string | null; ciudad?: string | null; correo?: string | null; creado_en?: string; estado?: Enum<'estado_perfil'>
+          aprobado_en?: string | null; cedula_ruc?: string | null; ciudad?: string | null; correo?: string | null; creado_en?: string; direccion?: string | null; estado?: Enum<'estado_perfil'>
           id: string; negocio?: string | null; nombre?: string; rol?: Enum<'rol_usuario'>; telefono?: string | null
         }
         Update: {
-          cedula_ruc?: string | null; ciudad?: string | null; correo?: string | null; creado_en?: string; estado?: Enum<'estado_perfil'>
-          id?: string; negocio?: string | null; nombre?: string; rol?: Enum<'rol_usuario'>; telefono?: string | null
+          aprobado_en?: string | null; cedula_ruc?: string | null; ciudad?: string | null; correo?: string | null; creado_en?: string; direccion?: string | null; estado?: Enum<'estado_perfil'>
+          id?: string; motivo_estado?: string | null; negocio?: string | null; nombre?: string; rol?: Enum<'rol_usuario'>; telefono?: string | null
         }
         Relationships: []
       }
@@ -245,13 +248,25 @@ export type Database = {
     }
     Views: { [_ in never]: never }
     Functions: {
+      actividad_mayorista: {
+        Args: { p_id?: string }
+        Returns: { mayorista_id: string; ultimo_pedido: string | null; vence_en: string }[]
+      }
       ajustar_stock: { Args: { p_delta: number; p_nota: string; p_variante: string }; Returns: undefined }
       cancelar_pedido: { Args: { p_pedido: string }; Returns: undefined }
       confirmar_pedido: { Args: { p_pedido: string }; Returns: undefined }
       crear_pedido: {
         Args: {
           p_cliente_nombre: string; p_cliente_telefono: string; p_items: Json
+          p_cliente_correo?: string; p_cliente_direccion?: string; p_cliente_documento?: string
           p_nota?: string; p_tienda_id?: string; p_tipo: Enum<'tipo_pedido'>
+        }
+        Returns: Json
+      }
+      registrar_venta_mostrador: {
+        Args: {
+          p_items: Json; p_metodo_pago?: string; p_cliente_nombre?: string; p_cliente_telefono?: string
+          p_cliente_correo?: string; p_cliente_documento?: string; p_nota?: string
         }
         Returns: Json
       }
@@ -274,7 +289,7 @@ export type Database = {
       motivo_movimiento: 'ingreso' | 'venta' | 'pedido_mayorista' | 'ajuste' | 'anulacion'
       rol_usuario: 'admin' | 'mayorista'
       tipo_ingreso: 'caja' | 'unidad'
-      tipo_pedido: 'minorista' | 'mayorista' | 'lead_tienda'
+      tipo_pedido: 'minorista' | 'mayorista' | 'lead_tienda' | 'mostrador'
     }
     CompositeTypes: { [_ in never]: never }
   }

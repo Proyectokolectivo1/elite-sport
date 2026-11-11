@@ -14,6 +14,7 @@ export const registroSchema = z
     cedula_ruc: z.string().trim().regex(/^[0-9]{10}(001)?$|^[0-9]{13}$/, 'Cédula (10 dígitos) o RUC (13 dígitos)'),
     telefono: z.string().trim().regex(/^\+?[0-9]{9,15}$/, 'WhatsApp con código de país, solo números. Ej. 593991234567'),
     ciudad: z.string().trim().min(2, 'Ingresa tu ciudad'),
+    direccion: z.string().trim().min(5, 'Ingresa la dirección de tu negocio'),
     email: z.string().min(1, 'Ingresa tu correo').email('Correo no válido'),
     password: z.string().min(8, 'Mínimo 8 caracteres'),
     confirmar: z.string(),

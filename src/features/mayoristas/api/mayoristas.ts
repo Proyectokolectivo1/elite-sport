@@ -14,16 +14,22 @@ export interface Mayorista {
   estado: EstadoPerfil
   creadoEn: string
   slug: string | null
+  motivo: string | null
+  ultimoPedido: string | null
+  venceEn: string | null
 }
 
 export async function listarMayoristas(): Promise<Mayorista[]> {
-  const [p, t] = await Promise.all([
+  const [p, t, act] = await Promise.all([
     supabase.from('perfiles').select('*').eq('rol', 'mayorista').order('creado_en', { ascending: false }),
     supabase.from('tiendas').select('propietario_id, slug').not('propietario_id', 'is', null),
+    supabase.rpc('actividad_mayorista'),
   ])
+  if (act.error) throw act.error
   if (p.error) throw p.error
   if (t.error) throw t.error
   const slugs = new Map(t.data.map((x) => [x.propietario_id, x.slug]))
+  const actividad = new Map(act.data.map((x) => [x.mayorista_id, x]))
   return p.data.map((x) => ({
     id: x.id,
     nombre: x.nombre,
@@ -35,6 +41,9 @@ export async function listarMayoristas(): Promise<Mayorista[]> {
     estado: x.estado,
     creadoEn: x.creado_en,
     slug: slugs.get(x.id) ?? null,
+    motivo: x.motivo_estado,
+    ultimoPedido: actividad.get(x.id)?.ultimo_pedido ?? null,
+    venceEn: actividad.get(x.id)?.vence_en ?? null,
   }))
 }
 

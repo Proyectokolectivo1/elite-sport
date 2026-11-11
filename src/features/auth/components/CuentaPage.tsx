@@ -20,7 +20,11 @@ export function CuentaPage() {
   if (perfil?.rol === 'admin' && perfil.estado === 'aprobado') return <Navigate to="/admin" replace />
   if (perfil?.rol === 'mayorista' && perfil.estado === 'aprobado') return <Navigate to="/mayorista" replace />
 
-  const m = MENSAJES[perfil?.estado === 'rechazado' || perfil?.estado === 'suspendido' ? perfil.estado : 'pendiente']
+  const base = MENSAJES[perfil?.estado === 'rechazado' || perfil?.estado === 'suspendido' ? perfil.estado : 'pendiente']
+  const m =
+    perfil?.estado === 'suspendido' && perfil.motivo_estado === 'inactividad'
+      ? { titulo: 'Tu catálogo está en pausa', texto: 'Pasó el plazo sin que hicieras un pedido a Elite Sport, así que tu sección y tu panel se bloquearon. Escríbenos y los reactivamos para que vuelvas a vender.' }
+      : base
   return (
     <main className="grid min-h-dvh place-items-center px-[var(--gutter)]">
       <div className="max-w-md space-y-4">

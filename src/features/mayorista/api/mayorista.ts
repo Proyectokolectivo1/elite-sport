@@ -86,6 +86,9 @@ export async function guardarPreciosTienda(tiendaId: string, cambios: CambioPrec
 export async function crearPedidoMayorista(v: {
   nombre: string
   telefono: string
+  correo: string
+  direccion: string
+  documento: string
   nota: string
   items: { variante_id: string; cantidad: number }[]
 }): Promise<{ id: string; numero: number; total: number }> {
@@ -95,6 +98,9 @@ export async function crearPedidoMayorista(v: {
     p_cliente_telefono: v.telefono,
     p_items: v.items,
     p_nota: v.nota || undefined,
+    p_cliente_correo: v.correo,
+    p_cliente_direccion: v.direccion,
+    p_cliente_documento: v.documento,
   })
   if (error) throw error
   const r = data as { id: string; numero: number; total: number }
@@ -104,4 +110,12 @@ export async function crearPedidoMayorista(v: {
 export async function cancelarMiPedido(id: string): Promise<void> {
   const { error } = await supabase.rpc('cancelar_pedido', { p_pedido: id })
   if (error) throw error
+}
+
+/** Fecha límite para hacer un pedido y mantener activo el catálogo del mayorista actual. */
+export async function obtenerMiPlazo(): Promise<{ venceEn: string; ultimoPedido: string | null; diasRestantes: number } | null> {
+  const { data, error } = await supabase.rpc('actividad_mayorista')
+  if (error) throw error
+  const f = data[0]
+  return f ? { venceEn: f.vence_en, ultimoPedido: f.ultimo_pedido, diasRestantes: Math.ceil((new Date(f.vence_en).getTime() - Date.now()) / 86_400_000) } : null
 }

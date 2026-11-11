@@ -9,6 +9,9 @@ interface Entrada {
   numero: number
   nombre: string
   telefono: string
+  correo?: string
+  direccion?: string
+  documento?: string
   nota: string
   lineas: LineaMensaje[]
   total: number
@@ -27,7 +30,10 @@ export function construirMensaje(e: Entrada): string {
     `Total: ${e.formato(e.total)}`,
     '',
     `Cliente: ${e.nombre}`,
-    `Teléfono: ${e.telefono}`,
+    ...(e.documento ? [`Cédula o RUC: ${e.documento}`] : []),
+    `Celular: ${e.telefono}`,
+    ...(e.correo ? [`Correo: ${e.correo}`] : []),
+    ...(e.direccion ? [`Dirección: ${e.direccion}`] : []),
     ...(e.nota.trim() ? [`Nota: ${e.nota.trim()}`] : []),
   ].join('\n')
 }

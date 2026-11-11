@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react'
 import { NavLink, Outlet } from 'react-router-dom'
-import { PanelLeftClose, PanelLeftOpen, type LucideIcon } from 'lucide-react'
+import { Ellipsis, PanelLeftClose, PanelLeftOpen, type LucideIcon } from 'lucide-react'
+import { Sheet, SheetContent } from '@/components/ui/sheet'
 import { Logo } from '@/components/layout/Logo'
 import { ModeToggle } from '@/components/layout/ModeToggle'
 import { cn } from '@/lib/utils'
@@ -20,17 +21,24 @@ interface Props {
   nav: PanelNavItem[]
   /** Acciones a la derecha de la barra superior (usuario, salir). */
   acciones?: ReactNode
+  /** Aviso destacado sobre el contenido (ej. plazo por vencer). */
+  aviso?: ReactNode
   children?: ReactNode
 }
 
-const MAX_BOTTOM = 5
+/** Destinos fijos en la barra inferior del celular; el resto va en "Más". */
+const MAX_BOTTOM = 4
 
 /**
  * Panel: sidebar colapsable en escritorio y barra inferior en móvil.
  * En móvil muestra los primeros 5 destinos; el resto queda en el menú lateral de tablet+.
  */
-export function PanelLayout({ nombre, logoUrl, seccion, nav, acciones, children }: Props) {
+export function PanelLayout({ nombre, logoUrl, seccion, nav, acciones, aviso, children }: Props) {
   const [colapsado, setColapsado] = useState(false)
+  const [masAbierto, setMasAbierto] = useState(false)
+  // Hasta 5 destinos caben en la barra; si hay más, 4 fijos y "Más".
+  const principales = nav.length > 5 ? nav.slice(0, MAX_BOTTOM) : nav
+  const resto = nav.length > 5 ? nav.slice(MAX_BOTTOM) : []
 
   return (
     <div className="min-h-dvh bg-background md:grid md:grid-cols-[auto_1fr]">
@@ -88,6 +96,7 @@ export function PanelLayout({ nombre, logoUrl, seccion, nav, acciones, children 
           </div>
         </header>
         <main id="contenido" className="px-[var(--gutter)] py-6 md:py-8">
+          {aviso}
           {children ?? <Outlet />}
         </main>
       </div>
@@ -95,9 +104,9 @@ export function PanelLayout({ nombre, logoUrl, seccion, nav, acciones, children 
       <nav
         aria-label={`${seccion}, móvil`}
         className="fixed inset-x-0 bottom-0 z-40 grid border-t border-sidebar-border bg-sidebar pb-[env(safe-area-inset-bottom)] text-sidebar-foreground md:hidden"
-        style={{ gridTemplateColumns: `repeat(${Math.min(nav.length, MAX_BOTTOM)}, minmax(0, 1fr))` }}
+        style={{ gridTemplateColumns: `repeat(${principales.length + (resto.length > 0 ? 1 : 0)}, minmax(0, 1fr))` }}
       >
-        {nav.slice(0, MAX_BOTTOM).map(({ to, label, icon: Icon, end }) => (
+        {principales.map(({ to, label, icon: Icon, end }) => (
           <NavLink
             key={to}
             to={to}
@@ -113,7 +122,34 @@ export function PanelLayout({ nombre, logoUrl, seccion, nav, acciones, children 
             {label}
           </NavLink>
         ))}
+        {resto.length > 0 && (
+          <button
+            type="button"
+            onClick={() => setMasAbierto(true)}
+            className="flex h-16 flex-col items-center justify-center gap-1 text-[0.625rem] font-semibold uppercase tracking-[0.08em] text-sidebar-foreground/65"
+          >
+            <Ellipsis className="size-5" />
+            Más
+          </button>
+        )}
       </nav>
+
+      {resto.length > 0 && (
+        <Sheet open={masAbierto} onOpenChange={setMasAbierto}>
+          <SheetContent side="bottom" title="Más opciones">
+            <ul className="divide-y divide-border">
+              {resto.map(({ to, label, icon: Icon }) => (
+                <li key={to}>
+                  <NavLink to={to} onClick={() => setMasAbierto(false)} className="flex h-14 items-center gap-3 text-[1.0625rem] font-semibold">
+                    <Icon className="size-5 text-muted-foreground" />
+                    {label}
+                  </NavLink>
+                </li>
+              ))}
+            </ul>
+          </SheetContent>
+        </Sheet>
+      )}
     </div>
   )
 }

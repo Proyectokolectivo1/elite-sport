@@ -1,26 +1,20 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Minus, Plus, Trash2 } from 'lucide-react'
-import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
-import { FieldError, Input, Label, Textarea } from '@/components/ui/input'
 import { Sheet, SheetContent } from '@/components/ui/sheet'
 import { toast } from '@/components/ui/toast'
 import { mensajeError } from '@/lib/errors'
 import { formatMoney, useMoneyStore } from '@/lib/money'
+import { useAuth } from '@/features/auth/hooks/AuthProvider'
+import { CamposCliente } from '@/features/pedidos/components/CamposCliente'
+import { DATOS_CLIENTE_VACIOS, datosClienteSchema, datosDesdePerfil, type DatosCliente } from '@/features/pedidos/datosCliente'
 import { crearPedidoPublico } from '../api/tienda'
 import { totalCarrito, useCarritoStore, type ItemCarrito } from '../carrito/carritoStore'
 import { useStore } from '../context/StoreContext'
 import { construirMensaje, urlWhatsApp } from '../whatsapp'
-
-const schema = z.object({
-  nombre: z.string().trim().min(2, 'Ingresa tu nombre'),
-  telefono: z.string().trim().regex(/^[0-9+() -]{7,20}$/, 'Ingresa un teléfono válido'),
-  nota: z.string().max(500, 'Máximo 500 caracteres'),
-})
-type Valores = z.infer<typeof schema>
 
 const SIN_ITEMS: ItemCarrito[] = []
 
@@ -37,13 +31,16 @@ export function CarritoSheet() {
   const fmt = (n: number) => formatMoney(n, moneda)
   const [enviado, setEnviado] = useState<Enviado | null>(null)
   const [enviando, setEnviando] = useState(false)
+  // Si quien compra tiene cuenta (por ejemplo, un mayorista), sus datos se rellenan solos y puede cambiarlos.
+  const { perfil } = useAuth()
+  const valoresPerfil = useMemo(() => (perfil ? datosDesdePerfil(perfil) : undefined), [perfil])
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<Valores>({ resolver: zodResolver(schema), defaultValues: { nombre: '', telefono: '', nota: '' } })
+  } = useForm<DatosCliente>({ resolver: zodResolver(datosClienteSchema), defaultValues: DATOS_CLIENTE_VACIOS, values: valoresPerfil })
 
-  async function onSubmit(v: Valores) {
+  async function onSubmit(v: DatosCliente) {
     setEnviando(true)
     try {
       const r = await crearPedidoPublico({
@@ -51,6 +48,9 @@ export function CarritoSheet() {
         esPrincipal,
         nombre: v.nombre,
         telefono: v.telefono,
+        correo: v.correo,
+        direccion: v.direccion,
+        documento: v.documento,
         nota: v.nota,
         items: items.map((i) => ({ variante_id: i.varianteId, cantidad: i.cantidad })),
       })
@@ -59,6 +59,9 @@ export function CarritoSheet() {
         numero: r.numero,
         nombre: v.nombre,
         telefono: v.telefono,
+        correo: v.correo,
+        direccion: v.direccion,
+        documento: v.documento,
         nota: v.nota,
         lineas: items.map((i) => ({ descripcion: `${i.nombre} · ${i.color} · talla ${i.talla}`, cantidad: i.cantidad, precio: i.precio })),
         total: r.total,
@@ -124,21 +127,7 @@ export function CarritoSheet() {
 
             <div className="space-y-4 border-t border-border pt-5">
               <h3 className="text-2xl">Tus datos</h3>
-              <div>
-                <Label htmlFor="c-nombre">Nombre</Label>
-                <Input id="c-nombre" autoComplete="name" aria-invalid={!!errors.nombre} {...register('nombre')} />
-                <FieldError>{errors.nombre?.message}</FieldError>
-              </div>
-              <div>
-                <Label htmlFor="c-tel">Teléfono</Label>
-                <Input id="c-tel" type="tel" autoComplete="tel" inputMode="tel" aria-invalid={!!errors.telefono} {...register('telefono')} />
-                <FieldError>{errors.telefono?.message}</FieldError>
-              </div>
-              <div>
-                <Label htmlFor="c-nota">Nota (opcional)</Label>
-                <Textarea id="c-nota" className="min-h-20" {...register('nota')} />
-                <FieldError>{errors.nota?.message}</FieldError>
-              </div>
+              <CamposCliente register={register} errors={errors} prefijo="carrito" />
             </div>
           </form>
         )}

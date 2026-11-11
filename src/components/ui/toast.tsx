@@ -49,13 +49,13 @@ export function Toaster() {
     <div
       role="region"
       aria-label="Notificaciones"
-      className="pointer-events-none fixed inset-x-0 bottom-0 z-[60] flex flex-col items-center gap-2 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:items-end"
+      className="pointer-events-none fixed inset-x-0 top-0 z-[60] flex flex-col items-center gap-2 p-4 pt-20 sm:items-end"
     >
       {items.map((t) => (
         <div
           key={t.id}
           role={t.tone === 'error' ? 'alert' : 'status'}
-          className="pointer-events-auto flex w-full max-w-sm items-stretch overflow-hidden rounded-xl border border-border bg-popover text-popover-foreground shadow-md animate-in fade-in slide-in-from-bottom-2 duration-200"
+          className="pointer-events-auto flex w-full max-w-sm items-stretch overflow-hidden rounded-xl border border-border bg-popover text-popover-foreground shadow-md animate-in fade-in slide-in-from-top-2 duration-200"
         >
           <span aria-hidden className={cn('w-1 shrink-0', bar[t.tone])} />
           <p className="flex-1 px-3.5 py-3 text-sm">{t.message}</p>

@@ -16,6 +16,10 @@ export interface PedidoFila {
   moneda: string
   nota: string | null
   creadoEn: string
+  correo: string | null
+  direccion: string | null
+  documento: string | null
+  metodoPago: string | null
 }
 
 export async function listarPedidos(): Promise<PedidoFila[]> {
@@ -37,6 +41,10 @@ export async function listarPedidos(): Promise<PedidoFila[]> {
     moneda: p.moneda,
     nota: p.nota,
     creadoEn: p.creado_en,
+    correo: p.cliente_correo,
+    direccion: p.cliente_direccion,
+    documento: p.cliente_documento,
+    metodoPago: p.metodo_pago,
   }))
 }
 

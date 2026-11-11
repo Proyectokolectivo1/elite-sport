@@ -18,6 +18,7 @@ const CAMPOS: { name: keyof RegistroValues; label: string; type?: string; auto?:
   { name: 'cedula_ruc', label: 'Cédula o RUC', auto: 'off' },
   { name: 'telefono', label: 'WhatsApp', type: 'tel', auto: 'tel', ayuda: 'Con código de país y sin signos. Ej. 593991234567' },
   { name: 'ciudad', label: 'Ciudad', auto: 'address-level2' },
+  { name: 'direccion', label: 'Dirección del negocio', auto: 'street-address' },
   { name: 'email', label: 'Correo', type: 'email', auto: 'email' },
   { name: 'password', label: 'Contraseña', type: 'password', auto: 'new-password' },
   { name: 'confirmar', label: 'Repite la contraseña', type: 'password', auto: 'new-password' },
@@ -39,7 +40,7 @@ export function RegistroPage() {
   async function onSubmit(v: RegistroValues) {
     setError(null)
     try {
-      const conSesion = await registrarMayorista({ email: v.email, password: v.password, nombre: v.nombre, negocio: v.negocio, cedula_ruc: v.cedula_ruc, telefono: v.telefono, ciudad: v.ciudad })
+      const conSesion = await registrarMayorista({ email: v.email, password: v.password, nombre: v.nombre, negocio: v.negocio, cedula_ruc: v.cedula_ruc, telefono: v.telefono, ciudad: v.ciudad, direccion: v.direccion })
       if (!conSesion) setRevisarCorreo(true)
     } catch (e) {
       const m = mensajeError(e)
@@ -78,7 +79,7 @@ export function RegistroPage() {
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             {CAMPOS.map((c) => (
-              <div key={c.name} className={c.name === 'email' || c.name === 'nombre' ? 'sm:col-span-2' : undefined}>
+              <div key={c.name} className={c.name === 'email' || c.name === 'nombre' || c.name === 'direccion' ? 'sm:col-span-2' : undefined}>
                 <Label htmlFor={c.name}>{c.label}</Label>
                 <Input id={c.name} type={c.type} autoComplete={c.auto} aria-invalid={!!errors[c.name]} {...register(c.name)} />
                 {c.ayuda && !errors[c.name] && <p className="mt-1 text-xs text-muted-foreground">{c.ayuda}</p>}
