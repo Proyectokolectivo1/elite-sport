@@ -38,10 +38,17 @@ test.describe('tienda pública', () => {
     await expect(page.getByRole('heading', { name: /Solicita tu cuenta/i })).toBeVisible()
   })
 
-  test('el pie ofrece solicitar cuenta e ingresar como mayorista', async ({ page }) => {
+  test('el menú separa la tienda, los mayoristas y la administración', async ({ page }) => {
     await page.goto('/')
-    await expect(page.getByRole('contentinfo').getByRole('link', { name: 'Solicitar ser mayorista' })).toBeVisible()
-    await expect(page.getByRole('contentinfo').getByRole('link', { name: 'Ingreso de mayoristas' })).toBeVisible()
+    await page.getByRole('button', { name: 'Abrir menú' }).click()
+    const menu = page.getByRole('navigation', { name: 'Menú' })
+    await expect(menu.getByRole('heading', { name: 'Comprar' })).toBeVisible()
+    await expect(menu.getByRole('heading', { name: 'Mayoristas' })).toBeVisible()
+    await expect(menu.getByRole('heading', { name: 'Administración' })).toBeVisible()
+    await expect(menu.getByRole('link', { name: /Ingreso de mayoristas/ })).toHaveAttribute('href', '/ingresar')
+    await expect(menu.getByRole('link', { name: /Ingreso del administrador/ })).toHaveAttribute('href', '/admin/login')
+    await menu.getByRole('link', { name: /Solicitar ser mayorista/ }).click()
+    await expect(page).toHaveURL(/\/registro/)
   })
 
   test('sin scroll horizontal', async ({ page }) => {

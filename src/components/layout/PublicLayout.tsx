@@ -1,8 +1,9 @@
 import { useState, type FormEvent, type ReactNode } from 'react'
 import { Link, NavLink, Outlet } from 'react-router-dom'
-import { Search, ShoppingBag, X } from 'lucide-react'
+import { Menu, Search, ShoppingBag, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Sheet, SheetContent } from '@/components/ui/sheet'
 import { Logo } from '@/components/layout/Logo'
 import { ModeToggle } from '@/components/layout/ModeToggle'
 import { cn } from '@/lib/utils'
@@ -15,6 +16,11 @@ export interface NavItem {
   destacado?: boolean
 }
 
+export interface MenuSeccion {
+  titulo: string
+  items: { to: string; label: string; detalle?: string }[]
+}
+
 interface Props {
   /** Nombre y logo de la tienda activa (principal o de un mayorista). */
   nombre: string
@@ -22,6 +28,8 @@ interface Props {
   /** Ruta base: "/" para la principal, "/t/slug" para un mayorista. */
   basePath?: string
   nav?: NavItem[]
+  /** Secciones del menú lateral (hamburguesa). Si no se pasan, no hay menú. */
+  menu?: MenuSeccion[]
   cartCount?: number
   onCartClick?: () => void
   onSearch?: (query: string) => void
@@ -36,6 +44,7 @@ export function PublicLayout({
   logoUrl,
   basePath = '/',
   nav = [],
+  menu = [],
   cartCount = 0,
   onCartClick,
   onSearch,
@@ -43,6 +52,7 @@ export function PublicLayout({
   children,
 }: Props) {
   const [buscando, setBuscando] = useState(false)
+  const [menuAbierto, setMenuAbierto] = useState(false)
   const [q, setQ] = useState('')
 
   function enviar(e: FormEvent) {
@@ -102,6 +112,11 @@ export function PublicLayout({
                 </span>
               )}
             </Button>
+            {menu.length > 0 && (
+              <Button variant="ghost" size="icon-sm" className="text-current hover:bg-white/10" aria-label="Abrir menú" onClick={() => setMenuAbierto(true)}>
+                <Menu />
+              </Button>
+            )}
           </div>
         </div>
 
@@ -145,6 +160,30 @@ export function PublicLayout({
           </nav>
         )}
       </header>
+
+      {menu.length > 0 && (
+        <Sheet open={menuAbierto} onOpenChange={setMenuAbierto}>
+          <SheetContent side="right" title="Menú">
+            <nav aria-label="Menú" className="space-y-8">
+              {menu.map((sec) => (
+                <section key={sec.titulo}>
+                  <h2 className="mb-3 text-lg text-muted-foreground">{sec.titulo}</h2>
+                  <ul className="divide-y divide-border border-y border-border">
+                    {sec.items.map((it) => (
+                      <li key={it.to + it.label}>
+                        <Link to={it.to} onClick={() => setMenuAbierto(false)} className="block py-3.5 hover:opacity-70">
+                          <span className="block text-[1.0625rem] font-semibold">{it.label}</span>
+                          {it.detalle && <span className="mt-0.5 block text-sm text-muted-foreground">{it.detalle}</span>}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              ))}
+            </nav>
+          </SheetContent>
+        </Sheet>
+      )}
 
       <main id="contenido" className="flex-1">
         {children ?? <Outlet />}

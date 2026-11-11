@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
 import { PublicLayout } from '@/components/layout/PublicLayout'
 import { Toaster } from '@/components/ui/toast'
@@ -43,18 +43,39 @@ function Marco() {
           { to: ruta('/catalogo'), label: 'Catálogo', end: true },
           ...(esPrincipal ? [{ to: '/registro', label: 'Ser mayorista', destacado: true }] : []),
         ]}
+        menu={[
+          {
+            titulo: 'Comprar',
+            items: [
+              { to: ruta('/'), label: 'Inicio' },
+              { to: ruta('/catalogo'), label: 'Todo el catálogo' },
+              { to: ruta('/catalogo?g=dama'), label: 'Dama' },
+              { to: ruta('/catalogo?g=caballero'), label: 'Caballero' },
+              { to: ruta('/catalogo?g=nino'), label: 'Niño' },
+            ],
+          },
+          ...(esPrincipal
+            ? [
+                {
+                  titulo: 'Mayoristas',
+                  items: [
+                    { to: '/registro', label: 'Solicitar ser mayorista', detalle: 'Compra a precio mayorista y arma tu propia sección de venta.' },
+                    { to: '/ingresar', label: 'Ingreso de mayoristas', detalle: 'Para cuentas ya aprobadas.' },
+                  ],
+                },
+                {
+                  titulo: 'Administración',
+                  items: [{ to: '/admin/login', label: 'Ingreso del administrador', detalle: 'Solo para el equipo de Elite Sport.' }],
+                },
+              ]
+            : []),
+        ]}
         cartCount={unidadesCarrito(items ?? [])}
         onCartClick={() => setCarritoAbierto(true)}
         onSearch={(q) => navigate(`${ruta('/catalogo')}${q ? `?q=${encodeURIComponent(q)}` : ''}`)}
         footer={
           <>
             <p>{ciudad}. Pedidos por WhatsApp.</p>
-            {esPrincipal && (
-              <p className="mt-3 flex flex-wrap gap-x-5 gap-y-1">
-                <Link to="/registro" className="underline underline-offset-4 hover:opacity-100">Solicitar ser mayorista</Link>
-                <Link to="/ingresar" className="underline underline-offset-4 hover:opacity-100">Ingreso de mayoristas</Link>
-              </p>
-            )}
           </>
         }
       />
