@@ -32,7 +32,8 @@ test.describe('fondo en movimiento', () => {
     const capa = page.locator('div.fixed.-z-10')
     await expect(capa).toHaveCount(1)
     expect(await capa.evaluate((e) => getComputedStyle(e).position)).toBe('fixed')
-    await expect(capa.locator('video')).toHaveCount(1)
+    // El video se pide cuando la página termina de cargar y el navegador queda libre (hasta unos 3 s después).
+    await expect(capa.locator('video')).toHaveCount(1, { timeout: 10_000 })
     expect(await page.evaluate(() => document.documentElement.dataset.fondo)).toBe('on')
     // La capa no intercepta clics y el contenido sigue usable.
     await page.getByRole('link', { name: 'Ver catálogo' }).click()

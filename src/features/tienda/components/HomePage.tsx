@@ -9,12 +9,7 @@ import { useStore } from '../context/StoreContext'
 import { useOpciones } from '@/features/catalogo/hooks/useCatalogo'
 import { useProductosPagina } from '../hooks/useProductosTienda'
 import { aTarjeta } from '../tarjeta'
-
-const GRUPOS = [
-  { id: 'dama', titulo: 'Dama', texto: 'Tallas 34 a 40' },
-  { id: 'caballero', titulo: 'Caballero', texto: 'Tallas 38 a 45' },
-  { id: 'nino', titulo: 'Niño', texto: 'Tallas 22 a 33' },
-]
+import { CategoriasGrupo } from './CategoriasGrupo'
 
 export function HomePage() {
   const { tienda, ruta, ciudad, tiendaPrecios } = useStore()
@@ -49,16 +44,7 @@ export function HomePage() {
         </div>
       </section>
 
-      <section aria-label="Categorías por grupo" className="container-page grid gap-3 py-10 sm:grid-cols-3">
-        {GRUPOS.map((g) => (
-          <Link key={g.id} to={ruta(`/catalogo?g=${g.id}`)} className="group flex h-36 flex-col justify-between rounded-xl border border-border bg-card p-5 transition-colors hover:border-foreground md:h-44">
-            <span className="eyebrow">{g.texto}</span>
-            <span className="flex items-end justify-between">
-              <span className="font-display text-5xl font-extrabold uppercase leading-none">{g.titulo}</span>
-            </span>
-          </Link>
-        ))}
-      </section>
+      <CategoriasGrupo />
 
       {destacados.length > 0 && (
         <section className="container-page py-6">
