@@ -6,7 +6,6 @@ import { Price } from '@/components/ui/price'
 import { ProductCard } from '@/components/ui/product-card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SizeSelector, type TallaOpcion } from '@/components/ui/size-selector'
-import { toast } from '@/components/ui/toast'
 import { usePageMeta } from '@/lib/meta'
 import { cn } from '@/lib/utils'
 import { useCarritoStore } from '../carrito/carritoStore'
@@ -74,7 +73,6 @@ function ProductoVista({ slug: productoSlug }: { slug: string | undefined }) {
       precio: pr,
       stock: variante.stock,
     })
-    toast.success('Agregado al carrito')
     setCarritoAbierto(true)
   }
 
