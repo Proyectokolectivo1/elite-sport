@@ -7,7 +7,7 @@ import { useProductos, useTallas, useVariantes } from '@/features/catalogo/hooks
 import { mensajeError } from '@/lib/errors'
 import { cn } from '@/lib/utils'
 import { calcularLineas, paresPorCaja, totalUnidades } from '../calculo'
-import { useCurvas, useRegistrarIngreso } from '../hooks/useInventario'
+import { useCurvas, useRegistrarIngreso, useUltimoSurtido } from '../hooks/useInventario'
 
 type Tipo = 'caja' | 'unidad'
 
@@ -20,7 +20,8 @@ export function IngresoForm({ productoInicial }: { productoInicial?: string }) {
   const [tipo, setTipo] = useState<Tipo>('caja')
   const [productoId, setProductoId] = useState(productoInicial ?? '')
   const [color, setColor] = useState('')
-  const [curvaId, setCurvaId] = useState('')
+  // 'auto': el surtido del último ingreso de este producto (si existe); 'personalizado'; o el id de una curva guardada.
+  const [fuente, setFuente] = useState<string>('auto')
   const [cajas, setCajas] = useState('1')
   const [pares, setPares] = useState<Record<string, string>>({})
   const [totales, setTotales] = useState<Record<string, string>>({})
@@ -30,38 +31,49 @@ export function IngresoForm({ productoInicial }: { productoInicial?: string }) {
   const [error, setError] = useState<string | null>(null)
   const { data: variantesProducto = [] } = useVariantes(productoId)
   const coloresProducto = [...new Set(variantesProducto.map((v) => v.color))]
+  const { data: ultimo } = useUltimoSurtido(productoId)
 
   const producto = productos.find((p) => p.id === productoId)
   const tallasGrupo = useMemo(() => tallas.filter((t) => t.grupo === producto?.grupo), [tallas, producto?.grupo])
   const curvasGrupo = curvas.filter((c) => c.grupo === producto?.grupo)
   const nCajas = tipo === 'caja' ? Number(cajas) : 1
 
+  const paresEfectivos: Record<string, string> = useMemo(() => {
+    if (fuente === 'personalizado') return pares
+    if (fuente === 'auto') return ultimo ? Object.fromEntries(Object.entries(ultimo.pares).map(([k, v]) => [k, String(v)])) : pares
+    const c = curvas.find((x) => x.id === fuente)
+    return c ? Object.fromEntries(c.detalle.map((d) => [d.talla_id, String(d.pares)])) : pares
+  }, [fuente, pares, ultimo, curvas])
+  const valorFuente = fuente === 'auto' ? (ultimo ? 'ultimo' : 'personalizado') : fuente
+
   const lineas = useMemo(
     () =>
       calcularLineas(
         tallasGrupo.map((t) => ({
           tallaId: t.id,
-          pares: Number(pares[t.id] || 0),
+          pares: Number(paresEfectivos[t.id] || 0),
           totalManual: totales[t.id] !== undefined && totales[t.id] !== '' ? Number(totales[t.id]) : tipo === 'unidad' ? 0 : undefined,
         })),
         nCajas,
       ),
-    [tallasGrupo, pares, totales, tipo, nCajas],
+    [tallasGrupo, paresEfectivos, totales, tipo, nCajas],
   )
   const total = totalUnidades(lineas)
 
   function elegirProducto(id: string) {
     setProductoId(id)
-    setCurvaId('')
+    setFuente('auto')
     setPares({})
     setTotales({})
   }
 
-  function elegirCurva(id: string) {
-    setCurvaId(id)
+  function elegirFuente(valor: string) {
     setTotales({})
-    const c = curvas.find((x) => x.id === id)
-    setPares(c ? Object.fromEntries(c.detalle.map((d) => [d.talla_id, String(d.pares)])) : {})
+    if (valor === 'ultimo') setFuente('auto')
+    else {
+      setFuente(valor)
+      if (valor === 'personalizado') setPares({})
+    }
   }
 
   function validar(): string | null {
@@ -89,9 +101,7 @@ export function IngresoForm({ productoInicial }: { productoInicial?: string }) {
         lineas: lineas.map((l) => ({ talla_id: l.tallaId, pares: tipo === 'caja' ? l.pares : l.total, total: l.total })),
       })
       toast.success(`Ingresaron ${total} pares de ${producto.nombre}`)
-      setPares({})
       setTotales({})
-      setCurvaId('')
       setNota('')
       setReferencia('')
     } catch (e) {
@@ -134,12 +144,16 @@ export function IngresoForm({ productoInicial }: { productoInicial?: string }) {
           <>
             <div>
               <Label htmlFor="ing-curva">Surtido de la caja</Label>
-              <Select id="ing-curva" value={curvaId} onChange={(e) => elegirCurva(e.target.value)} disabled={!producto}>
-                <option value="">Personalizado</option>
+              <Select id="ing-curva" value={valorFuente} onChange={(e) => elegirFuente(e.target.value)} disabled={!producto}>
+                {ultimo && <option value="ultimo">Último ingreso de este producto</option>}
                 {curvasGrupo.map((c) => (
                   <option key={c.id} value={c.id}>{c.nombre}</option>
                 ))}
+                <option value="personalizado">Personalizado</option>
               </Select>
+              {valorFuente === 'ultimo' && ultimo && (
+                <p className="mt-1 text-xs text-muted-foreground">Tomado del ingreso del {new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium' }).format(new Date(ultimo.fecha))}. Puedes cambiarlo abajo.</p>
+              )}
             </div>
             <div>
               <Label htmlFor="ing-cajas">Número de cajas</Label>
@@ -174,12 +188,12 @@ export function IngresoForm({ productoInicial }: { productoInicial?: string }) {
                           step="1"
                           inputMode="numeric"
                           className="ml-auto h-9 w-24 text-right"
-                          value={pares[t.id] ?? ''}
+                          value={paresEfectivos[t.id] ?? ''}
                           placeholder="0"
                           onChange={(e) => {
-                            setPares((p) => ({ ...p, [t.id]: e.target.value }))
+                            setPares({ ...paresEfectivos, [t.id]: e.target.value })
                             setTotales((o) => Object.fromEntries(Object.entries(o).filter(([k]) => k !== t.id)))
-                            setCurvaId('')
+                            setFuente('personalizado')
                           }}
                         />
                       </TD>

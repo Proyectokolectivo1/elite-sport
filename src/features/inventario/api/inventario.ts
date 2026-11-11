@@ -136,3 +136,32 @@ export async function listarMovimientos(limite = 300): Promise<Movimiento[]> {
     talla: m.variantes_producto?.tallas?.etiqueta ?? '',
   }))
 }
+
+// ---- Último surtido de caja de un producto ----
+export interface UltimoSurtido {
+  fecha: string
+  /** Pares por caja de cada talla (talla_id -> pares). */
+  pares: Record<string, number>
+}
+
+/** Surtido del último ingreso por caja de este producto, para no volver a digitarlo. */
+export async function ultimoSurtidoCaja(productoId: string): Promise<UltimoSurtido | null> {
+  const v = await supabase.from('variantes_producto').select('id, talla_id').eq('producto_id', productoId)
+  if (v.error) throw v.error
+  if (v.data.length === 0) return null
+  const tallaDe = new Map(v.data.map((x) => [x.id, x.talla_id]))
+  const d = await supabase
+    .from('ingresos_inventario_detalle')
+    .select('variante_id, pares_por_caja, ingresos_inventario(tipo, creado_en)')
+    .in('variante_id', v.data.map((x) => x.id))
+  if (d.error) throw d.error
+  const filas = d.data.filter((r) => r.ingresos_inventario?.tipo === 'caja' && (r.pares_por_caja ?? 0) > 0)
+  if (filas.length === 0) return null
+  const fecha = filas.reduce((m, r) => (r.ingresos_inventario && r.ingresos_inventario.creado_en > m ? r.ingresos_inventario.creado_en : m), '')
+  const pares: Record<string, number> = {}
+  for (const r of filas) {
+    const t = tallaDe.get(r.variante_id)
+    if (t && r.ingresos_inventario?.creado_en === fecha && r.pares_por_caja) pares[t] = r.pares_por_caja
+  }
+  return { fecha, pares }
+}

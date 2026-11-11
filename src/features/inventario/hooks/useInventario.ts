@@ -8,6 +8,7 @@ import {
   listarExistencias,
   listarMovimientos,
   registrarIngreso,
+  ultimoSurtidoCaja,
   type IngresoEntrada,
 } from '../api/inventario'
 
@@ -17,6 +18,8 @@ export const inventarioKeys = {
   movimientos: ['movimientos'] as const,
 }
 
+export const useUltimoSurtido = (productoId: string) =>
+  useQuery({ queryKey: ['ultimo-surtido', productoId], queryFn: () => ultimoSurtidoCaja(productoId), enabled: !!productoId })
 export const useCurvas = () => useQuery({ queryKey: inventarioKeys.curvas, queryFn: listarCurvas })
 export const useExistencias = () => useQuery({ queryKey: inventarioKeys.existencias, queryFn: listarExistencias })
 export const useMovimientos = () => useQuery({ queryKey: inventarioKeys.movimientos, queryFn: () => listarMovimientos() })
@@ -29,6 +32,7 @@ function useRefrescarStock() {
     void qc.invalidateQueries({ queryKey: catalogoKeys.productos })
     void qc.invalidateQueries({ queryKey: ['variantes'] })
     void qc.invalidateQueries({ queryKey: ['dashboard'] })
+    void qc.invalidateQueries({ queryKey: ['ultimo-surtido'] })
   }
 }
 
