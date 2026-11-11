@@ -119,3 +119,9 @@ export async function obtenerMiPlazo(): Promise<{ venceEn: string; ultimoPedido:
   const f = data[0]
   return f ? { venceEn: f.vence_en, ultimoPedido: f.ultimo_pedido, diasRestantes: Math.ceil((new Date(f.vence_en).getTime() - Date.now()) / 86_400_000) } : null
 }
+
+/** El dueño de la tienda atiende un pedido de sus clientes. No toca el inventario central. */
+export async function actualizarEstadoPedidoCliente(id: string, estado: 'confirmado' | 'entregado' | 'cancelado'): Promise<void> {
+  const { error } = await supabase.rpc('actualizar_estado_pedido_cliente', { p_pedido: id, p_estado: estado })
+  if (error) throw error
+}

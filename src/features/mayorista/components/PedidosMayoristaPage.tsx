@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { PageHeader } from '@/components/ui/page-header'
 import { Skeleton } from '@/components/ui/skeleton'
-import { Tabs } from '@/components/ui/tabs'
 import { toast } from '@/components/ui/toast'
 import { useDetallePedido } from '@/features/pedidos/hooks/usePedidos'
 import type { EstadoPedido, PedidoFila } from '@/features/pedidos/api/pedidos'
@@ -51,20 +50,14 @@ function Fila({ p, puedeCancelar }: { p: PedidoFila; puedeCancelar: boolean }) {
 
 export function PedidosMayoristaPage() {
   const { data = [], isLoading } = useMisPedidos()
-  const [tab, setTab] = useState<'compras' | 'ventas'>('compras')
   const compras = data.filter((p) => p.tipo === 'mayorista')
-  const ventas = data.filter((p) => p.tipo === 'lead_tienda')
-  const lista = tab === 'compras' ? compras : ventas
-
   return (
     <>
-      <PageHeader title="Pedidos" />
-      <Tabs className="mb-6" value={tab} onChange={setTab} tabs={[{ id: 'compras', label: `Mis compras (${compras.length})` }, { id: 'ventas', label: `Pedidos de mi tienda (${ventas.length})` }]} />
-      {tab === 'ventas' && <p className="mb-4 text-sm text-muted-foreground">Son los pedidos que tus clientes te enviaron desde tu sección. No descuentan el inventario de Elite Sport: tú los atiendes con tu propio abastecimiento.</p>}
-      {isLoading ? <Skeleton className="h-40 w-full" /> : lista.length === 0 ? (
-        <EmptyState title="Nada por aquí todavía" description={tab === 'compras' ? 'Tus pedidos al administrador aparecerán aquí.' : 'Cuando un cliente te escriba desde tu sección, lo verás aquí.'} />
+      <PageHeader title="Mis compras" description="Los pedidos que le haces a Elite Sport a precio mayorista. Los pedidos de tus clientes están en la pestaña Clientes." />
+      {isLoading ? <Skeleton className="h-40 w-full" /> : compras.length === 0 ? (
+        <EmptyState title="Aún no has pedido" description="Tus pedidos al administrador aparecerán aquí." />
       ) : (
-        <ul className="space-y-3">{lista.map((p) => <Fila key={p.id} p={p} puedeCancelar={tab === 'compras'} />)}</ul>
+        <ul className="space-y-3">{compras.map((p) => <Fila key={p.id} p={p} puedeCancelar />)}</ul>
       )}
     </>
   )

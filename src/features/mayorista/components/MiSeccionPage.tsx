@@ -122,6 +122,7 @@ export function MiSeccionPage() {
               <Label htmlFor="s-wa">WhatsApp para pedidos</Label>
               <Input id="s-wa" inputMode="tel" placeholder="593991234567" aria-invalid={!!errors.whatsapp} {...register('whatsapp')} />
               <FieldError>{errors.whatsapp?.message}</FieldError>
+              <p className="mt-1 text-xs text-muted-foreground">Es el número de tu tienda: allí se abre el WhatsApp de tus clientes. Los pedidos llegan siempre a la pestaña Clientes de este panel, tengas o no WhatsApp.</p>
             </div>
             <div className="sm:col-span-2">
               <Label htmlFor="s-msg">Saludo del mensaje</Label>

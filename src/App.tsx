@@ -26,6 +26,7 @@ const ConfiguracionPage = lazy(() => import('@/features/configuracion/components
 const RegistroPage = lazy(() => import('@/features/auth/components/RegistroPage').then((m) => ({ default: m.RegistroPage })))
 const CuentaPage = lazy(() => import('@/features/auth/components/CuentaPage').then((m) => ({ default: m.CuentaPage })))
 const MayoristaLayout = lazy(() => import('@/features/mayorista/components/MayoristaLayout').then((m) => ({ default: m.MayoristaLayout })))
+const ClientesPage = lazy(() => import('@/features/mayorista/components/ClientesPage').then((m) => ({ default: m.ClientesPage })))
 const PedirPage = lazy(() => import('@/features/mayorista/components/PedirPage').then((m) => ({ default: m.PedirPage })))
 const MiSeccionPage = lazy(() => import('@/features/mayorista/components/MiSeccionPage').then((m) => ({ default: m.MiSeccionPage })))
 const MisPreciosPage = lazy(() => import('@/features/mayorista/components/MisPreciosPage').then((m) => ({ default: m.MisPreciosPage })))
@@ -73,7 +74,8 @@ export default function App() {
           <Route path="/cuenta" element={<ThemeProvider><CuentaPage /></ThemeProvider>} />
           <Route path="/mayorista" element={<RequireMayorista />}>
             <Route element={<MayoristaLayout />}>
-              <Route index element={<PedirPage />} />
+              <Route index element={<ClientesPage />} />
+              <Route path="pedir" element={<PedirPage />} />
               <Route path="seccion" element={<MiSeccionPage />} />
               <Route path="precios" element={<MisPreciosPage />} />
               <Route path="pedidos" element={<PedidosMayoristaPage />} />

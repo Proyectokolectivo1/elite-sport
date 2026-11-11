@@ -11,6 +11,8 @@ export interface PanelNavItem {
   label: string
   icon: LucideIcon
   end?: boolean
+  /** Número de pendientes (ej. pedidos nuevos). */
+  badge?: number
 }
 
 interface Props {
@@ -52,7 +54,7 @@ export function PanelLayout({ nombre, logoUrl, seccion, nav, acciones, aviso, ch
           {colapsado ? <span aria-hidden className="-skew-x-[18deg] h-6 w-2 bg-signal" /> : <Logo nombre={nombre} logoUrl={logoUrl} />}
         </div>
         <nav aria-label={seccion} className="flex-1 space-y-1 overflow-y-auto p-3">
-          {nav.map(({ to, label, icon: Icon, end }) => (
+          {nav.map(({ to, label, icon: Icon, end, badge }) => (
             <NavLink
               key={to}
               to={to}
@@ -70,6 +72,7 @@ export function PanelLayout({ nombre, logoUrl, seccion, nav, acciones, aviso, ch
             >
               <Icon className="size-[1.125rem] shrink-0" />
               {colapsado ? <span className="sr-only">{label}</span> : label}
+              {!!badge && <span className="ml-auto rounded-full bg-signal px-2 py-0.5 text-[0.6875rem] font-bold text-signal-foreground tabular-nums">{badge}</span>}
             </NavLink>
           ))}
         </nav>
@@ -106,7 +109,7 @@ export function PanelLayout({ nombre, logoUrl, seccion, nav, acciones, aviso, ch
         className="fixed inset-x-0 bottom-0 z-40 grid border-t border-sidebar-border bg-sidebar pb-[env(safe-area-inset-bottom)] text-sidebar-foreground md:hidden"
         style={{ gridTemplateColumns: `repeat(${principales.length + (resto.length > 0 ? 1 : 0)}, minmax(0, 1fr))` }}
       >
-        {principales.map(({ to, label, icon: Icon, end }) => (
+        {principales.map(({ to, label, icon: Icon, end, badge }) => (
           <NavLink
             key={to}
             to={to}
@@ -118,7 +121,10 @@ export function PanelLayout({ nombre, logoUrl, seccion, nav, acciones, aviso, ch
               )
             }
           >
-            <Icon className="size-5" />
+            <span className="relative">
+              <Icon className="size-5" />
+              {!!badge && <span className="absolute -right-2.5 -top-1.5 grid min-w-4 place-items-center rounded-full bg-signal px-1 text-[0.625rem] font-bold leading-4 text-signal-foreground">{badge}</span>}
+            </span>
             {label}
           </NavLink>
         ))}

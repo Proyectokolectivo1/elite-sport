@@ -248,6 +248,7 @@ export type Database = {
     }
     Views: { [_ in never]: never }
     Functions: {
+      actualizar_estado_pedido_cliente: { Args: { p_estado: Enum<'estado_pedido'>; p_pedido: string }; Returns: undefined }
       actividad_mayorista: {
         Args: { p_id?: string }
         Returns: { mayorista_id: string; ultimo_pedido: string | null; vence_en: string }[]
