@@ -93,6 +93,24 @@ test.describe('panel por rol', () => {
     expect(llamadas.despachar[0]).toEqual({ p_pedido: 'ped-101', p_lineas: [{ detalle_id: 'd1', entregados: 4 }] })
   })
 
+  test('sin ventanas emergentes: el éxito no muestra aviso y el error queda en una franja fija', async ({ page }) => {
+    await entrarComo(page, 'bodeguero')
+    await page.goto('/admin/bodega')
+    await page.getByRole('button', { name: /^Despachar \d+ pares/ }).click()
+    await page.waitForTimeout(500)
+    await expect(page.getByRole('region', { name: 'Avisos' })).toHaveCount(0)
+    await expect(page.getByRole('status')).toHaveCount(0)
+    await page.route('**/rest/v1/rpc/despachar_pedido_bodega', (r) =>
+      r.fulfill({ status: 400, json: { message: 'Stock insuficiente de Runner talla 40', code: 'P0001' } }),
+    )
+    await page.getByRole('button', { name: /^Despachar \d+ pares/ }).click()
+    const aviso = page.getByRole('alert').filter({ hasText: 'Stock insuficiente' })
+    await expect(aviso).toBeVisible()
+    expect(await aviso.evaluate((el) => getComputedStyle(el.closest('[aria-label="Avisos"]') as Element).position)).toBe('static')
+    await page.getByRole('button', { name: 'Cerrar aviso' }).click()
+    await expect(aviso).toHaveCount(0)
+  })
+
   test('el cierre del día solo se guarda cuando cuadra', async ({ page }) => {
     const llamadas = await entrarComo(page, 'bodeguero')
     await page.goto('/admin/bodega/cierre')
@@ -153,7 +171,9 @@ test.describe('fotos al crear producto', () => {
     await page.goto('/admin/productos/nuevo')
     await expect(page.getByRole('tab', { name: 'Imágenes' })).toBeVisible()
     await page.getByRole('tab', { name: 'Imágenes' }).click()
-    await expect(page.getByText(/Primero crea el producto/)).toBeVisible()
+    // Sin producto creado, la pestaña no cambia y sigue la guía de la página.
+    await expect(page.getByRole('tab', { name: 'Datos y precios' })).toHaveAttribute('aria-selected', 'true')
+    await expect(page.getByText(/Crear y subir fotos/).first()).toBeVisible()
     await page.getByLabel('Nombre').fill('Trail Norte')
     // Marca, categoría y estilo se eligen con la lista propia: su valor debe llegar al formulario.
     await page.getByRole('combobox', { name: 'Marca' }).click()

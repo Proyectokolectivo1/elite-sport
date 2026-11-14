@@ -35,7 +35,6 @@ test.describe('administrador', () => {
     await page.getByLabel('Número de cajas').fill('2')
     await page.getByLabel(/Surtido de la caja/).selectOption({ index: 1 })
     await page.getByRole('button', { name: /^Ingresar \d+ pares/ }).click()
-    await expect(page.getByText(/Ingresaron \d+ pares/)).toBeVisible()
     await page.goto('/admin/inventario?tab=movimientos')
     await expect(page.getByText('Ingreso').first()).toBeVisible()
   })

@@ -1,69 +1,56 @@
 import { create } from 'zustand'
 import { X } from 'lucide-react'
-import { cn } from '@/lib/utils'
 
-type ToastTone = 'neutral' | 'success' | 'error'
-
-interface ToastItem {
+interface AvisoItem {
   id: number
   message: string
-  tone: ToastTone
 }
 
-interface ToastState {
-  items: ToastItem[]
-  push: (message: string, tone?: ToastTone) => void
+interface AvisoState {
+  items: AvisoItem[]
+  push: (message: string) => void
   dismiss: (id: number) => void
 }
 
 let nextId = 1
 
-const useToastStore = create<ToastState>((set, get) => ({
+const useAvisoStore = create<AvisoState>((set) => ({
   items: [],
-  push: (message, tone = 'neutral') => {
-    const id = nextId++
-    set((s) => ({ items: [...s.items, { id, message, tone }] }))
-    setTimeout(() => get().dismiss(id), 4500)
-  },
+  // El mismo mensaje no se repite: un error que se reintenta no apila franjas.
+  push: (message) => set((s) => (s.items.some((i) => i.message === message) ? s : { items: [...s.items, { id: nextId++, message }] })),
   dismiss: (id) => set((s) => ({ items: s.items.filter((t) => t.id !== id) })),
 }))
 
-/** API imperativa: `toast.success('Guardado')`. Se puede llamar fuera de componentes. */
+/**
+ * Avisos de la interfaz. No hay ventanas emergentes:
+ * - `success` y `show` no muestran nada: el resultado ya se ve en la pantalla (listas, saldos y estados se actualizan).
+ * - `error` se muestra en una franja fija dentro de la página, que se cierra a mano, para que un fallo nunca pase en silencio.
+ */
 export const toast = {
-  show: (message: string) => useToastStore.getState().push(message, 'neutral'),
-  success: (message: string) => useToastStore.getState().push(message, 'success'),
-  error: (message: string) => useToastStore.getState().push(message, 'error'),
+  show: (message: string) => {
+    void message
+  },
+  success: (message: string) => {
+    void message
+  },
+  error: (message: string) => useAvisoStore.getState().push(message),
 }
 
-const bar: Record<ToastTone, string> = {
-  neutral: 'bg-foreground',
-  success: 'bg-success',
-  error: 'bg-destructive',
-}
-
-/** Monta una sola vez, cerca de la raíz de la app. */
+/** Franja de errores. Va en el flujo de la página (no flota sobre el contenido). Se monta una vez por diseño. */
 export function Toaster() {
-  const items = useToastStore((s) => s.items)
-  const dismiss = useToastStore((s) => s.dismiss)
+  const items = useAvisoStore((s) => s.items)
+  const dismiss = useAvisoStore((s) => s.dismiss)
+  if (items.length === 0) return null
   return (
-    <div
-      role="region"
-      aria-label="Notificaciones"
-      className="pointer-events-none fixed inset-x-0 top-0 z-[60] flex flex-col items-center gap-2 p-4 pt-20 sm:items-end"
-    >
+    <div role="region" aria-label="Avisos" className="border-b border-destructive/40 bg-destructive/10">
       {items.map((t) => (
-        <div
-          key={t.id}
-          role={t.tone === 'error' ? 'alert' : 'status'}
-          className="pointer-events-auto flex w-full max-w-sm items-stretch overflow-hidden rounded-xl border border-border bg-popover text-popover-foreground shadow-md animate-in fade-in slide-in-from-top-2 duration-200"
-        >
-          <span aria-hidden className={cn('w-1 shrink-0', bar[t.tone])} />
-          <p className="flex-1 px-3.5 py-3 text-sm">{t.message}</p>
+        <div key={t.id} role="alert" className="mx-auto flex max-w-[var(--container-max,80rem)] items-start gap-3 px-[var(--gutter)] py-2.5 text-sm">
+          <p className="flex-1">{t.message}</p>
           <button
             type="button"
-            aria-label="Cerrar notificación"
+            aria-label="Cerrar aviso"
             onClick={() => dismiss(t.id)}
-            className="grid w-10 place-items-center text-muted-foreground transition-colors hover:text-foreground"
+            className="grid size-6 shrink-0 place-items-center text-muted-foreground transition-colors hover:text-foreground"
           >
             <X className="size-4" />
           </button>
