@@ -120,29 +120,45 @@ export type Database = {
           cliente_nombre: string; cliente_telefono: string; creado_en: string; estado: Enum<'estado_pedido'>
           id: string; mayorista_id: string | null; moneda: string; nota: string | null; numero: number
           stock_descontado: boolean; tienda_id: string | null; tipo: Enum<'tipo_pedido'>; total: number
+          solicitante_id: string | null; despachado_por: string | null; despachado_en: string | null; liquidado_por: string | null; liquidado_en: string | null
         }
         Insert: {
           cliente_correo?: string | null; cliente_direccion?: string | null; cliente_documento?: string | null; metodo_pago?: 'efectivo' | 'transferencia' | 'tarjeta' | null
           cliente_nombre: string; cliente_telefono: string; creado_en?: string; estado?: Enum<'estado_pedido'>
           id?: string; mayorista_id?: string | null; moneda: string; nota?: string | null; numero?: never
           stock_descontado?: boolean; tienda_id?: string | null; tipo: Enum<'tipo_pedido'>; total?: number
+          solicitante_id?: string | null; despachado_por?: string | null; despachado_en?: string | null; liquidado_por?: string | null; liquidado_en?: string | null
         }
         Update: {
           cliente_correo?: string | null; cliente_direccion?: string | null; cliente_documento?: string | null; metodo_pago?: 'efectivo' | 'transferencia' | 'tarjeta' | null
           cliente_nombre?: string; cliente_telefono?: string; creado_en?: string; estado?: Enum<'estado_pedido'>
           id?: string; mayorista_id?: string | null; moneda?: string; nota?: string | null; numero?: never
           stock_descontado?: boolean; tienda_id?: string | null; tipo?: Enum<'tipo_pedido'>; total?: number
+          solicitante_id?: string | null; despachado_por?: string | null; despachado_en?: string | null; liquidado_por?: string | null; liquidado_en?: string | null
         }
         Relationships: [
+          { foreignKeyName: 'pedidos_despachado_por_fkey'; columns: ['despachado_por']; isOneToOne: false; referencedRelation: 'perfiles'; referencedColumns: ['id'] },
+          { foreignKeyName: 'pedidos_liquidado_por_fkey'; columns: ['liquidado_por']; isOneToOne: false; referencedRelation: 'perfiles'; referencedColumns: ['id'] },
           { foreignKeyName: 'pedidos_mayorista_id_fkey'; columns: ['mayorista_id']; isOneToOne: false; referencedRelation: 'perfiles'; referencedColumns: ['id'] },
+          { foreignKeyName: 'pedidos_solicitante_id_fkey'; columns: ['solicitante_id']; isOneToOne: false; referencedRelation: 'perfiles'; referencedColumns: ['id'] },
           { foreignKeyName: 'pedidos_tienda_id_fkey'; columns: ['tienda_id']; isOneToOne: false; referencedRelation: 'tiendas'; referencedColumns: ['id'] },
         ]
       }
       pedidos_detalle: {
-        Row: { cantidad: number; descripcion: string; id: string; pedido_id: string; precio_unitario: number; variante_id: string }
-        Insert: { cantidad: number; descripcion: string; id?: string; pedido_id: string; precio_unitario: number; variante_id: string }
-        Update: { cantidad?: number; descripcion?: string; id?: string; pedido_id?: string; precio_unitario?: number; variante_id?: string }
+        Row: {
+          cantidad: number; descripcion: string; id: string; pedido_id: string; precio_unitario: number; variante_id: string
+          cantidad_entregada: number | null; cantidad_vendida: number | null; cantidad_devuelta: number | null; origen_detalle_id: string | null
+        }
+        Insert: {
+          cantidad: number; descripcion: string; id?: string; pedido_id: string; precio_unitario: number; variante_id: string
+          cantidad_entregada?: number | null; cantidad_vendida?: number | null; cantidad_devuelta?: number | null; origen_detalle_id?: string | null
+        }
+        Update: {
+          cantidad?: number; descripcion?: string; id?: string; pedido_id?: string; precio_unitario?: number; variante_id?: string
+          cantidad_entregada?: number | null; cantidad_vendida?: number | null; cantidad_devuelta?: number | null; origen_detalle_id?: string | null
+        }
         Relationships: [
+          { foreignKeyName: 'pedidos_detalle_origen_detalle_id_fkey'; columns: ['origen_detalle_id']; isOneToOne: false; referencedRelation: 'pedidos_detalle'; referencedColumns: ['id'] },
           { foreignKeyName: 'pedidos_detalle_pedido_id_fkey'; columns: ['pedido_id']; isOneToOne: false; referencedRelation: 'pedidos'; referencedColumns: ['id'] },
           { foreignKeyName: 'pedidos_detalle_variante_id_fkey'; columns: ['variante_id']; isOneToOne: false; referencedRelation: 'variantes_producto'; referencedColumns: ['id'] },
         ]
@@ -263,6 +279,7 @@ export type Database = {
       }
       ajustar_stock: { Args: { p_delta: number; p_nota: string; p_variante: string }; Returns: undefined }
       cancelar_pedido: { Args: { p_pedido: string }; Returns: undefined }
+      cerrar_pedido_bodega: { Args: { p_lineas: Json; p_pedido: string }; Returns: Json }
       confirmar_pedido: { Args: { p_pedido: string }; Returns: undefined }
       crear_pedido: {
         Args: {
@@ -279,9 +296,25 @@ export type Database = {
         }
         Returns: Json
       }
+      despachar_pedido_bodega: { Args: { p_lineas?: Json; p_pedido: string }; Returns: undefined }
+      devolver_a_bodega: { Args: { p_lineas: Json; p_pedido: string }; Returns: undefined }
       entregar_pedido: { Args: { p_pedido: string }; Returns: undefined }
       es_admin: { Args: never; Returns: boolean }
+      es_bodeguero: { Args: never; Returns: boolean }
       es_mayorista_aprobado: { Args: never; Returns: boolean }
+      es_mayorista_sector: { Args: never; Returns: boolean }
+      es_personal_bodega: { Args: never; Returns: boolean }
+      es_vendedor: { Args: never; Returns: boolean }
+      listar_pedidos_bodega: { Args: { p_vista: string }; Returns: Json }
+      mis_pares_en_poder: { Args: never; Returns: Json }
+      registrar_venta_local: {
+        Args: {
+          p_items: Json; p_metodo_pago?: string; p_cliente_nombre?: string; p_cliente_telefono?: string
+          p_cliente_correo?: string; p_cliente_documento?: string; p_nota?: string
+        }
+        Returns: Json
+      }
+      solicitar_a_bodega: { Args: { p_items: Json; p_nota?: string }; Returns: Json }
       obtener_precio_mayorista: { Args: { p_mayorista?: string; p_producto: string }; Returns: number }
       registrar_ingreso_inventario: {
         Args: {
@@ -292,13 +325,13 @@ export type Database = {
       }
     }
     Enums: {
-      estado_pedido: 'nuevo' | 'confirmado' | 'entregado' | 'cancelado'
+      estado_pedido: 'nuevo' | 'confirmado' | 'entregado' | 'cancelado' | 'liquidado'
       estado_perfil: 'pendiente' | 'aprobado' | 'rechazado' | 'suspendido'
       grupo_talla: 'dama' | 'caballero' | 'nino'
-      motivo_movimiento: 'ingreso' | 'venta' | 'pedido_mayorista' | 'ajuste' | 'anulacion'
-      rol_usuario: 'admin' | 'mayorista'
+      motivo_movimiento: 'ingreso' | 'venta' | 'pedido_mayorista' | 'ajuste' | 'anulacion' | 'despacho' | 'devolucion'
+      rol_usuario: 'admin' | 'mayorista' | 'bodeguero' | 'vendedor' | 'mayorista_sector'
       tipo_ingreso: 'caja' | 'unidad'
-      tipo_pedido: 'minorista' | 'mayorista' | 'lead_tienda' | 'mostrador'
+      tipo_pedido: 'minorista' | 'mayorista' | 'lead_tienda' | 'mostrador' | 'consignacion'
     }
     CompositeTypes: { [_ in never]: never }
   }

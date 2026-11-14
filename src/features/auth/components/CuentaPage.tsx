@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cerrarSesion } from '../api/auth'
 import { useAuth } from '../hooks/AuthProvider'
+import { inicioDeRol } from '../roles'
 
 const MENSAJES = {
-  pendiente: { titulo: 'Tu solicitud está en revisión', texto: 'El administrador la revisará pronto. Cuando la apruebe, esta pantalla te llevará a tu panel de mayorista.' },
+  pendiente: { titulo: 'Tu solicitud está en revisión', texto: 'El administrador la revisará pronto. Cuando la apruebe, esta pantalla te llevará a tu panel.' },
   rechazado: { titulo: 'Tu solicitud no fue aprobada', texto: 'Si crees que es un error, comunícate con Elite Sport por WhatsApp.' },
   suspendido: { titulo: 'Tu cuenta está suspendida', texto: 'Tu sección de tienda está desactivada. Comunícate con Elite Sport para reactivarla.' },
 } as const
@@ -17,8 +18,8 @@ export function CuentaPage() {
   const { session, perfil, cargando } = useAuth()
   if (cargando) return <div className="container-page py-16"><Skeleton className="h-40 w-full max-w-md" /></div>
   if (!session) return <Navigate to="/ingresar" replace />
-  if (perfil?.rol === 'admin' && perfil.estado === 'aprobado') return <Navigate to="/admin" replace />
-  if (perfil?.rol === 'mayorista' && perfil.estado === 'aprobado') return <Navigate to="/mayorista" replace />
+  const inicio = inicioDeRol(perfil?.rol, perfil?.estado)
+  if (inicio !== '/cuenta') return <Navigate to={inicio} replace />
 
   const base = MENSAJES[perfil?.estado === 'rechazado' || perfil?.estado === 'suspendido' ? perfil.estado : 'pendiente']
   const m =

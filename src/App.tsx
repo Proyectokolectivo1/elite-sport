@@ -6,7 +6,7 @@ import { HomePage } from '@/features/tienda/components/HomePage'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
 import { AuthProvider } from '@/features/auth/hooks/AuthProvider'
 import { RequireMayorista } from '@/features/auth/components/RequireMayorista'
-import { RequireAdmin } from '@/features/auth/components/RequireAdmin'
+import { RequirePanel } from '@/features/auth/components/RequireAdmin'
 import { useConfiguracion } from '@/features/configuracion/hooks/useConfiguracion'
 
 // Catálogo y ficha van aparte de la portada y se descargan en segundo plano apenas el navegador queda libre.
@@ -43,6 +43,15 @@ const MiSeccionPage = lazy(() => import('@/features/mayorista/components/MiSecci
 const MisPreciosPage = lazy(() => import('@/features/mayorista/components/MisPreciosPage').then((m) => ({ default: m.MisPreciosPage })))
 const PedidosMayoristaPage = lazy(() => import('@/features/mayorista/components/PedidosMayoristaPage').then((m) => ({ default: m.PedidosMayoristaPage })))
 const CompartirPage = lazy(() => import('@/features/mayorista/components/CompartirPage').then((m) => ({ default: m.CompartirPage })))
+const BodegaPage = lazy(() => import('@/features/bodega/components/BodegaPage').then((m) => ({ default: m.BodegaPage })))
+const EquipoPage = lazy(() => import('@/features/bodega/components/EquipoPage').then((m) => ({ default: m.EquipoPage })))
+const MiMercanciaPage = lazy(() => import('@/features/ventas/components/MiMercanciaPage').then((m) => ({ default: m.MiMercanciaPage })))
+const VenderLocalPage = lazy(() => import('@/features/ventas/components/VenderLocalPage').then((m) => ({ default: m.VenderLocalPage })))
+const cargarSector = () => import('@/features/bodega/components/SectorLayout')
+const SectorLayout = lazy(() => cargarSector().then((m) => ({ default: m.SectorLayout })))
+const SectorEnPoderPage = lazy(() => cargarSector().then((m) => ({ default: m.SectorEnPoderPage })))
+const SectorPedirPage = lazy(() => cargarSector().then((m) => ({ default: m.SectorPedirPage })))
+const SectorHistorialPage = lazy(() => cargarSector().then((m) => ({ default: m.SectorHistorialPage })))
 
 export default function App() {
   useConfiguracion()
@@ -59,18 +68,32 @@ export default function App() {
               </ThemeProvider>
             }
           />
-          <Route path="/admin" element={<RequireAdmin />}>
+          {/* Panel: admin, bodeguero y vendedor. Cada grupo de rutas exige su rol; el resto va a su inicio. */}
+          <Route path="/admin" element={<RequirePanel />}>
             <Route element={<AdminLayout />}>
-              <Route index element={<DashboardPage />} />
-              <Route path="productos" element={<ProductosPage />} />
-              <Route path="productos/nuevo" element={<ProductoFormPage />} />
-              <Route path="productos/:id" element={<ProductoFormPage />} />
-              <Route path="inventario" element={<InventarioPage />} />
-              <Route path="precios" element={<PreciosPage />} />
-              <Route path="ventas" element={<VentasPage />} />
-              <Route path="pedidos" element={<PedidosPage />} />
-              <Route path="mayoristas" element={<MayoristasPage />} />
-              <Route path="configuracion" element={<ConfiguracionPage />} />
+              <Route element={<RequirePanel roles={['admin']} />}>
+                <Route index element={<DashboardPage />} />
+                <Route path="productos" element={<ProductosPage />} />
+                <Route path="productos/nuevo" element={<ProductoFormPage />} />
+                <Route path="productos/:id" element={<ProductoFormPage />} />
+                <Route path="precios" element={<PreciosPage />} />
+                <Route path="ventas" element={<VentasPage />} />
+                <Route path="pedidos" element={<PedidosPage />} />
+                <Route path="mayoristas" element={<MayoristasPage />} />
+                <Route path="equipo" element={<EquipoPage />} />
+                <Route path="configuracion" element={<ConfiguracionPage />} />
+              </Route>
+              <Route element={<RequirePanel roles={['admin', 'bodeguero']} />}>
+                <Route path="inventario" element={<InventarioPage />} />
+                <Route path="bodega" element={<BodegaPage vista="por_despachar" />} />
+                <Route path="bodega/cierre" element={<BodegaPage vista="en_poder" />} />
+                <Route path="bodega/web" element={<BodegaPage vista="web" />} />
+                <Route path="bodega/historial" element={<BodegaPage vista="historial" />} />
+              </Route>
+              <Route element={<RequirePanel roles={['vendedor']} />}>
+                <Route path="local" element={<MiMercanciaPage />} />
+                <Route path="local/vender" element={<VenderLocalPage />} />
+              </Route>
             </Route>
           </Route>
           <Route path="/registro" element={<ThemeProvider><RegistroPage /></ThemeProvider>} />
@@ -91,6 +114,13 @@ export default function App() {
               <Route path="precios" element={<MisPreciosPage />} />
               <Route path="pedidos" element={<PedidosMayoristaPage />} />
               <Route path="compartir" element={<CompartirPage />} />
+            </Route>
+          </Route>
+          <Route path="/sector" element={<RequirePanel roles={['mayorista_sector']} login="/ingresar" />}>
+            <Route element={<SectorLayout />}>
+              <Route index element={<SectorEnPoderPage />} />
+              <Route path="pedir" element={<SectorPedirPage />} />
+              <Route path="historial" element={<SectorHistorialPage />} />
             </Route>
           </Route>
           <Route path="/" element={<StoreShell />}>

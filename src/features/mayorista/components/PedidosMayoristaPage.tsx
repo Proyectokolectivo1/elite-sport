@@ -11,8 +11,8 @@ import { mensajeError } from '@/lib/errors'
 import { formatMoney, useMoneyStore } from '@/lib/money'
 import { useCancelarMiPedido, useMisPedidos } from '../hooks/useMayorista'
 
-const ESTADOS: Record<EstadoPedido, string> = { nuevo: 'Nuevo', confirmado: 'Confirmado', entregado: 'Entregado', cancelado: 'Cancelado' }
-const TONO: Record<EstadoPedido, 'signal' | 'warning' | 'success' | 'neutral'> = { nuevo: 'signal', confirmado: 'warning', entregado: 'success', cancelado: 'neutral' }
+const ESTADOS: Record<EstadoPedido, string> = { nuevo: 'Nuevo', confirmado: 'Confirmado', entregado: 'Entregado', cancelado: 'Cancelado', liquidado: 'Liquidado' }
+const TONO: Record<EstadoPedido, 'signal' | 'warning' | 'success' | 'neutral'> = { nuevo: 'signal', confirmado: 'warning', entregado: 'success', cancelado: 'neutral', liquidado: 'success' }
 const fecha = new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium', timeStyle: 'short' })
 
 function Fila({ p, puedeCancelar }: { p: PedidoFila; puedeCancelar: boolean }) {

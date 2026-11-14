@@ -14,9 +14,9 @@ import { formatMoney, useMoneyStore } from '@/lib/money'
 import type { EstadoPedido, PedidoFila, TipoPedido } from '../api/pedidos'
 import { useAccionPedido, useDetallePedido, usePedidos } from '../hooks/usePedidos'
 
-const TIPOS: Record<TipoPedido, string> = { minorista: 'Público', mayorista: 'Mayorista', lead_tienda: 'Tienda de mayorista', mostrador: 'Venta en tienda' }
-const ESTADOS: Record<EstadoPedido, string> = { nuevo: 'Nuevo', confirmado: 'Confirmado', entregado: 'Entregado', cancelado: 'Cancelado' }
-const TONO: Record<EstadoPedido, 'signal' | 'warning' | 'success' | 'neutral'> = { nuevo: 'signal', confirmado: 'warning', entregado: 'success', cancelado: 'neutral' }
+const TIPOS: Record<TipoPedido, string> = { minorista: 'Público', mayorista: 'Mayorista', lead_tienda: 'Tienda de mayorista', mostrador: 'Venta en tienda', consignacion: 'Entrega de bodega' }
+const ESTADOS: Record<EstadoPedido, string> = { nuevo: 'Nuevo', confirmado: 'Confirmado', entregado: 'Entregado', cancelado: 'Cancelado', liquidado: 'Liquidado' }
+const TONO: Record<EstadoPedido, 'signal' | 'warning' | 'success' | 'neutral'> = { nuevo: 'signal', confirmado: 'warning', entregado: 'success', cancelado: 'neutral', liquidado: 'success' }
 const fecha = new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium', timeStyle: 'short' })
 
 function Detalle({ pedido, onCerrar }: { pedido: PedidoFila; onCerrar: () => void }) {
@@ -40,6 +40,7 @@ function Detalle({ pedido, onCerrar }: { pedido: PedidoFila; onCerrar: () => voi
 
   const afectaStock = pedido.tipo !== 'lead_tienda'
   const esMostrador = pedido.tipo === 'mostrador'
+  const esBodega = pedido.tipo === 'consignacion'
   const tel = pedido.telefono.replace(/[^\d]/g, '')
   return (
     <div className="space-y-5">
@@ -68,14 +69,15 @@ function Detalle({ pedido, onCerrar }: { pedido: PedidoFila; onCerrar: () => voi
         </ul>
       )}
 
+      {esBodega && <p className="rounded-md bg-muted p-3 text-sm text-muted-foreground">Es una entrega de bodega: se despacha y se cierra desde Bodega. El total es lo vendido al cierre.</p>}
       {!afectaStock && <p className="rounded-md bg-muted p-3 text-sm text-muted-foreground">Es una venta de la tienda de un mayorista: no afecta el inventario central.</p>}
 
       <div className="flex flex-wrap gap-2">
-        {pedido.estado === 'nuevo' && afectaStock && !esMostrador && <Button disabled={accion.isPending} onClick={() => ejecutar('confirmar')}>Confirmar y descontar stock</Button>}
-        {pedido.estado === 'confirmado' && <Button variant="solid" disabled={accion.isPending} onClick={() => ejecutar('entregar')}>Marcar entregado</Button>}
-        {(pedido.estado === 'nuevo' || pedido.estado === 'confirmado' || (esMostrador && pedido.estado === 'entregado')) && (
+        {pedido.estado === 'nuevo' && afectaStock && !esMostrador && !esBodega && <Button disabled={accion.isPending} onClick={() => ejecutar('confirmar')}>Confirmar y descontar stock</Button>}
+        {pedido.estado === 'confirmado' && !esBodega && <Button variant="solid" disabled={accion.isPending} onClick={() => ejecutar('entregar')}>Marcar entregado</Button>}
+        {(pedido.estado === 'nuevo' || (pedido.estado === 'confirmado' && !esBodega) || (esMostrador && pedido.estado === 'entregado')) && (
           <Button variant="outline" disabled={accion.isPending} onClick={() => ejecutar('cancelar')}>
-            {pedido.estado === 'confirmado' || esMostrador ? 'Anular y reponer stock' : 'Cancelar'}
+            {esMostrador ? 'Anular venta' : pedido.estado === 'confirmado' ? 'Anular y reponer stock' : 'Cancelar'}
           </Button>
         )}
       </div>

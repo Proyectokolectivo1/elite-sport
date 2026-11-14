@@ -14,6 +14,8 @@ const MOTIVOS: Record<MotivoMovimiento, string> = {
   pedido_mayorista: 'Pedido mayorista',
   ajuste: 'Ajuste',
   anulacion: 'Anulación',
+  despacho: 'Entrega a liquidar',
+  devolucion: 'Devolución a bodega',
 }
 
 const fecha = new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium', timeStyle: 'short' })

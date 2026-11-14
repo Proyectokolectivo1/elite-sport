@@ -15,8 +15,8 @@ import { formatMoney, useMoneyStore } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { useActualizarPedidoCliente, useMisPedidos } from '../hooks/useMayorista'
 
-const ESTADOS: Record<EstadoPedido, string> = { nuevo: 'Nuevo', confirmado: 'En proceso', entregado: 'Entregado', cancelado: 'Cancelado' }
-const TONO: Record<EstadoPedido, 'signal' | 'warning' | 'success' | 'neutral'> = { nuevo: 'signal', confirmado: 'warning', entregado: 'success', cancelado: 'neutral' }
+const ESTADOS: Record<EstadoPedido, string> = { nuevo: 'Nuevo', confirmado: 'En proceso', entregado: 'Entregado', cancelado: 'Cancelado', liquidado: 'Liquidado' }
+const TONO: Record<EstadoPedido, 'signal' | 'warning' | 'success' | 'neutral'> = { nuevo: 'signal', confirmado: 'warning', entregado: 'success', cancelado: 'neutral', liquidado: 'success' }
 const fecha = new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium', timeStyle: 'short' })
 
 type Filtro = 'nuevo' | 'confirmado' | 'entregado' | 'cancelado' | 'todos'

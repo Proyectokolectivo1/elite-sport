@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Link, useNavigate, useParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogClose, DialogContent, DialogTrigger } from '@/components/ui/dialog'
@@ -18,6 +18,8 @@ import type { TablaOpciones } from '../api/catalogo'
 import { ImagenesProducto } from './ImagenesProducto'
 import { VariantesProducto } from './VariantesProducto'
 import { NuevaOpcion } from './NuevaOpcion'
+
+type Tab = 'datos' | 'imagenes' | 'variantes'
 
 const VACIO: ProductoValues = {
   nombre: '',
@@ -56,7 +58,10 @@ export function ProductoFormPage() {
   const { data: producto, isLoading } = useProducto(id)
   const guardar = useGuardarProducto(id)
   const eliminar = useEliminarProducto()
-  const [tab, setTab] = useState<'datos' | 'imagenes' | 'variantes'>('datos')
+  const location = useLocation()
+  // Al crear un producto se vuelve a montar la página con su id: llega aquí directo a la pestaña de fotos.
+  const tabInicial = (location.state as { tab?: Tab } | null)?.tab
+  const [tab, setTab] = useState<Tab>(id && tabInicial ? tabInicial : 'datos')
 
   const {
     register,
@@ -93,8 +98,14 @@ export function ProductoFormPage() {
         estilo_id: v.estilo_id || null,
         descripcion: v.descripcion.trim() || null,
       })
-      toast.success('Producto guardado')
-      if (!id) navigate(`/admin/productos/${nuevoId}`, { replace: true })
+      if (id) {
+        toast.success('Producto guardado')
+      } else {
+        toast.success('Producto creado. Ahora sube sus fotos.')
+        // /nuevo y /:id usan la misma instancia de la página (no se vuelve a montar): se cambia la pestaña aquí.
+        setTab('imagenes')
+        navigate(`/admin/productos/${nuevoId}`, { replace: true, state: { tab: 'imagenes' } })
+      }
     } catch (e) {
       toast.error(mensajeError(e))
     }
@@ -120,17 +131,23 @@ export function ProductoFormPage() {
       </Link>
       <PageHeader title={id ? (producto?.nombre ?? 'Producto') : 'Nuevo producto'} />
 
-      {id && (
-        <Tabs
-          className="mb-6"
-          value={tab}
-          onChange={setTab}
-          tabs={[
-            { id: 'datos', label: 'Datos y precios' },
-            { id: 'imagenes', label: 'Imágenes' },
-            { id: 'variantes', label: 'Tallas y stock' },
-          ]}
-        />
+      <Tabs
+        className="mb-6"
+        value={tab}
+        onChange={(t) => {
+          if (id || t === 'datos') setTab(t)
+          else toast.show('Primero crea el producto con sus datos. Luego subes las fotos aquí mismo.')
+        }}
+        tabs={[
+          { id: 'datos', label: 'Datos y precios' },
+          { id: 'imagenes', label: 'Imágenes' },
+          { id: 'variantes', label: 'Tallas y stock' },
+        ]}
+      />
+      {!id && (
+        <p className="mb-6 max-w-3xl rounded-md bg-muted p-3 text-sm text-muted-foreground">
+          Completa los datos y pulsa <strong className="text-foreground">Crear y subir fotos</strong>: el producto se guarda y pasas directo a la sección de imágenes, sin salir de aquí.
+        </p>
       )}
 
       {tab === 'datos' && (
@@ -190,7 +207,7 @@ export function ProductoFormPage() {
 
           <div className="flex flex-wrap items-center gap-3 border-t border-border pt-5">
             <Button type="submit" disabled={guardar.isPending || (!!id && !isDirty)}>
-              {guardar.isPending ? 'Guardando…' : id ? 'Guardar cambios' : 'Crear producto'}
+              {guardar.isPending ? 'Guardando…' : id ? 'Guardar cambios' : 'Crear y subir fotos'}
             </Button>
             {id && (
               <Dialog>

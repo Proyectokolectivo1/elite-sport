@@ -67,7 +67,7 @@ begin
   if v_n = 0 then ok := ok || E'\npendiente no ve precios mayoristas'; else fallos := fallos || E'\npendiente ve precios'; end if;
   begin update public.perfiles set rol = 'admin', estado = 'aprobado' where id = v_pen; fallos := fallos || E'\npendiente se autoaprobo';
   exception when others then ok := ok || E'\npendiente no se autoaprueba'; end;
-  begin perform public.crear_pedido('mayorista', 'x', '0991234567', jsonb_build_array(jsonb_build_object('variante_id', v_var, 'cantidad', 1)));
+  begin perform public.crear_pedido('mayorista', 'x', '0991234567', jsonb_build_array(jsonb_build_object('variante_id', v_var, 'cantidad', 1)), null, null, 'cliente@t.test', 'Calle 123 y Av. 9', '0912345678');
     fallos := fallos || E'\npendiente hizo pedido mayorista';
   exception when others then ok := ok || E'\npendiente no hace pedido mayorista'; end;
   reset role;
@@ -99,7 +99,7 @@ begin
   begin update public.tiendas set activa = false where id = v_tienda_apr;
     fallos := fallos || E'\naprobado cambio activa';
   exception when others then ok := ok || E'\naprobado no cambia activa'; end;
-  v_ped := public.crear_pedido('mayorista', 'Aprobado', '0991234567', jsonb_build_array(jsonb_build_object('variante_id', v_var, 'cantidad', 1)));
+  v_ped := public.crear_pedido('mayorista', 'Aprobado', '0991234567', jsonb_build_array(jsonb_build_object('variante_id', v_var, 'cantidad', 1)), null, null, 'cliente@t.test', 'Calle 123 y Av. 9', '0912345678');
   ok := ok || E'\naprobado crea pedido mayorista';
   begin perform public.confirmar_pedido((v_ped->>'id')::uuid); fallos := fallos || E'\naprobado confirmo su pedido';
   exception when others then ok := ok || E'\naprobado no confirma pedidos'; end;
@@ -119,7 +119,7 @@ begin
   v_n := 0;
   begin
     for i in 1..8 loop
-      perform public.crear_pedido('lead_tienda', 'Spam', '0990000000', jsonb_build_array(jsonb_build_object('variante_id', v_var, 'cantidad', 1)), v_tienda_apr);
+      perform public.crear_pedido('lead_tienda', 'Spam', '0990000000', jsonb_build_array(jsonb_build_object('variante_id', v_var, 'cantidad', 1)), v_tienda_apr, null, 'cliente@t.test', 'Calle 123 y Av. 9', '0912345678');
       v_n := i;
     end loop;
     fallos := fallos || E'\nlimite por telefono no actuo';
@@ -133,9 +133,10 @@ begin
   set local role authenticated;
   begin update public.variantes_producto set stock = 999 where id = v_var; fallos := fallos || E'\nadmin hizo UPDATE directo de stock';
   exception when others then ok := ok || E'\nnadie (ni admin) hace UPDATE directo de stock'; end;
-  perform public.confirmar_pedido((v_ped->>'id')::uuid);
   select stock into v_n from public.variantes_producto where id = v_var;
-  if v_n = 9 then ok := ok || E'\nadmin confirma y el stock baja de 10 a 9'; else fallos := fallos || E'\nstock tras confirmar=' || v_n; end if;
+  perform public.confirmar_pedido((v_ped->>'id')::uuid);
+  select v_n - stock into v_n from public.variantes_producto where id = v_var;
+  if v_n = 1 then ok := ok || E'\nadmin confirma y el stock baja en 1'; else fallos := fallos || E'\nstock tras confirmar bajo ' || v_n; end if;
   reset role;
 
   raise exception E'REPORTE (todo revertido)\nFALLOS: %\nOK: %', coalesce(nullif(fallos, ''), ' ninguno'), ok;

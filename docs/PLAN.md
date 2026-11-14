@@ -9,7 +9,10 @@ Catálogo y venta de zapatos para Elite Sport (Guayaquil). Hay un **inventario c
 |---|---|
 | Público | Compra a PVP en la tienda principal. |
 | Mayorista (aprobado por el admin) | a) Pide al admin a precio mayorista. b) Tiene su sección `/t/{slug}`, que reutiliza el catálogo del admin con su logo, colores, WhatsApp y precios propios. |
-| Admin | Gestiona el catálogo, las imágenes, el inventario, los precios, las aprobaciones y los pedidos. |
+| Admin | Gestiona el catálogo, las imágenes, el inventario, los precios, las aprobaciones, el equipo y los pedidos. |
+| Bodeguero | Despacha pedidos a bodega, cierra el día, ingresa mercancía, ajusta stock y entrega pedidos web. No ve precios, ventas, mayoristas ni ajustes. |
+| Vendedor del local | Pide pares a bodega y registra las ventas del punto físico con lo que tiene en su poder. |
+| Mayorista del sector | Retira pares en bodega y al cierre liquida lo vendido a su precio mayorista; lo demás regresa. Sin sección propia. |
 
 ## 2. Reglas de negocio
 | Flujo | Precio | ¿Descuenta stock? |
@@ -17,6 +20,7 @@ Catálogo y venta de zapatos para Elite Sport (Guayaquil). Hay un **inventario c
 | Público → tienda principal → WhatsApp del admin | PVP | Sí, al confirmar el admin. |
 | Mayorista → pedido mayorista → admin | Mayorista (o especial) | Sí, al confirmar el admin. |
 | Cliente → `/t/{slug}` → WhatsApp del mayorista | El que fija el mayorista | **No** (es un `lead_tienda`). |
+| Vendedor o mayorista del sector → pedido a bodega (`consignacion`) | PVP (vendedor) o mayorista (sector) | Sí al despachar; lo que regresa al cierre vuelve al stock. |
 
 Reglas adicionales:
 - El mayorista no tiene stock propio y no crea ni edita productos ni imágenes.
@@ -37,7 +41,7 @@ React 18 + Vite + TS · Tailwind + shadcn/ui · React Router · TanStack Query �
 **Convención:** todo en español (tablas, columnas, enums, funciones), en `snake_case` sin tildes.
 
 **Usuarios y tiendas**
-- `perfiles`: rol (admin | mayorista), estado (pendiente | aprobado | rechazado | suspendido), nombre, telefono, cedula_ruc, ciudad, negocio.
+- `perfiles`: rol (admin | mayorista | bodeguero | vendedor | mayorista_sector), estado (pendiente | aprobado | rechazado | suspendido), nombre, telefono, cedula_ruc, ciudad, negocio.
 - `tiendas`: propietario_id, slug, nombre, logo_url, banner_url, color_primario, color_acento, whatsapp, plantilla_mensaje, activa.
 - `configuracion`: fila única con moneda (codigo_iso, simbolo, decimales, locale) y datos del negocio.
 
@@ -58,7 +62,7 @@ React 18 + Vite + TS · Tailwind + shadcn/ui · React Router · TanStack Query �
 - `movimientos_inventario`: libro mayor.
 
 **Pedidos**
-- `pedidos` (tipo: minorista | mayorista | lead_tienda; estado: nuevo | confirmado | entregado | cancelado) + `pedidos_detalle`.
+- `pedidos` (tipo: minorista | mayorista | lead_tienda | mostrador | consignacion; estado: nuevo | confirmado | entregado | cancelado | liquidado) + `pedidos_detalle` (con cantidades entregada, vendida y devuelta en los pedidos a bodega).
 
 **Funciones RPC** (únicos puntos que tocan el stock):
 - `registrar_ingreso_inventario`: **conversión de caja a unidades**. Pares por talla = pares de esa talla en el surtido × número de cajas. Es editable por talla antes de guardar y suma a `variantes_producto.stock`.
@@ -66,6 +70,7 @@ React 18 + Vite + TS · Tailwind + shadcn/ui · React Router · TanStack Query �
 - `cancelar_pedido`
 - `ajustar_stock`
 - `obtener_precio_mayorista`
+- `solicitar_a_bodega`, `despachar_pedido_bodega`, `devolver_a_bodega`, `cerrar_pedido_bodega`, `registrar_venta_local`, `registrar_venta_mostrador`
 
 **RLS:**
 - Lectura pública del catálogo activo, sin precio mayorista.

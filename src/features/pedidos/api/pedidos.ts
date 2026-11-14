@@ -25,7 +25,7 @@ export interface PedidoFila {
 export async function listarPedidos(): Promise<PedidoFila[]> {
   const { data, error } = await supabase
     .from('pedidos')
-    .select('id, numero, tipo, estado, cliente_nombre, cliente_telefono, cliente_correo, cliente_direccion, cliente_documento, metodo_pago, total, moneda, nota, creado_en, tiendas(nombre), perfiles(nombre, negocio)')
+    .select('id, numero, tipo, estado, cliente_nombre, cliente_telefono, cliente_correo, cliente_direccion, cliente_documento, metodo_pago, total, moneda, nota, creado_en, tiendas(nombre), perfiles!pedidos_mayorista_id_fkey(nombre, negocio), solicitante:perfiles!pedidos_solicitante_id_fkey(nombre, negocio)')
     .order('creado_en', { ascending: false })
     .limit(300)
   if (error) throw error
@@ -36,7 +36,7 @@ export async function listarPedidos(): Promise<PedidoFila[]> {
     estado: p.estado,
     cliente: p.cliente_nombre,
     telefono: p.cliente_telefono,
-    origen: p.perfiles?.negocio || p.perfiles?.nombre || p.tiendas?.nombre || 'Tienda principal',
+    origen: p.perfiles?.negocio || p.perfiles?.nombre || p.solicitante?.negocio || p.solicitante?.nombre || p.tiendas?.nombre || 'Tienda principal',
     total: p.total,
     moneda: p.moneda,
     nota: p.nota,
