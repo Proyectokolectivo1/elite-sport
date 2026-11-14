@@ -34,15 +34,15 @@ const VACIO: ProductoValues = {
   destacado: false,
 }
 
-function SelectOpcion({ tabla, etiqueta, ...rest }: { tabla: TablaOpciones; etiqueta: string } & React.SelectHTMLAttributes<HTMLSelectElement>) {
+function SelectOpcion({ tabla, etiqueta, id, value, onValor }: { tabla: TablaOpciones; etiqueta: string; id: string; value: string; onValor: (v: string) => void }) {
   const { data = [] } = useOpciones(tabla)
   return (
     <div>
       <div className="flex items-end justify-between">
-        <Label htmlFor={rest.id}>{etiqueta}</Label>
+        <Label htmlFor={id}>{etiqueta}</Label>
         <NuevaOpcion tabla={tabla} etiqueta={etiqueta} />
       </div>
-      <Select {...rest}>
+      <Select id={id} value={value} onChange={(e) => onValor(e.target.value)}>
         <option value="">Sin asignar</option>
         {data.map((o) => (
           <option key={o.id} value={o.id}>{o.nombre}</option>
@@ -67,6 +67,7 @@ export function ProductoFormPage() {
     register,
     handleSubmit,
     reset,
+    setValue,
     control,
     formState: { errors, isDirty },
   } = useForm<ProductoValues>({ resolver: zodResolver(productoSchema), defaultValues: VACIO })
@@ -167,9 +168,9 @@ export function ProductoFormPage() {
               </Select>
               {producto && <p className="mt-1 text-xs text-muted-foreground">No se puede cambiar: define las tallas del inventario.</p>}
             </div>
-            <SelectOpcion id="marca" value={sel.marca_id} tabla="marcas" etiqueta="Marca" {...register('marca_id')} />
-            <SelectOpcion id="categoria" value={sel.categoria_id} tabla="categorias" etiqueta="Categoría" {...register('categoria_id')} />
-            <SelectOpcion id="estilo" value={sel.estilo_id} tabla="estilos" etiqueta="Estilo" {...register('estilo_id')} />
+            <SelectOpcion id="marca" value={sel.marca_id ?? ''} tabla="marcas" etiqueta="Marca" onValor={(v) => setValue('marca_id', v, { shouldDirty: true })} />
+            <SelectOpcion id="categoria" value={sel.categoria_id ?? ''} tabla="categorias" etiqueta="Categoría" onValor={(v) => setValue('categoria_id', v, { shouldDirty: true })} />
+            <SelectOpcion id="estilo" value={sel.estilo_id ?? ''} tabla="estilos" etiqueta="Estilo" onValor={(v) => setValue('estilo_id', v, { shouldDirty: true })} />
             <div className="sm:col-span-2">
               <Label htmlFor="descripcion">Descripción</Label>
               <Textarea id="descripcion" {...register('descripcion')} />

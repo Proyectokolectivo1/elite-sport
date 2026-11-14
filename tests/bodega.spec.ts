@@ -139,6 +139,10 @@ test.describe('fotos al crear producto', () => {
   test('al crear el producto pasa directo a la pestaña de imágenes', async ({ page }) => {
     const llamadas = await entrarComo(page, 'admin')
     const producto = { id: 'p-nuevo', nombre: 'Trail Norte', slug: 'trail-norte', grupo: 'caballero', marca_id: null, categoria_id: null, estilo_id: null, descripcion: null, precio_publico: 99, activo: true, destacado: false, creado_en: new Date().toISOString() }
+    const op = (t: string) => [{ id: `id-${t}`, nombre: t, slug: t }]
+    await page.route('**/rest/v1/marcas*', (r) => r.fulfill({ json: op('Adidas') }))
+    await page.route('**/rest/v1/categorias*', (r) => r.fulfill({ json: op('Running') }))
+    await page.route('**/rest/v1/estilos*', (r) => r.fulfill({ json: op('Deportivo') }))
     await page.route('**/rest/v1/productos*', (r) => {
       if (r.request().method() === 'POST') {
         llamadas.producto.push(r.request().postDataJSON())
@@ -151,12 +155,21 @@ test.describe('fotos al crear producto', () => {
     await page.getByRole('tab', { name: 'Imágenes' }).click()
     await expect(page.getByText(/Primero crea el producto/)).toBeVisible()
     await page.getByLabel('Nombre').fill('Trail Norte')
+    // Marca, categoría y estilo se eligen con la lista propia: su valor debe llegar al formulario.
+    await page.getByRole('combobox', { name: 'Marca' }).click()
+    await page.getByRole('option', { name: 'Adidas' }).click()
+    await page.getByRole('combobox', { name: 'Categoría' }).click()
+    await page.getByRole('option', { name: 'Running' }).click()
+    await page.getByRole('combobox', { name: 'Estilo' }).click()
+    await page.getByRole('option', { name: 'Deportivo' }).click()
     await page.getByLabel('Precio al público').fill('99')
+    await page.getByLabel('Precio mayorista').fill('60')
     await page.getByRole('button', { name: 'Crear y subir fotos' }).click()
     await expect(page).toHaveURL(/\/admin\/productos\/p-nuevo$/)
     await expect(page.getByRole('tab', { name: 'Imágenes' })).toHaveAttribute('aria-selected', 'true')
     await expect(page.getByLabel('Color de las fotos')).toBeVisible()
     await expect(page.getByRole('button', { name: 'Subir fotos' })).toBeVisible()
     expect(llamadas.producto).toHaveLength(1)
+    expect(llamadas.producto[0]).toMatchObject({ marca_id: 'id-Adidas', categoria_id: 'id-Running', estilo_id: 'id-Deportivo' })
   })
 })
