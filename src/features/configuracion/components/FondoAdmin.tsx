@@ -15,9 +15,9 @@ const CAMPO: Record<MedioFondo, 'fondo_video_url' | 'fondo_video_movil_url' | 'f
 }
 
 const INFO: Record<MedioFondo, { titulo: string; ayuda: string; accept: string }> = {
-  video: { titulo: 'Video para computador', ayuda: 'Horizontal 16:9, 1080p, de 6 a 10 segundos, sin audio. Ideal por debajo de 12 MB.', accept: 'video/mp4,video/webm' },
-  'video-movil': { titulo: 'Video para celular', ayuda: 'Vertical 9:16, 540 × 960, mismo recorrido. Ideal por debajo de 6 MB. Si no subes uno, el celular usa el de computador.', accept: 'video/mp4,video/webm' },
-  poster: { titulo: 'Imagen de respaldo', ayuda: 'Se ve mientras carga el video y si la persona tiene activado "reducir movimiento" o ahorro de datos.', accept: 'image/jpeg,image/png,image/webp' },
+  video: { titulo: 'Video para computador', ayuda: 'Horizontal 16:9, 1280 × 720, de 6 a 10 segundos, sin audio. Máximo 4 MB.', accept: 'video/mp4,video/webm' },
+  'video-movil': { titulo: 'Video para celular', ayuda: 'Vertical 9:16, 540 × 960, mismo recorrido. Máximo 2 MB. Si no subes uno, el celular usa el de computador.', accept: 'video/mp4,video/webm' },
+  poster: { titulo: 'Imagen de respaldo', ayuda: 'Se ve mientras carga el video y si la persona tiene activado "reducir movimiento" o ahorro de datos. Máximo 300 KB.', accept: 'image/jpeg,image/png,image/webp' },
 }
 
 function Medio({ tipo, config }: { tipo: MedioFondo; config: Configuracion }) {

@@ -65,7 +65,8 @@ export function FondoCorredor({ video, videoMovil, poster, opacidad }: FondoConf
     if (!cargar || !src || quieto) return
     const control = new AbortController()
     let url: string | null = null
-    fetch(src, { signal: control.signal })
+    // force-cache: si el dispositivo ya lo descargó (caché de un año), no se vuelve a pedir a la red.
+    fetch(src, { signal: control.signal, cache: 'force-cache' })
       .then((r) => {
         if (!r.ok) throw new Error('video no disponible')
         return r.blob()

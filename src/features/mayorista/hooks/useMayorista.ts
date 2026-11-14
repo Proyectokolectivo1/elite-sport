@@ -36,7 +36,7 @@ export function usePreciosMiTienda(tiendaId: string | undefined) {
 /** Pedidos visibles para el mayorista (RLS): sus compras al admin y los leads de su tienda. */
 export function useMisPedidos() {
   // Se refresca cada medio minuto para que los pedidos nuevos de sus clientes aparezcan sin recargar.
-  return useQuery({ queryKey: ['mis-pedidos'], queryFn: listarPedidos, refetchInterval: 30_000 })
+  return useQuery({ queryKey: ['mis-pedidos'], queryFn: listarPedidos, refetchInterval: 60_000 })
 }
 
 export function useActualizarMiTienda(id: string) {

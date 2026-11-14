@@ -40,12 +40,14 @@ const MIME: Record<MedioFondo, string[]> = {
   'video-movil': ['video/mp4', 'video/webm'],
   poster: ['image/jpeg', 'image/png', 'image/webp'],
 }
-const MAX_MB = 25
+/** Topes por archivo: cada visitante nuevo descarga el medio, y el plan gratuito de Supabase incluye 5 GB al mes. */
+const MAX_MB: Record<MedioFondo, number> = { video: 4, 'video-movil': 2, poster: 0.3 }
 
 /** Sube un medio al bucket `medios` y devuelve su URL pública. */
 export async function subirMedioFondo(tipo: MedioFondo, archivo: File | Blob): Promise<string> {
   if (!MIME[tipo].includes(archivo.type)) throw new Error(tipo === 'poster' ? 'La imagen debe ser JPG, PNG o WebP.' : 'El video debe ser MP4 o WebM.')
-  if (archivo.size > MAX_MB * 1024 * 1024) throw new Error(`El archivo pesa más de ${MAX_MB} MB.`)
+  const tope = MAX_MB[tipo]
+  if (archivo.size > tope * 1024 * 1024) throw new Error(`El archivo pesa más de ${tope < 1 ? `${tope * 1000} KB` : `${tope} MB`}. Comprímelo antes de subirlo.`)
   const ext = archivo.type === 'image/jpeg' ? 'jpg' : archivo.type.split('/')[1]
   const ruta = `fondo/${tipo}-${crypto.randomUUID()}.${ext}`
   const { error } = await supabase.storage.from('medios').upload(ruta, archivo, { contentType: archivo.type, cacheControl: '31536000' })

@@ -11,7 +11,7 @@ import '@fontsource/barlow-condensed/latin-800.css'
 import './styles/index.css'
 
 // Los datos se reutilizan 30 s antes de volver a pedirlos: menos consultas al navegar entre páginas.
-const queryClient = new QueryClient({ defaultOptions: { queries: { staleTime: 30_000, retry: 1 } } })
+const queryClient = new QueryClient({ defaultOptions: { queries: { staleTime: 60_000, retry: 1, refetchOnWindowFocus: false } } })
 
 // Mide la velocidad real de los visitantes (Core Web Vitals). Solo envía datos en producción en Vercel.
 if (import.meta.env.PROD && !['localhost', '127.0.0.1'].includes(location.hostname)) injectSpeedInsights()

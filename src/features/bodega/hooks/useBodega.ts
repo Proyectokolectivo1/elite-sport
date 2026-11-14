@@ -45,7 +45,7 @@ function useRefrescar() {
 }
 
 export const usePedidosBodega = (vista: VistaBodega) =>
-  useQuery({ queryKey: bodegaKeys.vista(vista), queryFn: () => listarPedidosBodega(vista), refetchInterval: 30_000 })
+  useQuery({ queryKey: bodegaKeys.vista(vista), queryFn: () => listarPedidosBodega(vista), refetchInterval: 60_000 })
 
 export function useDespachar() {
   const refrescar = useRefrescar()
@@ -92,13 +92,13 @@ export function useSolicitarABodega() {
 export function useMisParesEnPoder() {
   const { session } = useAuth()
   const uid = session?.user.id
-  return useQuery({ queryKey: bodegaKeys.enPoder(uid), queryFn: misParesEnPoder, enabled: !!uid, refetchInterval: 30_000 })
+  return useQuery({ queryKey: bodegaKeys.enPoder(uid), queryFn: misParesEnPoder, enabled: !!uid, refetchInterval: 60_000 })
 }
 
 export function useMisEntregas() {
   const { session } = useAuth()
   const uid = session?.user.id
-  return useQuery({ queryKey: bodegaKeys.entregas(uid), queryFn: () => misEntregas(uid as string), enabled: !!uid, refetchInterval: 30_000 })
+  return useQuery({ queryKey: bodegaKeys.entregas(uid), queryFn: () => misEntregas(uid as string), enabled: !!uid, refetchInterval: 60_000 })
 }
 
 /** Ventas del vendedor desde el inicio del día. */
