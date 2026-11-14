@@ -73,7 +73,7 @@ export function CierreEntrega({ pedido }: { pedido: PedidoBodega }) {
         <p className="font-display text-2xl font-bold uppercase leading-none">Entrega #{pedido.numero}</p>
         <p className="text-sm text-muted-foreground">
           {pedido.despachado_en && `Salió a las ${hora.format(new Date(pedido.despachado_en))} · `}
-          <strong className="text-foreground tabular-nums">{enPoder}</strong> pares en su poder
+          <strong className="text-foreground tabular-nums">{enPoder}</strong> {enPoder === 1 ? 'par' : 'pares'} en su poder
         </p>
       </div>
 

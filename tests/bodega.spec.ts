@@ -114,6 +114,13 @@ test.describe('panel por rol', () => {
   test('el cierre del día solo se guarda cuando cuadra', async ({ page }) => {
     const llamadas = await entrarComo(page, 'bodeguero')
     await page.goto('/admin/bodega/cierre')
+    // Cada persona tiene su encabezado con lo que se le despachó en total.
+    const grupo = page.getByRole('region', { name: 'Entregas de Carlos Local' })
+    await expect(grupo.getByText('Vendedor del local')).toBeVisible()
+    await expect(grupo.getByText(/1 entrega abierta · 4 pares despachados/)).toBeVisible()
+    await expect(grupo.getByText('2 pares', { exact: true })).toBeVisible()
+    await grupo.getByText('Qué se le despachó').click()
+    await expect(grupo.getByText(/Despachados 4 · vendidos 2 · regresaron 0/)).toBeVisible()
     const vendidos = page.getByLabel(/Vendidos de Runner/)
     const regresan = page.getByLabel(/Regresan de Runner/)
     // Propuesta inicial: los 2 registrados vendidos y 2 regresan.

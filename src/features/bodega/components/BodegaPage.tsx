@@ -169,6 +169,54 @@ function Historial({ p }: { p: PedidoBodega }) {
   )
 }
 
+/** Encabezado de cada persona en el cierre: quién es y qué se le despachó en total. */
+function ResumenGrupo({ nombre, rol, pedidos }: { nombre: string; rol: PedidoBodega['solicitante_rol']; pedidos: PedidoBodega[] }) {
+  const resumen = useMemo(() => {
+    const m = new Map<string, { entregados: number; vendidos: number; devueltos: number }>()
+    for (const p of pedidos) {
+      for (const l of p.lineas) {
+        const e = l.cantidad_entregada ?? 0
+        if (e === 0) continue
+        const x = m.get(l.descripcion) ?? { entregados: 0, vendidos: 0, devueltos: 0 }
+        x.entregados += e
+        x.vendidos += l.cantidad_vendida ?? 0
+        x.devueltos += l.cantidad_devuelta ?? 0
+        m.set(l.descripcion, x)
+      }
+    }
+    return [...m.entries()].sort((a, b) => a[0].localeCompare(b[0], 'es'))
+  }, [pedidos])
+  const entregados = resumen.reduce((s, [, x]) => s + x.entregados, 0)
+  const enPoder = resumen.reduce((s, [, x]) => s + x.entregados - x.vendidos - x.devueltos, 0)
+  const plural = (n: number, uno: string, varios: string) => `${n} ${n === 1 ? uno : varios}`
+
+  return (
+    <div className="mb-3">
+      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <h2 className="text-3xl">{nombre}</h2>
+        {rol && <Badge variant="outline">{NOMBRE_ROL[rol]}</Badge>}
+      </div>
+      <p className="mt-1 text-sm text-muted-foreground">
+        {plural(pedidos.length, 'entrega abierta', 'entregas abiertas')} · {plural(entregados, 'par despachado', 'pares despachados')} ·{' '}
+        <strong className="text-foreground tabular-nums">{plural(enPoder, 'par', 'pares')}</strong> en su poder
+      </p>
+      <details className="mt-2 rounded-lg border border-border bg-card/50 px-3 py-2 text-sm">
+        <summary className="cursor-pointer font-semibold">Qué se le despachó</summary>
+        <ul className="mt-2 divide-y divide-border">
+          {resumen.map(([descripcion, x]) => (
+            <li key={descripcion} className="flex flex-wrap justify-between gap-2 py-1.5">
+              <span>{descripcion}</span>
+              <span className="tabular-nums text-muted-foreground">
+                Despachados {x.entregados} · vendidos {x.vendidos} · regresaron {x.devueltos} · <strong className="text-foreground">en su poder {x.entregados - x.vendidos - x.devueltos}</strong>
+              </span>
+            </li>
+          ))}
+        </ul>
+      </details>
+    </div>
+  )
+}
+
 export function BodegaPage({ vista }: { vista: VistaBodega }) {
   const navigate = useNavigate()
   const { data = [], isLoading, error } = usePedidosBodega(vista)
@@ -180,14 +228,16 @@ export function BodegaPage({ vista }: { vista: VistaBodega }) {
     return s ? data.filter((p) => `${p.numero} ${p.solicitante_nombre ?? ''} ${p.cliente_nombre}`.toLowerCase().includes(s)) : data
   }, [data, q])
 
-  // En el cierre se agrupa por solicitante: al final de la tarde se cuadra persona por persona.
+  // En el cierre se agrupa por solicitante (cada mayorista del sector o vendedor): se cuadra persona por persona.
   const grupos = useMemo(() => {
-    const m = new Map<string, PedidoBodega[]>()
+    const m = new Map<string, { nombre: string; rol: PedidoBodega['solicitante_rol']; pedidos: PedidoBodega[] }>()
     for (const p of filas) {
-      const k = p.solicitante_nombre ?? p.cliente_nombre
-      m.set(k, [...(m.get(k) ?? []), p])
+      const k = p.solicitante_id ?? p.cliente_nombre
+      const g = m.get(k) ?? { nombre: p.solicitante_nombre ?? p.cliente_nombre, rol: p.solicitante_rol, pedidos: [] }
+      g.pedidos.push(p)
+      m.set(k, g)
     }
-    return [...m.entries()]
+    return [...m.entries()].sort((a, b) => a[1].nombre.localeCompare(b[1].nombre, 'es'))
   }, [filas])
 
   return (
@@ -208,9 +258,9 @@ export function BodegaPage({ vista }: { vista: VistaBodega }) {
 
       {vista === 'en_poder' ? (
         <div className="space-y-10">
-          {grupos.map(([nombre, pedidos]) => (
-            <section key={nombre} aria-label={`Entregas de ${nombre}`}>
-              <h2 className="mb-3 text-3xl">{nombre}</h2>
+          {grupos.map(([clave, { nombre, rol, pedidos }]) => (
+            <section key={clave} aria-label={`Entregas de ${nombre}`}>
+              <ResumenGrupo nombre={nombre} rol={rol} pedidos={pedidos} />
               <div className="space-y-4">
                 {pedidos.map((p) => (
                   // La clave cambia si llegan ventas o devoluciones nuevas: así el formulario parte de los datos al día.
