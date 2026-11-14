@@ -48,3 +48,20 @@ export async function obtenerPerfil(id: string): Promise<Perfil | null> {
   if (error) throw error
   return data
 }
+
+/** Ruta a la que vuelve el enlace del correo de recuperación. */
+export const RUTA_NUEVA_CONTRASENA = '/nueva-contrasena'
+
+/** Envía el correo con el enlace para crear una contraseña nueva. */
+export async function solicitarRecuperacion(email: string): Promise<void> {
+  const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+    redirectTo: `${window.location.origin}${RUTA_NUEVA_CONTRASENA}`,
+  })
+  if (error) throw error
+}
+
+/** Cambia la contraseña de la sesión actual (la que abrió el enlace del correo). */
+export async function cambiarContrasena(password: string): Promise<void> {
+  const { error } = await supabase.auth.updateUser({ password })
+  if (error) throw error
+}

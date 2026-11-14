@@ -119,3 +119,9 @@
 - **Atención al desplegar:** la 0014 añade una segunda relación `pedidos → perfiles`, así que el embebido `perfiles(...)` sin pista falla. El frontend nuevo ya usa `perfiles!pedidos_mayorista_id_fkey`; **la lista de Pedidos del admin desplegada antes de este cambio falla hasta publicar el código nuevo**.
 - **No verificado:** las pantallas con cuentas reales de bodeguero, vendedor y mayorista del sector (solo con datos simulados en E2E y SQL).
 - **Pendiente:** el admin ve Bodega sin precios; los totales están en Pedidos. Las curvas de caja siguen siendo solo del admin.
+
+### Extra — Recuperación de contraseña (2026-11-14)
+- **Hecho:** enlace "¿Olvidaste tu contraseña?" en los dos ingresos (`/ingresar` y `/admin/login`). `/recuperar` pide el correo y llama a `resetPasswordForEmail` (el mensaje es el mismo exista o no la cuenta, para no revelar quién está registrado). El enlace del correo abre `/nueva-contrasena`, donde se elige la contraseña nueva (mínimo 8, con confirmación) con `updateUser`; si el enlace venció o ya se usó, muestra "Enlace no válido" y permite pedir otro. Al terminar lleva a `/cuenta`, que redirige a cada rol a su pantalla.
+- **Verificado:** 8 E2E nuevos (`tests/recuperacion.spec.ts`, en 375 y 1280 px) con las respuestas de Supabase simuladas: validación, el destino del enlace, enlace no válido y guardado de la contraseña.
+- **No verificado:** el correo real. Requiere los pasos de abajo.
+- **Pendiente del dueño (Supabase):** en Authentication → URL Configuration, agregar `https://<dominio>/nueva-contrasena` a Redirect URLs (si no, el enlace llega al Site URL). Revisar la plantilla "Reset Password" en español y, para volumen real, configurar SMTP propio (el de Supabase está limitado a pocos correos por hora).

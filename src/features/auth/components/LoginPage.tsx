@@ -64,6 +64,7 @@ export function LoginPage({ destinoPorDefecto = '/admin', pie }: Props) {
             <Label htmlFor="password">Contraseña</Label>
             <Input id="password" type="password" autoComplete="current-password" aria-invalid={!!errors.password} {...register('password')} />
             <FieldError>{errors.password?.message}</FieldError>
+            <Link to="/recuperar" className="mt-2 inline-block text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground">¿Olvidaste tu contraseña?</Link>
           </div>
           <FieldError>{error ?? undefined}</FieldError>
           <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>

@@ -22,3 +22,18 @@ export const registroSchema = z
   .refine((v) => v.password === v.confirmar, { path: ['confirmar'], message: 'Las contraseñas no coinciden' })
 
 export type RegistroValues = z.infer<typeof registroSchema>
+
+export const recuperarSchema = z.object({
+  email: z.string().min(1, 'Ingresa tu correo').email('Correo no válido'),
+})
+
+export type RecuperarValues = z.infer<typeof recuperarSchema>
+
+export const nuevaContrasenaSchema = z
+  .object({
+    password: z.string().min(8, 'Mínimo 8 caracteres'),
+    confirmar: z.string(),
+  })
+  .refine((v) => v.password === v.confirmar, { path: ['confirmar'], message: 'Las contraseñas no coinciden' })
+
+export type NuevaContrasenaValues = z.infer<typeof nuevaContrasenaSchema>

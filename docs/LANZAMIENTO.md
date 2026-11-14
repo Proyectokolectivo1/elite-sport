@@ -11,6 +11,7 @@ Lista de pasos que solo puede hacer el dueño de las cuentas. Marca cada uno al 
 
 ## 2. Supabase (panel → Authentication)
 - [ ] **URL Configuration:** Site URL = el dominio de producción; añadir también la URL de Vercel Preview a Redirect URLs.
+- [ ] **Recuperación de contraseña:** añadir `https://<dominio>/nueva-contrasena` a Redirect URLs, traducir la plantilla "Reset Password" y configurar SMTP propio (el de Supabase envía muy pocos correos por hora).
 - [ ] **Providers → Email:** decidir si se exige confirmar el correo al registrarse. Con confirmación, el registro muestra "Confirma tu correo".
 - [ ] **Passwords:** activar *Leaked password protection* y subir el mínimo a 8 caracteres.
 - [ ] **Rate limits:** revisar los límites de envío de correos de autenticación.

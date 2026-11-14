@@ -35,6 +35,8 @@ const PedidosPage = lazy(() => import('@/features/pedidos/components/PedidosPage
 const MayoristasPage = lazy(() => import('@/features/mayoristas/components/MayoristasPage').then((m) => ({ default: m.MayoristasPage })))
 const ConfiguracionPage = lazy(() => import('@/features/configuracion/components/ConfiguracionPage').then((m) => ({ default: m.ConfiguracionPage })))
 const RegistroPage = lazy(() => import('@/features/auth/components/RegistroPage').then((m) => ({ default: m.RegistroPage })))
+const RecuperarPage = lazy(() => import('@/features/auth/components/RecuperarPage').then((m) => ({ default: m.RecuperarPage })))
+const NuevaContrasenaPage = lazy(() => import('@/features/auth/components/NuevaContrasenaPage').then((m) => ({ default: m.NuevaContrasenaPage })))
 const CuentaPage = lazy(() => import('@/features/auth/components/CuentaPage').then((m) => ({ default: m.CuentaPage })))
 const MayoristaLayout = lazy(() => import('@/features/mayorista/components/MayoristaLayout').then((m) => ({ default: m.MayoristaLayout })))
 const ClientesPage = lazy(() => import('@/features/mayorista/components/ClientesPage').then((m) => ({ default: m.ClientesPage })))
@@ -105,6 +107,8 @@ export default function App() {
               </ThemeProvider>
             }
           />
+          <Route path="/recuperar" element={<ThemeProvider><RecuperarPage /></ThemeProvider>} />
+          <Route path="/nueva-contrasena" element={<ThemeProvider><NuevaContrasenaPage /></ThemeProvider>} />
           <Route path="/cuenta" element={<ThemeProvider><CuentaPage /></ThemeProvider>} />
           <Route path="/mayorista" element={<RequireMayorista />}>
             <Route element={<MayoristaLayout />}>
