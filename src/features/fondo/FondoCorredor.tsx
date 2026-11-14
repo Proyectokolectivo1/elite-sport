@@ -58,9 +58,35 @@ export function FondoCorredor({ video, videoMovil, poster, opacidad }: FondoConf
 
   const src = (movil ? (videoMovil ?? video) : video) ?? null
 
+  // El video se descarga completo a memoria antes de mostrarlo. Así cada salto del scroll se resuelve
+  // sin red (en celulares los saltos por rangos HTTP son lo que más entrecorta la imagen).
+  const [fuente, setFuente] = useState<string | null>(null)
+  useEffect(() => {
+    if (!cargar || !src || quieto) return
+    const control = new AbortController()
+    let url: string | null = null
+    fetch(src, { signal: control.signal })
+      .then((r) => {
+        if (!r.ok) throw new Error('video no disponible')
+        return r.blob()
+      })
+      .then((blob) => {
+        url = URL.createObjectURL(blob)
+        setFuente(url)
+      })
+      .catch(() => {
+        // Si no se pudo descargar entero, se usa la dirección directa (el navegador la va pidiendo por partes).
+        if (!control.signal.aborted) setFuente(src)
+      })
+    return () => {
+      control.abort()
+      if (url) URL.revokeObjectURL(url)
+    }
+  }, [cargar, src, quieto])
+
   useEffect(() => {
     const el = ref.current
-    if (!el || !src || quieto) return
+    if (!el || !fuente || quieto) return
     let raf = 0
     let actual = 0
     let activo = true
@@ -89,16 +115,16 @@ export function FondoCorredor({ video, videoMovil, poster, opacidad }: FondoConf
       cancelAnimationFrame(raf)
       el.removeEventListener('loadedmetadata', arrancar)
     }
-  }, [src, quieto])
+  }, [fuente, quieto])
 
   // Cada imagen o video se pide una sola vez; el video móvil es más ligero.
   return (
     <div aria-hidden className="pointer-events-none fixed inset-0 -z-10 overflow-hidden bg-background">
-      {src && !quieto && cargar && (
+      {fuente && !quieto && (
         <video
-          key={src}
+          key={fuente}
           ref={ref}
-          src={src}
+          src={fuente}
           poster={poster ?? undefined}
           muted
           playsInline

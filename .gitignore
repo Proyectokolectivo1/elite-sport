@@ -8,3 +8,6 @@ dist-e2e
 playwright-report
 test-results
 .DS_Store
+
+# Archivos de video optimizados para subir desde el panel (no van al repositorio)
+media/

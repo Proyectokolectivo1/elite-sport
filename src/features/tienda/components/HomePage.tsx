@@ -6,7 +6,6 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { usePageMeta } from '@/lib/meta'
 import { cn } from '@/lib/utils'
 import { useStore } from '../context/StoreContext'
-import { useOpciones } from '@/features/catalogo/hooks/useCatalogo'
 import { useProductosPagina } from '../hooks/useProductosTienda'
 import { aTarjeta } from '../tarjeta'
 import { CategoriasGrupo } from './CategoriasGrupo'
@@ -18,7 +17,6 @@ export function HomePage() {
   // Solo se piden los pocos productos que se ven en la portada, no todo el catálogo.
   const destacadosQ = useProductosPagina('destacados', tiendaPrecios, { destacado: true }, 5)
   const novedadesQ = useProductosPagina('novedades', tiendaPrecios, { orden: 'novedades' }, 8)
-  const { data: marcas = [] } = useOpciones('marcas')
   const destacados = destacadosQ.data?.productos ?? []
   const novedades = novedadesQ.data?.productos ?? []
   const cargando = novedadesQ.isLoading
@@ -56,18 +54,6 @@ export function HomePage() {
               </div>
             ))}
           </div>
-        </section>
-      )}
-
-      {marcas.length > 0 && (
-        <section aria-label="Marcas" className="container-page py-10">
-          <ul className="flex flex-wrap gap-x-8 gap-y-2 border-y border-border py-5">
-            {marcas.map((m) => (
-              <li key={m.id}>
-                <Link to={ruta(`/catalogo?marca=${m.id}`)} className="font-display text-3xl font-bold uppercase text-muted-foreground transition-colors hover:text-foreground">{m.nombre}</Link>
-              </li>
-            ))}
-          </ul>
         </section>
       )}
 
