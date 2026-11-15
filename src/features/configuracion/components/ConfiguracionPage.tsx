@@ -11,7 +11,6 @@ import { mensajeError } from '@/lib/errors'
 import { formatMoney } from '@/lib/money'
 import { actualizarConfiguracion } from '../api/configuracion'
 import { configuracionKey, useConfiguracion } from '../hooks/useConfiguracion'
-import { FondoAdmin } from './FondoAdmin'
 import { configuracionSchema, type ConfiguracionValues } from '../schemas'
 
 export function ConfiguracionPage() {
@@ -115,11 +114,6 @@ export function ConfiguracionPage() {
         <Button type="submit" disabled={!isDirty || guardar.isPending}>{guardar.isPending ? 'Guardando…' : 'Guardar cambios'}</Button>
       </form>
 
-      {data && (
-        <div className="mt-12 max-w-4xl border-t border-border pt-8">
-          <FondoAdmin config={data} />
-        </div>
-      )}
     </>
   )
 }

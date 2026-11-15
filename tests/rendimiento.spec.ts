@@ -85,24 +85,3 @@ test.describe('rendimiento', () => {
     expect(pedidasFoto.every((u) => !u.endsWith('/foto.webp'))).toBe(true)
   })
 })
-
-test.describe('consumo de Supabase', () => {
-  test('el video de fondo sale del propio sitio y no del almacenamiento de Supabase', async ({ page }) => {
-    const aSupabase: string[] = []
-    const propios: string[] = []
-    page.on('request', (r) => {
-      const u = r.url()
-      if (u.includes('/storage/v1/object/public/medios/')) aSupabase.push(u)
-      if (u.includes('/medios/fondo-')) propios.push(u)
-    })
-    await page.goto('/')
-    await page.waitForLoadState('networkidle')
-    await expect.poll(() => propios.length, { timeout: 8000 }).toBeGreaterThan(0)
-    expect(aSupabase).toEqual([])
-  })
-
-  test('los medios del fondo existen en el propio sitio', async ({ request }) => {
-    const r = await request.head('/medios/fondo-v1-poster.webp')
-    expect(r.ok()).toBe(true)
-  })
-})

@@ -137,3 +137,7 @@
 - Eliminados `vercel.json`, `api/` y `@vercel/speed-insights`. Añadidos `public/.htaccess` (SPA, HTTPS, caché, CSP) y `scripts/generar-sitemap.mjs` (corre al final de `npm run build`).
 - Pendiente (dueño): variables en Hostinger, borrar video viejo de 10,7 MB en Storage, plantilla "Reset Password" y SMTP.
 - Perdido a propósito: Open Graph dinámico por tienda (`/t/<slug>`).
+
+## Fondo en movimiento retirado
+- Se eliminó el video de fondo y su opción de subida (`FondoCorredor`, `FondoAdmin`, `public/medios`, `docs/FONDO_VIDEO.md`, estilos `data-fondo`, tests). Las columnas `fondo_*` de `configuracion` se conservan sin uso (fondo desactivado, URLs en null).
+- Pendiente (dueño): borrar los archivos `fondo/*` del bucket `medios` en Supabase Storage.

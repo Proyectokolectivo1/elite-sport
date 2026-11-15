@@ -1,26 +1,15 @@
-import { lazy, Suspense, useEffect, useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
 import { PublicLayout } from '@/components/layout/PublicLayout'
 import { Toaster } from '@/components/ui/toast'
-import { useConfiguracion } from '@/features/configuracion/hooks/useConfiguracion'
 import { unidadesCarrito, useCarritoStore } from '../carrito/carritoStore'
 import { StoreProvider, useStore } from '../context/StoreContext'
-const FondoCorredor = lazy(() => import('@/features/fondo/FondoCorredor').then((m) => ({ default: m.FondoCorredor })))
 const CarritoSheet = lazy(() => import('./CarritoSheet').then((m) => ({ default: m.CarritoSheet })))
 
 function Marco() {
   const { tienda, ruta, clave, ciudad, setCarritoAbierto, esPrincipal } = useStore()
   const navigate = useNavigate()
-  const { data: config } = useConfiguracion()
-  // El fondo en movimiento es solo de la tienda principal, no de las secciones de mayoristas.
-  const fondoActivo = esPrincipal && !!config?.fondo_activo && !!(config.fondo_video_url || config.fondo_poster_url)
-  // Marca el <html> para que las superficies de marca se vuelvan translúcidas sobre el video.
-  useEffect(() => {
-    if (!fondoActivo) return
-    document.documentElement.dataset.fondo = 'on'
-    return () => { delete document.documentElement.dataset.fondo }
-  }, [fondoActivo])
   const items = useCarritoStore((s) => s.porTienda[clave])
   const { carritoAbierto } = useStore()
   // El carrito (formulario y validación) se descarga la primera vez que se abre.
@@ -29,11 +18,6 @@ function Marco() {
   return (
     <ThemeProvider brand={{ primary: tienda.color_primario, accent: tienda.color_acento }}>
       <Toaster />
-      {fondoActivo && config && (
-        <Suspense fallback={null}>
-          <FondoCorredor video={config.fondo_video_url} videoMovil={config.fondo_video_movil_url} poster={config.fondo_poster_url} opacidad={config.fondo_opacidad} />
-        </Suspense>
-      )}
       <PublicLayout
         nombre={tienda.nombre}
         logoUrl={tienda.logo_url}
