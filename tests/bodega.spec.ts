@@ -45,6 +45,10 @@ async function entrarComo(page: Page, rol: Rol): Promise<Llamadas> {
     const vista = (r.request().postDataJSON() as { p_vista: string }).p_vista
     if (vista === 'por_despachar') return r.fulfill({ json: [pedido(101, 'nuevo', [linea('d1')])] })
     if (vista === 'en_poder') return r.fulfill({ json: [pedido(102, 'entregado', [linea('d2', { cantidad_entregada: 4, cantidad_vendida: 2, cantidad_devuelta: 0 })])] })
+    if (vista === 'historial') {
+      const cerrado = pedido(90, 'liquidado', [linea('d9', { cantidad_entregada: 6, cantidad_vendida: 5, cantidad_devuelta: 1 })])
+      return r.fulfill({ json: [{ ...cerrado, solicitante_id: 'u-3', solicitante_nombre: 'Tienda Norte', solicitante_rol: 'mayorista_sector', cliente_nombre: 'Tienda Norte', liquidado_en: new Date().toISOString() }] })
+    }
     return r.fulfill({ json: [] })
   })
   await page.route('**/rest/v1/rpc/despachar_pedido_bodega', (r) => {
@@ -135,6 +139,23 @@ test.describe('panel por rol', () => {
     await page.getByRole('button', { name: 'Cerrar entrega' }).click()
     await expect.poll(() => llamadas.cerrar.length).toBe(1)
     expect(llamadas.cerrar[0]).toEqual({ p_pedido: 'ped-102', p_lineas: [{ detalle_id: 'd2', vendidos: 3, devueltos: 1 }] })
+  })
+
+  test('el cierre muestra quién debe cerrar y quién ya cerró hoy', async ({ page }) => {
+    await entrarComo(page, 'bodeguero')
+    await page.goto('/admin/bodega/cierre')
+    const control = page.getByRole('region', { name: 'Control del cierre' })
+    await expect(control.getByText('1 persona debe cerrar · 2 pares por cuadrar')).toBeVisible()
+    await expect(control.getByText('Carlos Local')).toBeVisible()
+    await expect(control.getByText(/1 entrega abierta · 2 pares en su poder/)).toBeVisible()
+    // Quien ya cerró aparece aparte, con lo vendido y lo que regresó al inventario.
+    await expect(control.getByText('Ya cerraron hoy')).toBeVisible()
+    await expect(control.getByText('Tienda Norte')).toBeVisible()
+    await expect(control.getByText('Mayorista del sector')).toBeVisible()
+    await expect(control.getByText(/vendidos 5 · regresaron 1/)).toBeVisible()
+    // Cada entrega abierta dice a quién pertenece.
+    await expect(page.getByRole('region', { name: 'Entregas de Carlos Local' }).getByText('· Carlos Local')).toBeVisible()
+    await control.getByRole('button', { name: 'Ir al cierre' }).click()
   })
 
   test('el vendedor entra a su mercancía y solo ve Mi mercancía y Vender', async ({ page }) => {

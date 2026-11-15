@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils'
 import type { PedidoBodega, VistaBodega } from '../api/bodega'
 import { useCancelarPedidoBodega, useDespachar, usePedidosBodega, useEntregarWeb } from '../hooks/useBodega'
 import { CierreEntrega } from './CierreEntrega'
+import { idCierre, PendientesCierre } from './PendientesCierre'
 
 const VISTAS: { id: VistaBodega; label: string; ruta: string }[] = [
   { id: 'por_despachar', label: 'Por despachar', ruta: '/admin/bodega' },
@@ -258,8 +259,9 @@ export function BodegaPage({ vista }: { vista: VistaBodega }) {
 
       {vista === 'en_poder' ? (
         <div className="space-y-10">
+          <PendientesCierre grupos={grupos.map(([clave, g]) => ({ clave, ...g }))} />
           {grupos.map(([clave, { nombre, rol, pedidos }]) => (
-            <section key={clave} aria-label={`Entregas de ${nombre}`}>
+            <section key={clave} id={idCierre(clave)} aria-label={`Entregas de ${nombre}`} className="scroll-mt-24">
               <ResumenGrupo nombre={nombre} rol={rol} pedidos={pedidos} />
               <div className="space-y-4">
                 {pedidos.map((p) => (

@@ -70,7 +70,10 @@ export function CierreEntrega({ pedido }: { pedido: PedidoBodega }) {
   return (
     <article className="space-y-4 rounded-xl border border-border bg-card p-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <p className="font-display text-2xl font-bold uppercase leading-none">Entrega #{pedido.numero}</p>
+        <p className="font-display text-2xl font-bold uppercase leading-none">
+          Entrega #{pedido.numero}
+          {pedido.solicitante_nombre && <span className="ml-2 text-muted-foreground">· {pedido.solicitante_nombre}</span>}
+        </p>
         <p className="text-sm text-muted-foreground">
           {pedido.despachado_en && `Salió a las ${hora.format(new Date(pedido.despachado_en))} · `}
           <strong className="text-foreground tabular-nums">{enPoder}</strong> {enPoder === 1 ? 'par' : 'pares'} en su poder

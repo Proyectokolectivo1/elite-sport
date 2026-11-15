@@ -26,3 +26,6 @@ Lista de pasos que solo puede hacer el dueño de las cuentas. Marca cada uno al 
 - [ ] `npm run e2e` (usa Chrome instalado). Con credenciales reales: `E2E_ADMIN_EMAIL` y `E2E_ADMIN_PASSWORD` activan el recorrido del admin; `E2E_MUTATE=1` permite que registre una caja de prueba.
 - [ ] Pruebas de roles en la base: ejecutar `supabase/tests/rls_por_rol.sql` en el SQL Editor (no deja datos).
 - [ ] Recorrido manual: registrar un mayorista, aprobarlo, personalizar su sección, hacer un pedido a precio mayorista y confirmarlo; hacer un pedido público desde el teléfono.
+
+## Plantillas de correo (Supabase → Authentication → Emails)
+- **Reset Password:** asunto `Restablece tu contraseña · Elite Sport`; cuerpo = `docs/emails/recuperar-contrasena.html` (usa `{{ .ConfirmationURL }}` y `{{ .SiteURL }}`).

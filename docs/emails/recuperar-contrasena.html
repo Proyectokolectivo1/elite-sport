@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Restablece tu contraseña · Elite Sport</title>
+</head>
+<body style="margin:0;padding:0;background:#f4f2ed;">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;">Usa este enlace para elegir una contraseña nueva. Caduca en una hora.</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f2ed;">
+  <tr><td align="center" style="padding:32px 16px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#0b0b0c;">
+      <!-- Cabecera -->
+      <tr><td style="padding:28px 32px 0 32px;font-family:'Barlow Condensed','Arial Narrow',Impact,Arial,sans-serif;font-size:26px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:#f4f2ed;">
+        Elite <span style="font-weight:600;color:#a3a29c;">Sport</span> <span style="display:inline-block;width:7px;height:18px;background:#c8ff2e;transform:skewX(-18deg);vertical-align:-1px;margin-left:4px;"></span>
+      </td></tr>
+      <!-- Título -->
+      <tr><td style="padding:40px 32px 8px 32px;font-family:'Barlow Condensed','Arial Narrow',Impact,Arial,sans-serif;font-size:44px;line-height:0.95;font-weight:800;text-transform:uppercase;color:#f4f2ed;">
+        Elige una contraseña nueva
+      </td></tr>
+      <tr><td style="padding:16px 32px 0 32px;font-family:Inter,Arial,Helvetica,sans-serif;font-size:16px;line-height:1.6;color:#a3a29c;">
+        Recibimos una solicitud para restablecer la contraseña de tu cuenta en Elite Sport. Pulsa el botón y define la nueva.
+      </td></tr>
+      <!-- Botón -->
+      <tr><td style="padding:28px 32px 0 32px;">
+        <a href="{{ .ConfirmationURL }}" style="display:inline-block;background:#c8ff2e;color:#0b0b0c;font-family:'Barlow Condensed','Arial Narrow',Impact,Arial,sans-serif;font-size:20px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-decoration:none;padding:15px 30px;">Restablecer contraseña</a>
+      </td></tr>
+      <tr><td style="padding:24px 32px 0 32px;font-family:Inter,Arial,Helvetica,sans-serif;font-size:13px;line-height:1.6;color:#a3a29c;">
+        El enlace caduca en una hora y solo sirve una vez. Si el botón no funciona, copia esta dirección en tu navegador:<br>
+        <a href="{{ .ConfirmationURL }}" style="color:#c8ff2e;word-break:break-all;">{{ .ConfirmationURL }}</a>
+      </td></tr>
+      <!-- Aviso -->
+      <tr><td style="padding:32px 32px 0 32px;">
+        <div style="border-top:1px solid #2a2a2e;padding-top:20px;font-family:Inter,Arial,Helvetica,sans-serif;font-size:13px;line-height:1.6;color:#a3a29c;">
+          ¿No lo pediste tú? Ignora este correo: tu contraseña actual sigue funcionando y nadie puede entrar a tu cuenta sin ella.
+        </div>
+      </td></tr>
+      <!-- Pie -->
+      <tr><td style="padding:24px 32px 32px 32px;font-family:Inter,Arial,Helvetica,sans-serif;font-size:12px;line-height:1.6;color:#6b6a65;">
+        Elite Sport · Calzado deportivo y urbano · Guayaquil<br>
+        <a href="{{ .SiteURL }}" style="color:#6b6a65;">{{ .SiteURL }}</a>
+      </td></tr>
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>

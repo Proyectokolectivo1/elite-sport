@@ -141,3 +141,6 @@
 ## Fondo en movimiento retirado
 - Se eliminó el video de fondo y su opción de subida (`FondoCorredor`, `FondoAdmin`, `public/medios`, `docs/FONDO_VIDEO.md`, estilos `data-fondo`, tests). Las columnas `fondo_*` de `configuracion` se conservan sin uso (fondo desactivado, URLs en null).
 - Pendiente (dueño): borrar los archivos `fondo/*` del bucket `medios` en Supabase Storage.
+
+## Control del cierre del bodeguero
+- La pantalla "Cierre del dia" abre con "Falta por cerrar": cada mayorista del sector o vendedor con entregas abiertas, pares en su poder, hora de salida y aviso si la entrega es de un dia anterior, con boton "Ir al cierre". Debajo, "Ya cerraron hoy" con vendidos y devueltos. Cada entrega muestra el nombre del negocio. Componente `PendientesCierre`.
