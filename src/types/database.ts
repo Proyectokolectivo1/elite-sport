@@ -120,21 +120,21 @@ export type Database = {
           cliente_nombre: string; cliente_telefono: string; creado_en: string; estado: Enum<'estado_pedido'>
           id: string; mayorista_id: string | null; moneda: string; nota: string | null; numero: number
           stock_descontado: boolean; tienda_id: string | null; tipo: Enum<'tipo_pedido'>; total: number
-          solicitante_id: string | null; despachado_por: string | null; despachado_en: string | null; liquidado_por: string | null; liquidado_en: string | null
+          solicitante_id: string | null; despachado_por: string | null; despachado_en: string | null; liquidado_por: string | null; liquidado_en: string | null; pagado_en: string | null; pagado_por: string | null
         }
         Insert: {
           cliente_correo?: string | null; cliente_direccion?: string | null; cliente_documento?: string | null; metodo_pago?: 'efectivo' | 'transferencia' | 'tarjeta' | null
           cliente_nombre: string; cliente_telefono: string; creado_en?: string; estado?: Enum<'estado_pedido'>
           id?: string; mayorista_id?: string | null; moneda: string; nota?: string | null; numero?: never
           stock_descontado?: boolean; tienda_id?: string | null; tipo: Enum<'tipo_pedido'>; total?: number
-          solicitante_id?: string | null; despachado_por?: string | null; despachado_en?: string | null; liquidado_por?: string | null; liquidado_en?: string | null
+          solicitante_id?: string | null; despachado_por?: string | null; despachado_en?: string | null; liquidado_por?: string | null; liquidado_en?: string | null; pagado_en?: string | null; pagado_por?: string | null
         }
         Update: {
           cliente_correo?: string | null; cliente_direccion?: string | null; cliente_documento?: string | null; metodo_pago?: 'efectivo' | 'transferencia' | 'tarjeta' | null
           cliente_nombre?: string; cliente_telefono?: string; creado_en?: string; estado?: Enum<'estado_pedido'>
           id?: string; mayorista_id?: string | null; moneda?: string; nota?: string | null; numero?: never
           stock_descontado?: boolean; tienda_id?: string | null; tipo?: Enum<'tipo_pedido'>; total?: number
-          solicitante_id?: string | null; despachado_por?: string | null; despachado_en?: string | null; liquidado_por?: string | null; liquidado_en?: string | null
+          solicitante_id?: string | null; despachado_por?: string | null; despachado_en?: string | null; liquidado_por?: string | null; liquidado_en?: string | null; pagado_en?: string | null; pagado_por?: string | null
         }
         Relationships: [
           { foreignKeyName: 'pedidos_despachado_por_fkey'; columns: ['despachado_por']; isOneToOne: false; referencedRelation: 'perfiles'; referencedColumns: ['id'] },
@@ -281,6 +281,7 @@ export type Database = {
       cancelar_pedido: { Args: { p_pedido: string }; Returns: undefined }
       cerrar_pedido_bodega: { Args: { p_lineas: Json; p_pedido: string }; Returns: Json }
       confirmar_pedido: { Args: { p_pedido: string }; Returns: undefined }
+      marcar_pago_consignacion: { Args: { p_pagado: boolean; p_pedido: string }; Returns: undefined }
       crear_pedido: {
         Args: {
           p_cliente_nombre: string; p_cliente_telefono: string; p_items: Json

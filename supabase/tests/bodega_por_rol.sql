@@ -200,6 +200,27 @@ begin
 
   select total into v_num from public.pedidos where id = v_ped_s;
   if v_num = v_precio then ok := ok || E'\nsector liquida 1 par a su precio mayorista'; else fallos := fallos || E'\ntotal sector=' || v_num || ' esperado ' || v_precio; end if;
+  -- ================= Cobro al mayorista del sector =================
+  perform set_config('request.jwt.claims', c_sec, true);
+  set local role authenticated;
+  begin perform public.marcar_pago_consignacion(v_ped_s, true); fallos := fallos || E'\nel mayorista del sector se marco su propio pago';
+  exception when others then ok := ok || E'\nel mayorista del sector no marca su pago'; end;
+  perform set_config('request.jwt.claims', c_bod, true);
+  begin perform public.marcar_pago_consignacion(v_ped_s, true); fallos := fallos || E'\nel bodeguero marco un pago';
+  exception when others then ok := ok || E'\nel bodeguero no marca pagos'; end;
+  perform set_config('request.jwt.claims', c_adm, true);
+  begin perform public.marcar_pago_consignacion(v_ped_v, true); fallos := fallos || E'\nse cobro una entrega sin total';
+  exception when others then ok := ok || E'\nno se cobra una entrega con total 0'; end;
+  perform public.marcar_pago_consignacion(v_ped_s, true);
+  reset role;
+  select count(*) into v_n from public.pedidos where id = v_ped_s and pagado_en is not null and pagado_por = v_adm;
+  if v_n = 1 then ok := ok || E'\nel admin marca el pago y queda su autor'; else fallos := fallos || E'\nel pago no quedo registrado'; end if;
+  perform set_config('request.jwt.claims', c_sec, true);
+  set local role authenticated;
+  select count(*) into v_n from public.pedidos where id = v_ped_s and pagado_en is not null;
+  reset role;
+  if v_n = 1 then ok := ok || E'\nel mayorista del sector ve que su cierre esta pagado'; else fallos := fallos || E'\nel sector no ve el pago'; end if;
+
   select count(*) into v_n from public.pedidos where id = v_ped_v and total = 0 and estado = 'liquidado';
   if v_n = 1 then ok := ok || E'\nla entrega del vendedor queda liquidada con total 0 (sus ventas van aparte)'; else fallos := fallos || E'\nentrega del vendedor mal liquidada'; end if;
 

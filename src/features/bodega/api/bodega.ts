@@ -95,6 +95,7 @@ export interface MiEntrega {
   creadoEn: string
   despachadoEn: string | null
   liquidadoEn: string | null
+  pagadoEn: string | null
   lineas: LineaMiEntrega[]
 }
 
@@ -102,7 +103,7 @@ export interface MiEntrega {
 export async function misEntregas(usuarioId: string): Promise<MiEntrega[]> {
   const { data, error } = await supabase
     .from('pedidos')
-    .select('id, numero, estado, total, nota, creado_en, despachado_en, liquidado_en, pedidos_detalle!pedidos_detalle_pedido_id_fkey(id, descripcion, cantidad, cantidad_entregada, cantidad_vendida, cantidad_devuelta, precio_unitario)')
+    .select('id, numero, estado, total, nota, creado_en, despachado_en, liquidado_en, pagado_en, pedidos_detalle!pedidos_detalle_pedido_id_fkey(id, descripcion, cantidad, cantidad_entregada, cantidad_vendida, cantidad_devuelta, precio_unitario)')
     .eq('tipo', 'consignacion')
     .eq('solicitante_id', usuarioId)
     .order('creado_en', { ascending: false })
@@ -117,6 +118,7 @@ export async function misEntregas(usuarioId: string): Promise<MiEntrega[]> {
     creadoEn: p.creado_en,
     despachadoEn: p.despachado_en,
     liquidadoEn: p.liquidado_en,
+    pagadoEn: p.pagado_en,
     lineas: p.pedidos_detalle.map((d) => ({
       id: d.id,
       descripcion: d.descripcion,
@@ -212,5 +214,63 @@ export async function listarEquipo(): Promise<Integrante[]> {
 
 export async function actualizarIntegrante(id: string, v: IntegranteValues): Promise<void> {
   const { error } = await supabase.from('perfiles').update({ rol: v.rol, estado: v.estado }).eq('id', id)
+  if (error) throw error
+}
+
+// ============ Cobros a mayoristas del sector ============
+export interface CierreCobro {
+  id: string
+  numero: number
+  total: number
+  liquidadoEn: string | null
+  pagadoEn: string | null
+}
+
+export interface CuentaSector {
+  id: string
+  nombre: string
+  negocio: string | null
+  /** Cierres sin pagar: lo que debe ahora. */
+  porCobrar: number
+  /** Lo ya pagado. */
+  pagado: number
+  /** Pares que aún tiene en su poder, a su precio: lo máximo que podría deber si los vende todos. */
+  enPoderValor: number
+  enPoderPares: number
+  cierres: CierreCobro[]
+}
+
+/** Cuenta de cada mayorista del sector (solo admin: la RLS no deja leer esto a otros). */
+export async function cuentasSector(): Promise<CuentaSector[]> {
+  const { data, error } = await supabase
+    .from('pedidos')
+    .select('id, numero, estado, total, liquidado_en, pagado_en, solicitante_id, perfiles!pedidos_solicitante_id_fkey(nombre, negocio, rol), pedidos_detalle!pedidos_detalle_pedido_id_fkey(cantidad_entregada, cantidad_vendida, cantidad_devuelta, precio_unitario)')
+    .eq('tipo', 'consignacion')
+    .in('estado', ['entregado', 'liquidado'])
+    .order('liquidado_en', { ascending: false, nullsFirst: true })
+    .limit(500)
+  if (error) throw error
+  const m = new Map<string, CuentaSector>()
+  for (const p of data) {
+    if (!p.solicitante_id || p.perfiles?.rol !== 'mayorista_sector') continue
+    const c = m.get(p.solicitante_id) ?? { id: p.solicitante_id, nombre: p.perfiles.nombre, negocio: p.perfiles.negocio, porCobrar: 0, pagado: 0, enPoderValor: 0, enPoderPares: 0, cierres: [] }
+    if (p.estado === 'liquidado') {
+      if (p.pagado_en) c.pagado += p.total
+      else c.porCobrar += p.total
+      if (p.total > 0) c.cierres.push({ id: p.id, numero: p.numero, total: p.total, liquidadoEn: p.liquidado_en, pagadoEn: p.pagado_en })
+    } else {
+      for (const d of p.pedidos_detalle) {
+        const n = (d.cantidad_entregada ?? 0) - (d.cantidad_vendida ?? 0) - (d.cantidad_devuelta ?? 0)
+        c.enPoderPares += n
+        c.enPoderValor += n * d.precio_unitario
+      }
+    }
+    m.set(p.solicitante_id, c)
+  }
+  return [...m.values()].sort((a, b) => b.porCobrar - a.porCobrar || (a.negocio ?? a.nombre).localeCompare(b.negocio ?? b.nombre, 'es'))
+}
+
+export async function marcarPagoCierre(pedidoId: string, pagado: boolean): Promise<void> {
+  const { error } = await supabase.rpc('marcar_pago_consignacion', { p_pedido: pedidoId, p_pagado: pagado })
   if (error) throw error
 }

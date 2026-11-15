@@ -46,6 +46,7 @@ const MisPreciosPage = lazy(() => import('@/features/mayorista/components/MisPre
 const PedidosMayoristaPage = lazy(() => import('@/features/mayorista/components/PedidosMayoristaPage').then((m) => ({ default: m.PedidosMayoristaPage })))
 const CompartirPage = lazy(() => import('@/features/mayorista/components/CompartirPage').then((m) => ({ default: m.CompartirPage })))
 const BodegaPage = lazy(() => import('@/features/bodega/components/BodegaPage').then((m) => ({ default: m.BodegaPage })))
+const CobrosPage = lazy(() => import('@/features/bodega/components/CobrosPage').then((m) => ({ default: m.CobrosPage })))
 const EquipoPage = lazy(() => import('@/features/bodega/components/EquipoPage').then((m) => ({ default: m.EquipoPage })))
 const MiMercanciaPage = lazy(() => import('@/features/ventas/components/MiMercanciaPage').then((m) => ({ default: m.MiMercanciaPage })))
 const VenderLocalPage = lazy(() => import('@/features/ventas/components/VenderLocalPage').then((m) => ({ default: m.VenderLocalPage })))
@@ -82,6 +83,7 @@ export default function App() {
                 <Route path="ventas" element={<VentasPage />} />
                 <Route path="pedidos" element={<PedidosPage />} />
                 <Route path="mayoristas" element={<MayoristasPage />} />
+                <Route path="cobros" element={<CobrosPage />} />
                 <Route path="equipo" element={<EquipoPage />} />
                 <Route path="configuracion" element={<ConfiguracionPage />} />
               </Route>

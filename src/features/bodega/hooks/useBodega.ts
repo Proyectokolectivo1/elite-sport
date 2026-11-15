@@ -5,6 +5,8 @@ import { inventarioKeys } from '@/features/inventario/hooks/useInventario'
 import { pedidosKey } from '@/features/pedidos/hooks/usePedidos'
 import {
   actualizarIntegrante,
+  cuentasSector,
+  marcarPagoCierre,
   cancelarPedidoBodega,
   cerrarEntrega,
   despacharPedido,
@@ -28,6 +30,7 @@ export const bodegaKeys = {
   entregas: (uid: string | undefined) => ['bodega', 'entregas', uid] as const,
   ventas: (uid: string | undefined) => ['bodega', 'ventas', uid] as const,
   equipo: ['equipo'] as const,
+  cobros: ['bodega', 'cobros'] as const,
 }
 
 /** Refresca todo lo que cambia con un movimiento de bodega. */
@@ -131,5 +134,15 @@ export function useActualizarIntegrante() {
       void qc.invalidateQueries({ queryKey: bodegaKeys.equipo })
       void qc.invalidateQueries({ queryKey: ['mayoristas'] })
     },
+  })
+}
+
+export const useCuentasSector = () => useQuery({ queryKey: bodegaKeys.cobros, queryFn: cuentasSector, refetchInterval: 60_000 })
+
+export function useMarcarPago() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (v: { id: string; pagado: boolean }) => marcarPagoCierre(v.id, v.pagado),
+    onSuccess: () => void qc.invalidateQueries({ queryKey: bodegaKeys.todo }),
   })
 }

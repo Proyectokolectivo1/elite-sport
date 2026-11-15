@@ -10,6 +10,7 @@ import { useConfiguracion } from '@/features/configuracion/hooks/useConfiguracio
 import { EnPoderTabla } from './EnPoderTabla'
 import { MisEntregas } from './MisEntregas'
 import { PedirABodega } from './PedirABodega'
+import { SaldoSector } from './SaldoSector'
 
 const NAV: PanelNavItem[] = [
   { to: '/sector', label: 'En mi poder', icon: Warehouse, end: true },
@@ -42,6 +43,7 @@ export function SectorEnPoderPage() {
   return (
     <>
       <PageHeader title="En mi poder" description="Pares que retiraste en bodega. Al final del día se cuenta lo que regresa; el resto se liquida a tu precio de mayorista." />
+      <SaldoSector />
       <EnPoderTabla etiquetaPrecio="a tu precio" />
       <h2 className="mt-10 mb-4 text-3xl">Pedidos abiertos</h2>
       <MisEntregas estados={['nuevo', 'entregado']} vacio="No tienes pedidos abiertos." />
@@ -61,7 +63,8 @@ export function SectorPedirPage() {
 export function SectorHistorialPage() {
   return (
     <>
-      <PageHeader title="Historial" description="Entregas cerradas: lo vendido se cobra a tu precio de mayorista." />
+      <PageHeader title="Historial" description="Entregas cerradas: lo vendido se cobra a tu precio de mayorista. Cada una dice si ya está pagada." />
+      <SaldoSector />
       <MisEntregas estados={['liquidado', 'cancelado']} conTotal vacio="Aún no tienes entregas cerradas." />
     </>
   )

@@ -144,3 +144,7 @@
 
 ## Control del cierre del bodeguero
 - La pantalla "Cierre del dia" abre con "Falta por cerrar": cada mayorista del sector o vendedor con entregas abiertas, pares en su poder, hora de salida y aviso si la entrega es de un dia anterior, con boton "Ir al cierre". Debajo, "Ya cerraron hoy" con vendidos y devueltos. Cada entrega muestra el nombre del negocio. Componente `PendientesCierre`.
+
+## Cobros del sector
+- Migracion 0015: `pedidos.pagado_en/pagado_por` y RPC `marcar_pago_consignacion` (solo admin). El mayorista del sector ve en "En mi poder" e "Historial" cuanto debe pagar (cierres sin pagar) y cuanto ya pago; el admin tiene `/admin/cobros` con lo que debe cada mayorista, lo que tiene en su poder sin cerrar y el boton "Marcar pagado" / "Deshacer pago". Prueba SQL en `supabase/tests/bodega_por_rol.sql`.
+- Regla: se debe lo vendido de entregas cerradas (vendidos x su precio de mayorista); lo que tiene en su poder aun no se debe.

@@ -13,6 +13,7 @@ import {
   Truck,
   UserCog,
   Users,
+  Wallet,
   Warehouse,
 } from 'lucide-react'
 import { PanelLayout, type PanelNavItem } from '@/components/layout/PanelLayout'
@@ -29,6 +30,7 @@ const NAV_ADMIN: PanelNavItem[] = [
   { to: '/admin/ventas', label: 'Ventas', icon: Store },
   { to: '/admin/pedidos', label: 'Pedidos', icon: ClipboardList },
   { to: '/admin/bodega', label: 'Bodega', icon: Warehouse },
+  { to: '/admin/cobros', label: 'Cobros', icon: Wallet },
   { to: '/admin/productos', label: 'Productos', icon: Package },
   { to: '/admin/inventario', label: 'Inventario', icon: Truck },
   { to: '/admin/precios', label: 'Precios', icon: Tag },

@@ -61,7 +61,13 @@ export function MisEntregas({ estados, conTotal = false, vacio }: Props) {
             ))}
           </ul>
           {conTotal && e.estado === 'liquidado' && (
-            <p className="mt-3 flex justify-between border-t border-border pt-3 font-semibold"><span>Total vendido</span><span className="tabular-nums">{formatMoney(e.total, moneda)}</span></p>
+            <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3 font-semibold">
+              <span>Total a pagar</span>
+              <span className="flex items-center gap-3">
+                <span className="tabular-nums">{formatMoney(e.total, moneda)}</span>
+                {e.total > 0 && (e.pagadoEn ? <Badge variant="success">Pagado</Badge> : <Badge variant="warning">Por pagar</Badge>)}
+              </span>
+            </div>
           )}
           {e.estado === 'nuevo' && (
             <Button size="sm" variant="ghost" className="mt-2 text-destructive" disabled={cancelar.isPending}

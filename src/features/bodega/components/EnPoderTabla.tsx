@@ -19,7 +19,7 @@ export function EnPoderTabla({ etiquetaPrecio }: { etiquetaPrecio: string }) {
   return (
     <>
       <p className="mb-3 text-sm text-muted-foreground">
-        <strong className="text-foreground tabular-nums">{total}</strong> pares · {etiquetaPrecio} <strong className="text-foreground tabular-nums">{formatMoney(valor, moneda)}</strong>
+        <strong className="text-foreground tabular-nums">{total}</strong> {total === 1 ? 'par' : 'pares'} · {etiquetaPrecio} <strong className="text-foreground tabular-nums">{formatMoney(valor, moneda)}</strong>
       </p>
       <Table>
         <THead><TR><TH>Producto</TH><TH>Talla</TH><TH className="text-right">Pares</TH><TH className="text-right">Precio</TH></TR></THead>

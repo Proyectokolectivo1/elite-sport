@@ -171,6 +171,45 @@ test.describe('panel por rol', () => {
     await expect(page).toHaveURL(/\/admin\/local$/)
   })
 
+  const filaCobro = (numero: number, total: number, pagado: boolean, estado = 'liquidado') => ({
+    id: `ped-${numero}`, numero, estado, total, nota: null, creado_en: new Date().toISOString(),
+    despachado_en: new Date().toISOString(), liquidado_en: estado === 'liquidado' ? new Date().toISOString() : null,
+    pagado_en: pagado ? new Date().toISOString() : null, solicitante_id: 'u-3',
+    perfiles: { nombre: 'Marta Vega', negocio: 'Tienda Norte', rol: 'mayorista_sector' },
+    pedidos_detalle: [{ id: `d-${numero}`, descripcion: 'Runner Pro Veloz · Negro · talla 40', cantidad: 2, cantidad_entregada: 2, cantidad_vendida: estado === 'liquidado' ? 1 : 0, cantidad_devuelta: estado === 'liquidado' ? 1 : 0, precio_unitario: 99 }],
+  })
+
+  test('el mayorista del sector ve cuánto debe pagar y qué ya pagó', async ({ page }) => {
+    await entrarComo(page, 'mayorista_sector')
+    await page.route('**/rest/v1/pedidos*', (r) => r.fulfill({ json: [filaCobro(70, 99, false), filaCobro(69, 150, true)] }))
+    await page.goto('/sector')
+    const saldo = page.getByRole('region', { name: 'Lo que debes pagar' })
+    await expect(saldo.getByText('$99,00')).toBeVisible()
+    await expect(saldo.getByText('1 cierre sin pagar: #70.')).toBeVisible()
+    await expect(saldo.getByText('$150,00')).toBeVisible()
+    await page.goto('/sector/historial')
+    await expect(page.getByText('Por pagar')).toBeVisible()
+    await expect(page.getByText('Pagado', { exact: true }).first()).toBeVisible()
+  })
+
+  test('el admin ve cuánto debe cada mayorista del sector y marca el pago', async ({ page }) => {
+    await entrarComo(page, 'admin')
+    const marcas: unknown[] = []
+    await page.route('**/rest/v1/pedidos*', (r) => r.fulfill({ json: [filaCobro(70, 99, false), filaCobro(71, 40, false, 'entregado')] }))
+    await page.route('**/rest/v1/rpc/marcar_pago_consignacion', (r) => {
+      marcas.push(r.request().postDataJSON())
+      return r.fulfill({ status: 204, body: '' })
+    })
+    await page.goto('/admin/cobros')
+    await expect(page.getByRole('heading', { name: 'Cobros del sector' })).toBeVisible()
+    const cuenta = page.getByRole('region', { name: 'Cuenta de Tienda Norte' })
+    await expect(cuenta.getByText('$99,00').first()).toBeVisible()
+    await expect(cuenta.getByText(/tiene en su poder/)).toBeVisible()
+    await cuenta.getByRole('button', { name: 'Marcar pagado' }).click()
+    await expect.poll(() => marcas.length).toBe(1)
+    expect(marcas[0]).toEqual({ p_pedido: 'ped-70', p_pagado: true })
+  })
+
   test('el mayorista del sector tiene su propio panel', async ({ page }) => {
     await entrarComo(page, 'mayorista_sector')
     await page.goto('/cuenta')
