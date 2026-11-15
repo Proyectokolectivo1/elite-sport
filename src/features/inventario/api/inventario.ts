@@ -101,6 +101,15 @@ export async function listarExistencias(): Promise<Existencia[]> {
     .sort((a, b) => a.producto.localeCompare(b.producto) || a.color.localeCompare(b.color) || a.tallaOrden - b.tallaOrden)
 }
 
+/** Primera foto (miniatura) de cada producto, para reconocerlo de un vistazo en el inventario. */
+export async function miniaturasProductos(): Promise<Record<string, string>> {
+  const { data, error } = await supabase.from('imagenes_producto').select('producto_id, url, url_miniatura, orden').order('orden')
+  if (error) throw error
+  const m: Record<string, string> = {}
+  for (const i of data) m[i.producto_id] ??= i.url_miniatura ?? i.url
+  return m
+}
+
 export async function ajustarStock(varianteId: string, delta: number, nota: string): Promise<void> {
   const { error } = await supabase.rpc('ajustar_stock', { p_variante: varianteId, p_delta: delta, p_nota: nota })
   if (error) throw error

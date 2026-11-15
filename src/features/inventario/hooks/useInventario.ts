@@ -7,6 +7,7 @@ import {
   listarCurvas,
   listarExistencias,
   listarMovimientos,
+  miniaturasProductos,
   registrarIngreso,
   ultimoSurtidoCaja,
   type IngresoEntrada,
@@ -22,6 +23,7 @@ export const useUltimoSurtido = (productoId: string) =>
   useQuery({ queryKey: ['ultimo-surtido', productoId], queryFn: () => ultimoSurtidoCaja(productoId), enabled: !!productoId })
 export const useCurvas = () => useQuery({ queryKey: inventarioKeys.curvas, queryFn: listarCurvas })
 export const useExistencias = () => useQuery({ queryKey: inventarioKeys.existencias, queryFn: listarExistencias })
+export const useMiniaturas = () => useQuery({ queryKey: ['miniaturas-inventario'], queryFn: miniaturasProductos, staleTime: 5 * 60_000 })
 export const useMovimientos = () => useQuery({ queryKey: inventarioKeys.movimientos, queryFn: () => listarMovimientos() })
 
 function useRefrescarStock() {

@@ -148,3 +148,6 @@
 ## Cobros del sector
 - Migracion 0015: `pedidos.pagado_en/pagado_por` y RPC `marcar_pago_consignacion` (solo admin). El mayorista del sector ve en "En mi poder" e "Historial" cuanto debe pagar (cierres sin pagar) y cuanto ya pago; el admin tiene `/admin/cobros` con lo que debe cada mayorista, lo que tiene en su poder sin cerrar y el boton "Marcar pagado" / "Deshacer pago". Prueba SQL en `supabase/tests/bodega_por_rol.sql`.
 - Regla: se debe lo vendido de entregas cerradas (vendidos x su precio de mayorista); lo que tiene en su poder aun no se debe.
+
+## Inventario: existencias por producto
+- "Existencias" pasa de una tabla plana a una lista por producto: miniatura, total de pares, estado (Disponible / Stock bajo hasta 6 pares / Agotado) y resumen arriba con filtros. Al tocar un producto se abre el detalle por color con una casilla por talla (roja si no hay, ambar si quedan 3 o menos); tocar una talla permite ajustar el stock, y hay un enlace para ingresar mercancia de ese producto. Logica en `inventario/agrupar.ts`.
