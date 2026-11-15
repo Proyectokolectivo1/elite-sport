@@ -2,15 +2,14 @@
 
 Lista de pasos que solo puede hacer el dueño de las cuentas. Marca cada uno al terminarlo.
 
-## 1. Vercel
-- [ ] Crear el proyecto `elite-sport` desde el repositorio (framework: Vite; build `npm run build`; salida `dist`).
-- [ ] Variables de entorno (Production y Preview): `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`. Son las mismas de `.env.local`. **No subas la clave `service_role`.**
-- [ ] Primer deploy y revisar `/`, `/catalogo`, `/admin/login`, `/sitemap.xml` y `/t/<slug>` de un mayorista aprobado.
-- [ ] Dominio propio: añadirlo en Vercel y apuntar el DNS.
-- [ ] En `public/robots.txt` agregar la línea `Sitemap: https://TU-DOMINIO/sitemap.xml`.
+## 1. Hostinger
+- [ ] Importar el repositorio de GitHub (preset Vite, rama `main`, Node 22.x; build `npm run build`; salida `dist`).
+- [ ] Variables de entorno **antes** de implementar: `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` (las de `.env.local`). Opcional: `SITE_URL` si el dominio cambia (por defecto `https://teniselitesport.com`). **No subas la clave `service_role`.**
+- [ ] `public/.htaccess` ya trae HTTPS, reescritura a `index.html`, caché de un año y encabezados de seguridad. Revisar `/`, `/catalogo`, recargar `/admin/login` y abrir `/sitemap.xml`.
+- [ ] Sin Vercel: no hay vista previa Open Graph por tienda en `/t/<slug>`. El `sitemap.xml` se genera en cada compilación (`scripts/generar-sitemap.mjs`); vuelve a implementar para incluir productos nuevos.
 
 ## 2. Supabase (panel → Authentication)
-- [ ] **URL Configuration:** Site URL = el dominio de producción; añadir también la URL de Vercel Preview a Redirect URLs.
+- [ ] **URL Configuration:** Site URL = el dominio de producción;.
 - [ ] **Recuperación de contraseña:** añadir `https://<dominio>/nueva-contrasena` a Redirect URLs, traducir la plantilla "Reset Password" y configurar SMTP propio (el de Supabase envía muy pocos correos por hora).
 - [ ] **Providers → Email:** decidir si se exige confirmar el correo al registrarse. Con confirmación, el registro muestra "Confirma tu correo".
 - [ ] **Passwords:** activar *Leaked password protection* y subir el mínimo a 8 caracteres.

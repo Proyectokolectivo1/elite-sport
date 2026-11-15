@@ -132,3 +132,8 @@
 - **Verificado:** 57 unitarias y 86 E2E. Una prueba nueva falla si la portada vuelve a pedir algo al bucket `medios` de Supabase.
 - **Para cambiar el video:** comprimirlo a menos de 4 MB y, de preferencia, ponerlo en `public/medios/` con un nombre nuevo (ej. `fondo-v2-1280.mp4`) y actualizar las rutas en Ajustes; así no consume el plan de Supabase.
 - **Pendiente:** el video original (10,7 MB) sigue en el bucket `medios` sin uso; se puede borrar. El contador de Supabase no baja este mes: el ciclo se reinicia el 10 de diciembre.
+
+## Migración a Hostinger (sin Vercel)
+- Eliminados `vercel.json`, `api/` y `@vercel/speed-insights`. Añadidos `public/.htaccess` (SPA, HTTPS, caché, CSP) y `scripts/generar-sitemap.mjs` (corre al final de `npm run build`).
+- Pendiente (dueño): variables en Hostinger, borrar video viejo de 10,7 MB en Storage, plantilla "Reset Password" y SMTP.
+- Perdido a propósito: Open Graph dinámico por tienda (`/t/<slug>`).

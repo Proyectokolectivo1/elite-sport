@@ -5,3 +5,5 @@ Disallow: /mayorista
 Disallow: /cuenta
 Disallow: /ingresar
 Disallow: /registro
+
+Sitemap: https://teniselitesport.com/sitemap.xml
