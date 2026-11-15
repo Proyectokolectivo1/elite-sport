@@ -7,6 +7,7 @@ import { ThemeProvider } from '@/components/theme/ThemeProvider'
 import { AuthProvider } from '@/features/auth/hooks/AuthProvider'
 import { RequireMayorista } from '@/features/auth/components/RequireMayorista'
 import { RequirePanel } from '@/features/auth/components/RequireAdmin'
+import { AvisoVersion } from '@/components/AvisoVersion'
 import { useConfiguracion } from '@/features/configuracion/hooks/useConfiguracion'
 
 // Catálogo y ficha van aparte de la portada y se descargan en segundo plano apenas el navegador queda libre.
@@ -69,6 +70,7 @@ export default function App() {
   useConfiguracion()
   return (
     <AuthProvider>
+      <AvisoVersion />
       <Suspense fallback={<Cargando />}>
         <Routes>
           {import.meta.env.DEV && <Route path="/_ds/*" element={<DesignSystemPage />} />}

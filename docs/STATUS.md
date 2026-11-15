@@ -155,3 +155,8 @@
 ## Pantalla en negro al navegar
 - Causa: al publicar una version nueva se borran los archivos con hash de la anterior; con una pestana abierta, el siguiente cambio de pagina pedia un archivo inexistente y el servidor respondia index.html (HTML en lugar de JS). El import fallaba y, sin red de seguridad, React desmontaba todo (negro).
 - Arreglo: `ErrorBoundary` global (aviso con Recargar), recarga automatica una vez por pestana ante `vite:preloadError`, aviso "Cargando" en vez de vacio y `.htaccess` que devuelve 404 real para `/assets/` inexistente.
+
+## Consecutivo de pedidos sin saltos
+- Migracion 0016: `pedidos.numero` deja de ser una secuencia (que no se revierte y dejaba huecos por intentos fallidos y pruebas) y sale de la tabla `consecutivos` dentro de la misma transaccion (trigger `asignar_numero_pedido`). Un pedido cancelado conserva su numero. Los 6 pedidos existentes se renumeraron 1 a 6 por fecha de creacion. Prueba: `supabase/tests/consecutivo_pedidos.sql`.
+- Tambien se agrego un indice unico sobre `numero`.
+- Refuerzo: `AvisoVersion` compara al volver a la pestana (y cada 10 min) el archivo de entrada publicado con el cargado y ofrece "Actualizar ahora"; el guard de sesion muestra "Validando tu sesion" y una salida si tarda mas de 10 s. Las pestanas abiertas antes de un despliegue con estos arreglos siguen con el codigo viejo hasta recargarlas.

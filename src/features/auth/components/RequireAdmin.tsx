@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -19,12 +20,26 @@ interface Props {
 export function RequirePanel({ roles = ROLES_PANEL, login = '/admin/login' }: Props) {
   const { session, perfil, cargando } = useAuth()
   const location = useLocation()
+  const [tarda, setTarda] = useState(false)
+  // Si validar la sesión se alarga, se ofrece una salida en vez de dejar la pantalla esperando.
+  useEffect(() => {
+    if (!cargando) return
+    const t = window.setTimeout(() => setTarda(true), 10_000)
+    return () => window.clearTimeout(t)
+  }, [cargando])
 
   if (cargando) {
     return (
-      <div className="container-page space-y-4 py-16">
+      <div role="status" className="container-page space-y-4 py-16">
+        <p className="text-sm text-muted-foreground">Validando tu sesión…</p>
         <Skeleton className="h-10 w-48" />
         <Skeleton className="h-64 w-full" />
+        {tarda && (
+          <div className="space-y-3">
+            <p>Está tardando más de lo normal.</p>
+            <Button variant="outline" onClick={() => window.location.reload()}>Recargar</Button>
+          </div>
+        )}
       </div>
     )
   }
