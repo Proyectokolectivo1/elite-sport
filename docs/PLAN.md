@@ -42,6 +42,7 @@ React 18 + Vite + TS · Tailwind + shadcn/ui · React Router · TanStack Query �
 
 **Usuarios y tiendas**
 - `perfiles`: rol (admin | mayorista | bodeguero | vendedor | mayorista_sector), estado (pendiente | aprobado | rechazado | suspendido), nombre, telefono, cedula_ruc, ciudad, negocio.
+- **Quién define el rol:** solo el admin de Elite Sport (super admin de la herramienta). Un alta nueva siempre nace mayorista pendiente; `proteger_perfil` impide que alguien cambie su propio rol y la RLS impide editar perfiles ajenos. El bodeguero y el vendedor del local trabajan solo con la bodega y la tienda principal: no tiene tienda propia (al pasar de mayorista a otro rol su sección se desactiva) y no ven ni entregan pedidos de tiendas de mayoristas (el vendedor solo ve lo suyo). Prueba: `supabase/tests/roles_solo_admin.sql`.
 - `tiendas`: propietario_id, slug, nombre, logo_url, banner_url, color_primario, color_acento, whatsapp, plantilla_mensaje, activa.
 - `configuracion`: fila única con moneda (codigo_iso, simbolo, decimales, locale) y datos del negocio.
 

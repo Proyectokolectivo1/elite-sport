@@ -20,8 +20,8 @@ import { integranteSchema, type IntegranteValues } from '../schemas'
 const ROLES: { id: IntegranteValues['rol']; texto: string }[] = [
   { id: 'mayorista', texto: 'Compra en firme y tiene su sección /t/slug.' },
   { id: 'mayorista_sector', texto: 'Retira pares en bodega y liquida al cierre del día. Sin sección propia.' },
-  { id: 'bodeguero', texto: 'Despacha, cierra el día e ingresa mercancía. No ve precios ni ventas.' },
-  { id: 'vendedor', texto: 'Pide pares a bodega y registra las ventas del local.' },
+  { id: 'bodeguero', texto: 'Trabaja solo con la bodega y la tienda principal de Elite Sport: despacha, cierra el día e ingresa mercancía. No ve precios, ventas ni tiendas de mayoristas.' },
+  { id: 'vendedor', texto: 'Trabaja solo con la tienda principal de Elite Sport: pide pares a bodega y registra las ventas del local. No ve precios mayoristas ni pedidos de otros.' },
 ]
 const ESTADOS: Record<IntegranteValues['estado'], string> = { pendiente: 'Pendiente', aprobado: 'Aprobado', rechazado: 'Rechazado', suspendido: 'Suspendido' }
 const TONO: Record<IntegranteValues['estado'], 'warning' | 'success' | 'neutral' | 'destructive'> = { pendiente: 'warning', aprobado: 'success', rechazado: 'neutral', suspendido: 'destructive' }
@@ -84,7 +84,7 @@ export function EquipoPage() {
 
   return (
     <>
-      <PageHeader title="Equipo" description="Quien se registra entra como mayorista pendiente. Aquí le asignas su rol: bodeguero, vendedor del local o mayorista del sector." />
+      <PageHeader title="Equipo" description="Quien se registra entra como mayorista pendiente. Solo el administrador de Elite Sport asigna roles: bodeguero, vendedor del local o mayorista del sector." />
       <div className="mb-4 grid gap-3 sm:grid-cols-[1fr_14rem]">
         <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar por nombre, negocio o correo" aria-label="Buscar personas" />
         <Select value={rol} onChange={(e) => setRol(e.target.value)} aria-label="Filtrar por rol">
