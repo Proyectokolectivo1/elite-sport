@@ -151,3 +151,7 @@
 
 ## Inventario: existencias por producto
 - "Existencias" pasa de una tabla plana a una lista por producto: miniatura, total de pares, estado (Disponible / Stock bajo hasta 6 pares / Agotado) y resumen arriba con filtros. Al tocar un producto se abre el detalle por color con una casilla por talla (roja si no hay, ambar si quedan 3 o menos); tocar una talla permite ajustar el stock, y hay un enlace para ingresar mercancia de ese producto. Logica en `inventario/agrupar.ts`.
+
+## Pantalla en negro al navegar
+- Causa: al publicar una version nueva se borran los archivos con hash de la anterior; con una pestana abierta, el siguiente cambio de pagina pedia un archivo inexistente y el servidor respondia index.html (HTML en lugar de JS). El import fallaba y, sin red de seguridad, React desmontaba todo (negro).
+- Arreglo: `ErrorBoundary` global (aviso con Recargar), recarga automatica una vez por pestana ante `vite:preloadError`, aviso "Cargando" en vez de vacio y `.htaccess` que devuelve 404 real para `/assets/` inexistente.

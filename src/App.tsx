@@ -56,11 +56,20 @@ const SectorEnPoderPage = lazy(() => cargarSector().then((m) => ({ default: m.Se
 const SectorPedirPage = lazy(() => cargarSector().then((m) => ({ default: m.SectorPedirPage })))
 const SectorHistorialPage = lazy(() => cargarSector().then((m) => ({ default: m.SectorHistorialPage })))
 
+/** Mientras baja la página: un aviso discreto en vez de una pantalla vacía. */
+function Cargando() {
+  return (
+    <div role="status" aria-live="polite" className="grid min-h-dvh place-items-center bg-background text-sm text-muted-foreground">
+      Cargando…
+    </div>
+  )
+}
+
 export default function App() {
   useConfiguracion()
   return (
     <AuthProvider>
-      <Suspense fallback={null}>
+      <Suspense fallback={<Cargando />}>
         <Routes>
           {import.meta.env.DEV && <Route path="/_ds/*" element={<DesignSystemPage />} />}
           <Route

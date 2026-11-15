@@ -6,6 +6,8 @@
   RewriteCond %{HTTPS} off
   RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
   # App de una sola pagina: toda ruta que no sea un archivo real abre index.html
+  # Un archivo de /assets que ya no existe es un 404 real (no index.html): así el navegador sabe que hay una version nueva.
+  RewriteRule ^assets/ - [L]
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
   RewriteRule ^ /index.html [L]
