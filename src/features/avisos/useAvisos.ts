@@ -7,7 +7,7 @@ const VACIO: Pendientes = { pedidos: 0, bodega: 0, web: 0, mayoristas: 0 }
 const TITULO_BASE = 'Elite Sport'
 
 /**
- * Avisos de lo que llega: insignia en el menu, contador en el titulo de la pestana y un tono suave.
+ * Avisos de lo que llega: insignia en el menu, contador en el titulo de la pestana y una alerta sonora fuerte.
  * Consulta cada 30 s (solo conteos) y tambien con la pestana en segundo plano.
  * Si la funcion de conteo falla (por ejemplo, aun no esta instalada), no se muestra nada.
  */
