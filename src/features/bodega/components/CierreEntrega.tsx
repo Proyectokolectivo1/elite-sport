@@ -5,7 +5,9 @@ import { toast } from '@/components/ui/toast'
 import { mensajeError } from '@/lib/errors'
 import { cn } from '@/lib/utils'
 import type { PedidoBodega } from '../api/bodega'
-import { useCerrarEntrega, useDevolucion } from '../hooks/useBodega'
+import { useCerrarEntrega, useDevolucion, useFotoDeVariante } from '../hooks/useBodega'
+import { FotoPar } from './FotoPar'
+import { partesLinea } from './partesLinea'
 import { conVendidos, cuadreEntrega, cuadreLinea, pendiente, valoresIniciales, vendidosSinRegistrar, type LineaEntrega, type ValorCierre } from '../logica'
 
 const hora = new Intl.DateTimeFormat('es-EC', { timeStyle: 'short' })
@@ -15,14 +17,16 @@ export function CierreEntrega({ pedido }: { pedido: PedidoBodega }) {
   const cerrar = useCerrarEntrega()
   const devolver = useDevolucion()
   const esVendedor = pedido.solicitante_rol === 'vendedor'
+  const foto = useFotoDeVariante()
 
-  const lineas: (LineaEntrega & { descripcion: string })[] = useMemo(
+  const lineas: (LineaEntrega & { descripcion: string; varianteId: string })[] = useMemo(
     () =>
       pedido.lineas
         .filter((l) => (l.cantidad_entregada ?? 0) > 0)
         .map((l) => ({
           id: l.id,
           descripcion: l.descripcion,
+          varianteId: l.variante_id,
           entregada: l.cantidad_entregada ?? 0,
           vendida: l.cantidad_vendida ?? 0,
           devuelta: l.cantidad_devuelta ?? 0,
@@ -84,16 +88,24 @@ export function CierreEntrega({ pedido }: { pedido: PedidoBodega }) {
         {lineas.map((l) => {
           const v = valores[l.id]
           const c = cuadreLinea(l, v)
+          const partes = partesLinea(l.descripcion)
           return (
-            <li key={l.id} className="grid gap-3 py-3 sm:grid-cols-[1fr_auto] sm:items-center">
-              <div className="min-w-0 text-sm">
-                <p className="font-semibold">{l.descripcion}</p>
-                <p className="text-xs text-muted-foreground">
-                  Entregados <strong className="text-foreground tabular-nums">{l.entregada}</strong>
+            <li key={l.id} className="grid gap-4 py-4 sm:grid-cols-[auto_1fr_auto] sm:items-center">
+              <FotoPar src={foto(l.varianteId)} alt={l.descripcion} className="aspect-square w-full rounded-xl sm:size-40 sm:w-40" />
+              <div className="min-w-0 space-y-2">
+                <p className="font-display text-2xl font-bold uppercase leading-tight">{partes.nombre}</p>
+                {partes.color && (
+                  <p className="flex items-center gap-3">
+                    <span className="text-muted-foreground">{partes.color}</span>
+                    <span className="rounded-lg bg-foreground px-3 py-1 text-xl font-bold tabular-nums text-background">Talla {partes.talla}</span>
+                  </p>
+                )}
+                <p className="text-sm text-muted-foreground">
+                  Entregados <strong className="text-lg text-foreground tabular-nums">{l.entregada}</strong>
                   {esVendedor && <> · registrados <strong className="text-foreground tabular-nums">{l.vendida}</strong></>}
                   {l.devuelta > 0 && <> · ya regresaron {l.devuelta}</>}
                 </p>
-                {c.mensaje && <p className="text-xs text-destructive">{c.mensaje}</p>}
+                {c.mensaje && <p className="text-sm text-destructive">{c.mensaje}</p>}
               </div>
               <div className="grid grid-cols-2 gap-3 sm:flex">
                 <label className="text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">

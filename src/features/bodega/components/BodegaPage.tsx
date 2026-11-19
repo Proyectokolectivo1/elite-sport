@@ -15,6 +15,7 @@ import type { PedidoBodega, VistaBodega } from '../api/bodega'
 import { useCancelarPedidoBodega, useDespachar, useEntregarWeb, useFotoDeVariante, usePedidosBodega } from '../hooks/useBodega'
 import { CierreEntrega } from './CierreEntrega'
 import { FotoPar } from './FotoPar'
+import { partesLinea } from './partesLinea'
 import { idCierre, PendientesCierre } from './PendientesCierre'
 
 const VISTAS: { id: VistaBodega; label: string; ruta: string }[] = [
@@ -60,12 +61,6 @@ function Encabezado({ p }: { p: PedidoBodega }) {
       {p.tipo === 'minorista' && <Badge variant="outline">Tienda en línea</Badge>}
     </div>
   )
-}
-
-/** Separa "Producto · Color · talla 40" para destacar la talla; si el texto no tiene ese formato, lo deja entero. */
-function partesLinea(descripcion: string) {
-  const [nombre, color, talla] = descripcion.split(' · ')
-  return talla ? { nombre, color, talla: talla.replace(/^talla\s*/i, '') } : { nombre: descripcion, color: null, talla: null }
 }
 
 function Despacho({ p }: { p: PedidoBodega }) {
