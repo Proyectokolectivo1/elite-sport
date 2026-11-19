@@ -227,7 +227,7 @@ export function ProductoFormPage() {
                   <option key={g.value} value={g.value}>{g.label}</option>
                 ))}
               </Select>
-              {producto && <p className="mt-1 text-xs text-muted-foreground">No se puede cambiar: agrupa el modelo en la tienda (Dama, Caballero o Niño).</p>}
+              {producto && <p className="mt-1 text-xs text-muted-foreground">No se puede cambiar: agrupa el modelo en la tienda (Dama, Caballero, Niño o Unisex).</p>}
             </div>
             <SelectOpcion id="marca" value={sel.marca_id ?? ''} tabla="marcas" etiqueta="Marca" onValor={(v) => setValue('marca_id', v, { shouldDirty: true })} />
             <SelectOpcion id="categoria" value={sel.categoria_id ?? ''} tabla="categorias" etiqueta="Categoría" onValor={(v) => setValue('categoria_id', v, { shouldDirty: true })} />

@@ -20,6 +20,7 @@ const GRUPOS = [
   { id: 'dama', label: 'Dama' },
   { id: 'caballero', label: 'Caballero' },
   { id: 'nino', label: 'Niño' },
+  { id: 'unisex', label: 'Unisex' },
 ] as const
 
 export function FiltrosPanel({ opciones, filtros, onChange }: Props) {

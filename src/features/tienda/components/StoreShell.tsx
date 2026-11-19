@@ -36,6 +36,7 @@ function Marco() {
               { to: ruta('/catalogo?g=dama'), label: 'Dama' },
               { to: ruta('/catalogo?g=caballero'), label: 'Caballero' },
               { to: ruta('/catalogo?g=nino'), label: 'Niño' },
+              { to: ruta('/catalogo?g=unisex'), label: 'Unisex' },
             ],
           },
           ...(esPrincipal

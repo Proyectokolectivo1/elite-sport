@@ -5,6 +5,7 @@ export const RANGO_POR_GRUPO: Record<ProductoValues['grupo'], { desde: number; h
   nino: { desde: 22, hasta: 33 },
   dama: { desde: 34, hasta: 40 },
   caballero: { desde: 38, hasta: 45 },
+  unisex: { desde: 35, hasta: 45 },
 }
 
 /** Tallas enteras de `desde` a `hasta`, ambas incluidas. Vacío si el rango no es válido. */

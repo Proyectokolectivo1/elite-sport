@@ -187,3 +187,8 @@
 - Ingreso de mercancia: muestra solo las tallas del modelo y el surtido por defecto es "Surtido del modelo" (luego el del ultimo ingreso, los surtidos guardados o personalizado). Un producto sin configurar sigue usando todas las tallas de su grupo.
 - Logica en `catalogo/tallasModelo.ts` con pruebas. Migracion `0021_tallas_por_producto.sql` **aplicada el 2026-11-19**; prueba `supabase/tests/tallas_por_producto.sql`: 9 comprobaciones OK (rango 25-45, reemplazo a 36-45, ingreso con talla nueva, validaciones; bodeguero y anon no configuran ni leen).
 - Productos existentes configurados el 2026-11-19 (9): con mercancia, rango min-max de sus tallas y surtido del ultimo ingreso por caja (Runner Pro Veloz 38-45 x3, Adidas runner 38-44 x3, Foce one negro aa 38-43 2-4-6-6-4-2, NIke 38-39 2+1); sin mercancia, rango sugerido del grupo y surtido vacio. Todo editable en "Datos y precios".
+
+## Categoria Unisex (2026-11-19)
+- Nuevo grupo `unisex` (migracion `0022_grupo_unisex.sql`) junto a Dama, Caballero y Nino: en la ficha del producto, en el menu y filtros de la tienda y como cuarta tarjeta en "Compra por categoria" (2 columnas en tablet, 4 en escritorio). Rango sugerido 35-45; las tallas se crean al configurar cada modelo.
+- Un producto unisex solo aparece en el filtro Unisex (no en Dama ni Caballero).
+- Migracion 0022 aplicada el 2026-11-19; prueba revertida OK: el admin crea un producto unisex, configura 35-45 (11 tallas creadas) y la busqueda publica lo filtra por Unisex.

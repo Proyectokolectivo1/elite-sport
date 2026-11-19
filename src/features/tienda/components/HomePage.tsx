@@ -12,7 +12,7 @@ import { CategoriasGrupo } from './CategoriasGrupo'
 
 export function HomePage() {
   const { tienda, ruta, ciudad, tiendaPrecios } = useStore()
-  usePageMeta(`${tienda.nombre} · Calzado deportivo y urbano en ${ciudad}`, `Catálogo de ${tienda.nombre}: calzado para dama, caballero y niño. Elige tu talla y haz tu pedido por WhatsApp.`)
+  usePageMeta(`${tienda.nombre} · Calzado deportivo y urbano en ${ciudad}`, `Catálogo de ${tienda.nombre}: calzado para dama, caballero, niño y unisex. Elige tu talla y haz tu pedido por WhatsApp.`)
 
   // Solo se piden los pocos productos que se ven en la portada, no todo el catálogo.
   const destacadosQ = useProductosPagina('destacados', tiendaPrecios, { destacado: true }, 5)
@@ -34,7 +34,7 @@ export function HomePage() {
         )}
         <div className="container-page flex min-h-[26rem] flex-col justify-end gap-8 py-14 md:min-h-[34rem] md:py-20">
           <h1 className="display-xl max-w-4xl">Hecho para moverte</h1>
-          <p className="max-w-md text-current/80">Calzado deportivo y urbano para dama, caballero y niño. Elige tu talla y pide por WhatsApp.</p>
+          <p className="max-w-md text-current/80">Calzado deportivo y urbano para dama, caballero, niño y unisex. Elige tu talla y pide por WhatsApp.</p>
           <div className="flex flex-wrap gap-3">
             <Link to={ruta('/catalogo')} className={cn(buttonVariants({ size: 'lg' }))}>Ver catálogo</Link>
             <Link to={ruta('/catalogo?orden=novedades')} className={cn(buttonVariants({ size: 'lg', variant: 'outline' }), 'border-current/40 text-current hover:bg-white/10')}>Novedades</Link>

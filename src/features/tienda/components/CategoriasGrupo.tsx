@@ -9,6 +9,7 @@ const GRUPOS: { id: GrupoTalla; titulo: string; tallas: string; inicial: string 
   { id: 'dama', titulo: 'Dama', tallas: 'Tallas 34 a 40', inicial: '34' },
   { id: 'caballero', titulo: 'Caballero', tallas: 'Tallas 38 a 45', inicial: '38' },
   { id: 'nino', titulo: 'Niño', tallas: 'Tallas 22 a 33', inicial: '22' },
+  { id: 'unisex', titulo: 'Unisex', tallas: 'Tallas 35 a 45', inicial: '35' },
 ]
 
 function Tarjeta({ grupo }: { grupo: (typeof GRUPOS)[number] }) {
@@ -23,8 +24,8 @@ function Tarjeta({ grupo }: { grupo: (typeof GRUPOS)[number] }) {
     <Link
       to={ruta(`/catalogo?g=${grupo.id}`)}
       className={cn(
-        // Celular: tarjeta compacta y apaisada; desde tablet vuelve a la tarjeta alta de tres columnas.
-        'group relative isolate flex aspect-[16/11] min-w-[62%] snap-start flex-col justify-end overflow-hidden rounded-xl border border-border bg-card p-4 outline-none sm:min-w-[42%] md:aspect-[4/5] md:min-w-0 md:rounded-2xl md:p-6',
+        // Celular: tarjeta compacta y apaisada; desde tablet, tarjeta alta en la cuadrícula.
+        'group relative isolate flex aspect-[16/11] min-w-[62%] snap-start flex-col justify-end overflow-hidden rounded-xl border border-border bg-card p-4 outline-none sm:min-w-[42%] md:aspect-[4/3] lg:aspect-[4/5] md:min-w-0 md:rounded-2xl md:p-6',
         'focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring',
       )}
     >
@@ -53,7 +54,7 @@ function Tarjeta({ grupo }: { grupo: (typeof GRUPOS)[number] }) {
         <p className={cn('text-xs md:text-sm', imagen ? 'text-white/75' : 'text-muted-foreground')}>
           {isLoading ? grupo.tallas : `${total} ${total === 1 ? 'modelo' : 'modelos'} · ${grupo.tallas}`}
         </p>
-        <h3 className="mt-1 font-display text-3xl font-extrabold uppercase leading-[0.9] md:mt-1.5 md:text-6xl">{grupo.titulo}</h3>
+        <h3 className="mt-1 font-display text-3xl font-extrabold uppercase leading-[0.9] md:mt-1.5 md:text-6xl lg:text-5xl">{grupo.titulo}</h3>
         <span className="mt-2.5 inline-block border-b-2 border-signal pb-0.5 text-[0.6875rem] md:mt-4 md:text-[0.8125rem] font-semibold uppercase tracking-[0.1em]">Ver colección</span>
       </div>
     </Link>
@@ -65,8 +66,8 @@ export function CategoriasGrupo() {
   return (
     <section aria-label="Comprar por categoría" className="container-page py-8 md:py-12">
       <h2 className="display-lg mb-4 md:mb-6">Compra por categoría</h2>
-      {/* En celular se desliza de lado; desde tablet son tres columnas. */}
-      <div className="-mx-[var(--gutter)] flex snap-x snap-mandatory gap-3 overflow-x-auto px-[var(--gutter)] pb-2 md:mx-0 md:grid md:grid-cols-3 md:gap-5 md:overflow-visible md:px-0 md:pb-0 scroll-pl-[var(--gutter)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      {/* En celular se desliza de lado; en tablet dos columnas y en escritorio cuatro. */}
+      <div className="-mx-[var(--gutter)] flex snap-x snap-mandatory gap-3 overflow-x-auto px-[var(--gutter)] pb-2 md:mx-0 md:grid md:grid-cols-2 lg:grid-cols-4 md:gap-5 md:overflow-visible md:px-0 md:pb-0 scroll-pl-[var(--gutter)] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {GRUPOS.map((g) => (
           <Tarjeta key={g.id} grupo={g} />
         ))}

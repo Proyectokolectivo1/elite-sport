@@ -22,7 +22,7 @@ const num = (v: string | null): number | null => {
   return Number.isFinite(n) && n >= 0 ? n : null
 }
 
-const GRUPOS = ['dama', 'caballero', 'nino']
+const GRUPOS = ['dama', 'caballero', 'nino', 'unisex']
 const ORDENES: Orden[] = ['novedades', 'precio-asc', 'precio-desc', 'nombre']
 
 export function filtrosDesdeUrl(p: URLSearchParams): Filtros {

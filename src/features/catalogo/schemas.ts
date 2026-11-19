@@ -3,7 +3,7 @@ import { z } from 'zod'
 export const productoSchema = z
   .object({
     nombre: z.string().trim().min(2, 'Ingresa el nombre del producto'),
-    grupo: z.enum(['dama', 'caballero', 'nino']),
+    grupo: z.enum(['dama', 'caballero', 'nino', 'unisex']),
     marca_id: z.string(),
     categoria_id: z.string(),
     estilo_id: z.string(),
@@ -24,6 +24,7 @@ export const GRUPOS: { value: ProductoValues['grupo']; label: string }[] = [
   { value: 'dama', label: 'Dama' },
   { value: 'caballero', label: 'Caballero' },
   { value: 'nino', label: 'Niño' },
+  { value: 'unisex', label: 'Unisex' },
 ]
 
 /** Rango de tallas del modelo y surtido de la caja (pares por talla, texto del input). */

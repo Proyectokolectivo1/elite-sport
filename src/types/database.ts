@@ -348,7 +348,7 @@ export type Database = {
     Enums: {
       estado_pedido: 'nuevo' | 'confirmado' | 'entregado' | 'cancelado' | 'liquidado'
       estado_perfil: 'pendiente' | 'aprobado' | 'rechazado' | 'suspendido'
-      grupo_talla: 'dama' | 'caballero' | 'nino'
+      grupo_talla: 'dama' | 'caballero' | 'nino' | 'unisex'
       motivo_movimiento: 'ingreso' | 'venta' | 'pedido_mayorista' | 'ajuste' | 'anulacion' | 'despacho' | 'devolucion'
       rol_usuario: 'admin' | 'mayorista' | 'bodeguero' | 'vendedor' | 'mayorista_sector'
       tipo_ingreso: 'caja' | 'unidad'
