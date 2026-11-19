@@ -7,7 +7,7 @@ import { useCerrarEntrega, useDevolucion, useFotoDeVariante } from '../hooks/use
 import { Contador } from './Contador'
 import { FotoPar } from './FotoPar'
 import { partesLinea } from './partesLinea'
-import { conDevueltos, conVendidos, cuadreEntrega, cuadreLinea, maxDevueltos, pendiente, valoresIniciales, vendidosSinRegistrar, type LineaEntrega, type ValorCierre } from '../logica'
+import { aLiberar, conDevueltos, conVendidos, cuadreEntrega, cuadreLinea, pendiente, repartibles, valoresIniciales, vendidosSinRegistrar, type LineaEntrega, type ValorCierre } from '../logica'
 
 const hora = new Intl.DateTimeFormat('es-EC', { timeStyle: 'short' })
 
@@ -45,7 +45,11 @@ export function CierreEntrega({ pedido }: { pedido: PedidoBodega }) {
 
   function cerrarEntrega() {
     cerrar.mutate(
-      { id: pedido.id, lineas: lineas.map((l) => ({ detalleId: l.id, vendidos: valores[l.id].vendidos, devueltos: valores[l.id].devueltos })) },
+      {
+        id: pedido.id,
+        lineas: lineas.map((l) => ({ detalleId: l.id, vendidos: valores[l.id].vendidos, devueltos: valores[l.id].devueltos })),
+        liberar: lineas.map((l) => ({ detalleId: l.id, cantidad: aLiberar(l, valores[l.id].vendidos) })),
+      },
       {
         onSuccess: (r) =>
           toast.success(
@@ -60,10 +64,11 @@ export function CierreEntrega({ pedido }: { pedido: PedidoBodega }) {
 
   function recibirParcial() {
     const items = lineas
-      .map((l) => ({ detalleId: l.id, devueltos: Math.min(valores[l.id]?.devueltos ?? 0, pendiente(l)) }))
+      .map((l) => ({ detalleId: l.id, devueltos: Math.min(valores[l.id]?.devueltos ?? 0, repartibles(l)) }))
       .filter((x) => x.devueltos > 0)
+    const liberar = lineas.map((l) => ({ detalleId: l.id, cantidad: aLiberar(l, repartibles(l) - Math.min(valores[l.id]?.devueltos ?? 0, repartibles(l))) }))
     devolver.mutate(
-      { id: pedido.id, lineas: items },
+      { id: pedido.id, lineas: items, liberar },
       {
         onSuccess: () => toast.success(`Recibidos ${items.reduce((s, x) => s + x.devueltos, 0)} pares. La entrega sigue abierta.`),
         onError: (e) => toast.error(mensajeError(e)),
@@ -106,11 +111,9 @@ export function CierreEntrega({ pedido }: { pedido: PedidoBodega }) {
                   {l.devuelta > 0 && <> · ya regresaron {l.devuelta}</>}
                 </p>
                 {c.mensaje && <p className="text-sm text-destructive">{c.mensaje}</p>}
-                {l.vendida > 0 && (
-                  <p className="text-sm text-muted-foreground">
-                    {maxDevueltos(l) === 0
-                      ? 'Todo lo entregado ya está registrado como vendido: solo falta cerrar la entrega.'
-                      : `${l.vendida === 1 ? '1 par ya está registrado' : `${l.vendida} pares ya están registrados`} como vendido y no puede regresar.`}
+                {l.vendida > 0 && (v?.vendidos ?? l.vendida) < l.vendida && (
+                  <p className="text-sm text-warning">
+                    Se anulará {l.vendida - (v?.vendidos ?? l.vendida) === 1 ? '1 venta registrada' : `${l.vendida - (v?.vendidos ?? l.vendida)} ventas registradas`} por el vendedor: el par vuelve al inventario.
                   </p>
                 )}
               </div>
@@ -119,8 +122,8 @@ export function CierreEntrega({ pedido }: { pedido: PedidoBodega }) {
                   etiqueta="Vendidos"
                   ariaLabel={`Vendidos de ${l.descripcion}`}
                   valor={v?.vendidos ?? l.vendida}
-                  min={l.vendida}
-                  max={l.entregada - l.devuelta}
+                  min={0}
+                  max={repartibles(l)}
                   invalido={!c.ok}
                   onChange={(n) => poner(l, 'vendidos', n)}
                 />
@@ -129,7 +132,7 @@ export function CierreEntrega({ pedido }: { pedido: PedidoBodega }) {
                   ariaLabel={`Regresan de ${l.descripcion}`}
                   valor={v?.devueltos ?? 0}
                   min={0}
-                  max={maxDevueltos(l)}
+                  max={repartibles(l)}
                   invalido={!c.ok}
                   onChange={(n) => poner(l, 'devueltos', n)}
                 />

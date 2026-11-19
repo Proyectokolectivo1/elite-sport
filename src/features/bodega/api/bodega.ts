@@ -55,7 +55,23 @@ export async function despacharPedido(pedidoId: string, lineas: { detalleId: str
   if (error) throw error
 }
 
-export async function recibirDevolucion(pedidoId: string, lineas: { detalleId: string; devueltos: number }[]): Promise<void> {
+/** Ventas que el vendedor registró pero cuyo par regresa: se anulan antes de recibir o cerrar. */
+async function liberarVentas(pedidoId: string, liberar: { detalleId: string; cantidad: number }[]): Promise<void> {
+  const lineas = liberar.filter((x) => x.cantidad > 0)
+  if (lineas.length === 0) return
+  const { error } = await supabase.rpc('liberar_ventas_registradas', {
+    p_pedido: pedidoId,
+    p_lineas: lineas.map((l) => ({ detalle_id: l.detalleId, cantidad: l.cantidad })),
+  })
+  if (error) throw error
+}
+
+export async function recibirDevolucion(
+  pedidoId: string,
+  lineas: { detalleId: string; devueltos: number }[],
+  liberar: { detalleId: string; cantidad: number }[] = [],
+): Promise<void> {
+  await liberarVentas(pedidoId, liberar)
   const { error } = await supabase.rpc('devolver_a_bodega', {
     p_pedido: pedidoId,
     p_lineas: lineas.map((l) => ({ detalle_id: l.detalleId, devueltos: l.devueltos })),
@@ -66,7 +82,9 @@ export async function recibirDevolucion(pedidoId: string, lineas: { detalleId: s
 export async function cerrarEntrega(
   pedidoId: string,
   lineas: { detalleId: string; vendidos: number; devueltos: number }[],
+  liberar: { detalleId: string; cantidad: number }[] = [],
 ): Promise<{ ventaSinRegistrar: number | null }> {
+  await liberarVentas(pedidoId, liberar)
   const { data, error } = await supabase.rpc('cerrar_pedido_bodega', {
     p_pedido: pedidoId,
     p_lineas: lineas.map((l) => ({ detalle_id: l.detalleId, vendidos: l.vendidos, devueltos: l.devueltos })),

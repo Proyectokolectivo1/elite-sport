@@ -202,3 +202,8 @@
 - Los campos Vendidos y Regresan son contadores -/+ con campo editable (`bodega/components/Contador.tsx`): se pueden vaciar al escribir y al enfocarlos se selecciona el valor, asi escribir "1" ya no deja "10".
 - Vendidos y Regresan se completan entre si (`conDevueltos` en `bodega/logica.ts`): la linea siempre cuadra y "Cerrar entrega" queda habilitado. Lo ya registrado como vendido por el vendedor no puede regresar, y se explica en la linea.
 - El servidor ya funcionaba (cierre de la entrega #10 probado y revertido). Pruebas: `logica.test.ts` y `Contador.test.tsx`.
+
+## Cierre del dia: devolver pares ya registrados como vendidos (2026-11-19)
+- Regresan ya no se bloquea cuando el vendedor registro el par como vendido: el bodeguero puede recibirlo. Antes de recibir o cerrar se llama a la RPC `liberar_ventas_registradas` (migracion 0025), que baja `cantidad_vendida` y reduce o anula la venta del local (la mas reciente primero). El stock lo sube despues `devolver_a_bodega` / `cerrar_pedido_bodega`.
+- La pantalla avisa "Se anulara N venta registrada" cuando aplica.
+- Pendiente: aplicar la migracion 0025 en Supabase (requiere aprobacion) y desplegar.

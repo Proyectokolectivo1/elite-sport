@@ -65,7 +65,8 @@ export function useDespachar() {
 export function useDevolucion() {
   const refrescar = useRefrescar()
   return useMutation({
-    mutationFn: (v: { id: string; lineas: { detalleId: string; devueltos: number }[] }) => recibirDevolucion(v.id, v.lineas),
+    mutationFn: (v: { id: string; lineas: { detalleId: string; devueltos: number }[]; liberar?: { detalleId: string; cantidad: number }[] }) =>
+      recibirDevolucion(v.id, v.lineas, v.liberar),
     onSuccess: refrescar,
   })
 }
@@ -73,7 +74,8 @@ export function useDevolucion() {
 export function useCerrarEntrega() {
   const refrescar = useRefrescar()
   return useMutation({
-    mutationFn: (v: { id: string; lineas: { detalleId: string; vendidos: number; devueltos: number }[] }) => cerrarEntrega(v.id, v.lineas),
+    mutationFn: (v: { id: string; lineas: { detalleId: string; vendidos: number; devueltos: number }[]; liberar?: { detalleId: string; cantidad: number }[] }) =>
+      cerrarEntrega(v.id, v.lineas, v.liberar),
     onSuccess: refrescar,
   })
 }

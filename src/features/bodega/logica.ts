@@ -22,21 +22,26 @@ export function valoresIniciales(lineas: LineaEntrega[]): Record<string, ValorCi
   return Object.fromEntries(lineas.map((l) => [l.id, { vendidos: l.vendida, devueltos: pendiente(l) }]))
 }
 
-/** Al cambiar los vendidos, los devueltos se completan con el resto (sin bajar de 0). */
-export function conVendidos(l: LineaEntrega, vendidos: number): ValorCierre {
-  const v = Math.max(l.vendida, Math.min(l.entregada - l.devuelta, Math.trunc(vendidos) || 0))
-  return { vendidos: v, devueltos: l.entregada - l.devuelta - v }
+/** Pares de la línea que aún no han regresado a bodega (se reparten entre vendidos y regresan). */
+export function repartibles(l: LineaEntrega): number {
+  return Math.max(0, l.entregada - l.devuelta)
 }
 
-/** Pares que todavía se pueden marcar como devueltos (lo registrado como vendido ya no regresa). */
-export function maxDevueltos(l: LineaEntrega): number {
-  return Math.max(0, l.entregada - l.devuelta - l.vendida)
+/** Al cambiar los vendidos, los devueltos se completan con el resto (sin bajar de 0). */
+export function conVendidos(l: LineaEntrega, vendidos: number): ValorCierre {
+  const v = Math.max(0, Math.min(repartibles(l), Math.trunc(vendidos) || 0))
+  return { vendidos: v, devueltos: repartibles(l) - v }
 }
 
 /** Al cambiar los que regresan, los vendidos se completan con el resto: la línea siempre cuadra. */
 export function conDevueltos(l: LineaEntrega, devueltos: number): ValorCierre {
-  const d = Math.max(0, Math.min(maxDevueltos(l), Math.trunc(devueltos) || 0))
-  return { vendidos: l.entregada - l.devuelta - d, devueltos: d }
+  const d = Math.max(0, Math.min(repartibles(l), Math.trunc(devueltos) || 0))
+  return { vendidos: repartibles(l) - d, devueltos: d }
+}
+
+/** Pares registrados como vendidos que el bodeguero decide recibir de vuelta: se anula esa venta. */
+export function aLiberar(l: LineaEntrega, vendidosFinal: number): number {
+  return Math.max(0, l.vendida - vendidosFinal)
 }
 
 export interface ResultadoCuadre {
@@ -49,7 +54,6 @@ export function cuadreLinea(l: LineaEntrega, v: ValorCierre | undefined): Result
   if (!Number.isInteger(v.vendidos) || !Number.isInteger(v.devueltos) || v.vendidos < 0 || v.devueltos < 0) {
     return { ok: false, mensaje: 'Usa números enteros' }
   }
-  if (v.vendidos < l.vendida) return { ok: false, mensaje: `Ya hay ${l.vendida} vendidos registrados` }
   const suma = v.vendidos + v.devueltos + l.devuelta
   if (suma !== l.entregada) {
     const dif = l.entregada - suma

@@ -320,6 +320,7 @@ export type Database = {
       }
       despachar_pedido_bodega: { Args: { p_lineas?: Json; p_pedido: string }; Returns: undefined }
       devolver_a_bodega: { Args: { p_lineas: Json; p_pedido: string }; Returns: undefined }
+      liberar_ventas_registradas: { Args: { p_lineas: Json; p_pedido: string }; Returns: undefined }
       entregar_pedido: { Args: { p_pedido: string }; Returns: undefined }
       es_admin: { Args: never; Returns: boolean }
       es_bodeguero: { Args: never; Returns: boolean }
