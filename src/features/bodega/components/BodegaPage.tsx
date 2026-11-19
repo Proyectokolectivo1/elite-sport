@@ -144,12 +144,20 @@ function PedidoWeb({ p }: { p: PedidoBodega }) {
     <article className="space-y-3 rounded-xl border border-border bg-card p-4">
       <Encabezado p={p} />
       {p.cliente_direccion && <p className="text-sm"><span className="eyebrow mr-2">Dirección</span>{p.cliente_direccion}</p>}
-      <ul className="divide-y divide-border text-sm">
+      <ul className="divide-y divide-border">
         {p.lineas.map((l) => (
-          <li key={l.id} className="flex items-center gap-4 py-3">
-            <FotoPar src={foto(l.variante_id)} alt={l.descripcion} className="size-28 rounded-xl sm:size-32" />
-            <span className="min-w-0 flex-1 text-base font-semibold">{l.descripcion}</span>
-            <span className="text-2xl font-bold tabular-nums">× {l.cantidad}</span>
+          <li key={l.id} className="flex flex-col gap-4 py-4 sm:flex-row sm:items-center">
+            <FotoPar src={foto(l.variante_id)} alt={l.descripcion} className="aspect-square w-full rounded-xl sm:size-44 sm:w-44" />
+            <div className="min-w-0 flex-1">
+              <p className="font-display text-2xl font-bold uppercase leading-tight">{partesLinea(l.descripcion).nombre}</p>
+              {partesLinea(l.descripcion).color && (
+                <p className="mt-1 flex items-center gap-3">
+                  <span className="text-muted-foreground">{partesLinea(l.descripcion).color}</span>
+                  <span className="rounded-lg bg-foreground px-3 py-1 text-xl font-bold tabular-nums text-background">Talla {partesLinea(l.descripcion).talla}</span>
+                </p>
+              )}
+            </div>
+            <p className="text-sm text-muted-foreground sm:text-right">Pares <strong className="block text-4xl font-bold leading-none text-foreground tabular-nums">× {l.cantidad}</strong></p>
           </li>
         ))}
       </ul>
