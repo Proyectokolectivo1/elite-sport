@@ -173,6 +173,7 @@ function PedidoWeb({ p }: { p: PedidoBodega }) {
 }
 
 function Historial({ p }: { p: PedidoBodega }) {
+  const foto = useFotoDeVariante()
   return (
     <article className="space-y-3 rounded-xl border border-border bg-card p-4">
       <div className="flex items-start justify-between gap-2">
@@ -180,15 +181,29 @@ function Historial({ p }: { p: PedidoBodega }) {
         <Badge variant={p.estado === 'liquidado' ? 'success' : 'neutral'}>{p.estado === 'liquidado' ? 'Cerrada' : 'Cancelada'}</Badge>
       </div>
       {p.estado === 'liquidado' && (
-        <ul className="divide-y divide-border text-sm">
-          {p.lineas.map((l) => (
-            <li key={l.id} className="flex flex-wrap justify-between gap-3 py-2">
-              <span>{l.descripcion}</span>
-              <span className="tabular-nums text-muted-foreground">
-                Entregados {l.cantidad_entregada ?? 0} · vendidos <strong className="text-foreground">{l.cantidad_vendida ?? 0}</strong> · regresaron {l.cantidad_devuelta ?? 0}
-              </span>
-            </li>
-          ))}
+        <ul className="divide-y divide-border">
+          {p.lineas.map((l) => {
+            const partes = partesLinea(l.descripcion)
+            return (
+              <li key={l.id} className="flex flex-col gap-4 py-4 sm:flex-row sm:items-center">
+                <FotoPar src={foto(l.variante_id)} alt={l.descripcion} className="aspect-square w-full rounded-xl sm:size-44 sm:w-44" />
+                <div className="min-w-0 flex-1">
+                  <p className="font-display text-2xl font-bold uppercase leading-tight">{partes.nombre}</p>
+                  {partes.color && (
+                    <p className="mt-1 flex items-center gap-3">
+                      <span className="text-muted-foreground">{partes.color}</span>
+                      <span className="rounded-lg bg-foreground px-3 py-1 text-xl font-bold tabular-nums text-background">Talla {partes.talla}</span>
+                    </p>
+                  )}
+                </div>
+                <p className="text-sm tabular-nums text-muted-foreground sm:text-right">
+                  Entregados {l.cantidad_entregada ?? 0}
+                  <span className="block">Vendidos <strong className="text-2xl text-foreground">{l.cantidad_vendida ?? 0}</strong></span>
+                  <span className="block">Regresaron {l.cantidad_devuelta ?? 0}</span>
+                </p>
+              </li>
+            )
+          })}
         </ul>
       )}
     </article>
