@@ -212,13 +212,14 @@ function Historial({ p }: { p: PedidoBodega }) {
 
 /** Encabezado de cada persona en el cierre: quién es y qué se le despachó en total. */
 function ResumenGrupo({ nombre, rol, pedidos }: { nombre: string; rol: PedidoBodega['solicitante_rol']; pedidos: PedidoBodega[] }) {
+  const foto = useFotoDeVariante()
   const resumen = useMemo(() => {
-    const m = new Map<string, { entregados: number; vendidos: number; devueltos: number }>()
+    const m = new Map<string, { varianteId: string; entregados: number; vendidos: number; devueltos: number }>()
     for (const p of pedidos) {
       for (const l of p.lineas) {
         const e = l.cantidad_entregada ?? 0
         if (e === 0) continue
-        const x = m.get(l.descripcion) ?? { entregados: 0, vendidos: 0, devueltos: 0 }
+        const x = m.get(l.descripcion) ?? { varianteId: l.variante_id, entregados: 0, vendidos: 0, devueltos: 0 }
         x.entregados += e
         x.vendidos += l.cantidad_vendida ?? 0
         x.devueltos += l.cantidad_devuelta ?? 0
@@ -244,14 +245,25 @@ function ResumenGrupo({ nombre, rol, pedidos }: { nombre: string; rol: PedidoBod
       <details className="mt-2 rounded-lg border border-border bg-card/50 px-3 py-2 text-sm">
         <summary className="cursor-pointer font-semibold">Qué se le despachó</summary>
         <ul className="mt-2 divide-y divide-border">
-          {resumen.map(([descripcion, x]) => (
-            <li key={descripcion} className="flex flex-wrap justify-between gap-2 py-1.5">
-              <span>{descripcion}</span>
-              <span className="tabular-nums text-muted-foreground">
-                Despachados {x.entregados} · vendidos {x.vendidos} · regresaron {x.devueltos} · <strong className="text-foreground">en su poder {x.entregados - x.vendidos - x.devueltos}</strong>
-              </span>
-            </li>
-          ))}
+          {resumen.map(([descripcion, x]) => {
+            const partes = partesLinea(descripcion)
+            return (
+              <li key={descripcion} className="flex items-center gap-4 py-3">
+                <FotoPar src={foto(x.varianteId)} alt={descripcion} className="size-28 rounded-xl sm:size-36" />
+                <div className="min-w-0 flex-1">
+                  <p className="font-display text-xl font-bold uppercase leading-tight">{partes.nombre}</p>
+                  {partes.color && (
+                    <p className="mt-1 flex items-center gap-2">
+                      <span className="text-muted-foreground">{partes.color}</span>
+                      <span className="rounded-lg bg-foreground px-2.5 py-0.5 text-lg font-bold tabular-nums text-background">Talla {partes.talla}</span>
+                    </p>
+                  )}
+                  <p className="mt-2 text-xs tabular-nums text-muted-foreground">Despachados {x.entregados} · vendidos {x.vendidos} · regresaron {x.devueltos}</p>
+                </div>
+                <p className="text-right text-xs text-muted-foreground">En su poder<strong className="block text-3xl font-bold leading-none text-foreground tabular-nums">{x.entregados - x.vendidos - x.devueltos}</strong></p>
+              </li>
+            )
+          })}
         </ul>
       </details>
     </div>
