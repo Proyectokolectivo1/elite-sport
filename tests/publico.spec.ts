@@ -50,15 +50,16 @@ test.describe('tienda pública', () => {
     await expect(page).toHaveURL(/orden=precio-desc/)
   })
 
-  test('el menú separa la tienda, los mayoristas y la administración', async ({ page }) => {
+  test('el menú tiene un solo acceso para todos los roles', async ({ page }) => {
     await page.goto('/')
     await page.getByRole('button', { name: 'Abrir menú' }).click()
     const menu = page.getByRole('navigation', { name: 'Menú' })
     await expect(menu.getByRole('heading', { name: 'Comprar' })).toBeVisible()
     await expect(menu.getByRole('heading', { name: 'Mayoristas' })).toBeVisible()
-    await expect(menu.getByRole('heading', { name: 'Administración' })).toBeVisible()
-    await expect(menu.getByRole('link', { name: /Ingreso de mayoristas/ })).toHaveAttribute('href', '/ingresar')
-    await expect(menu.getByRole('link', { name: /Ingreso del administrador/ })).toHaveAttribute('href', '/admin/login')
+    await expect(menu.getByRole('heading', { name: 'Acceso' })).toBeVisible()
+    // Un solo ingreso para todos los roles.
+    await expect(menu.getByRole('link', { name: /^Ingresar/ })).toHaveAttribute('href', '/ingresar')
+    await expect(menu.getByRole('link', { name: /Ingreso del administrador|Ingreso de mayoristas/ })).toHaveCount(0)
     await menu.getByRole('link', { name: /Solicitar ser mayorista/ }).click()
     await expect(page).toHaveURL(/\/registro/)
   })

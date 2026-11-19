@@ -74,14 +74,8 @@ export default function App() {
       <Suspense fallback={<Cargando />}>
         <Routes>
           {import.meta.env.DEV && <Route path="/_ds/*" element={<DesignSystemPage />} />}
-          <Route
-            path="/admin/login"
-            element={
-              <ThemeProvider>
-                <LoginPage />
-              </ThemeProvider>
-            }
-          />
+          {/* Un solo ingreso para todos los roles: /ingresar lleva a cada persona a su panel. Esta ruta se conserva por los enlaces guardados. */}
+          <Route path="/admin/login" element={<Navigate to="/ingresar" replace />} />
           {/* Panel: admin, bodeguero y vendedor. Cada grupo de rutas exige su rol; el resto va a su inicio. */}
           <Route path="/admin" element={<RequirePanel />}>
             <Route element={<AdminLayout />}>

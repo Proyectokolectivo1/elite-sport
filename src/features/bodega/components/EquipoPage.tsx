@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { UserPlus } from 'lucide-react'
 import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Badge } from '@/components/ui/badge'
@@ -14,6 +15,7 @@ import { toast } from '@/components/ui/toast'
 import { NOMBRE_ROL } from '@/features/auth/roles'
 import { mensajeError } from '@/lib/errors'
 import type { Integrante } from '../api/bodega'
+import { NuevoUsuario, RestablecerContrasena } from './NuevoUsuario'
 import { useActualizarIntegrante, useEquipo } from '../hooks/useBodega'
 import { integranteSchema, type IntegranteValues } from '../schemas'
 
@@ -43,6 +45,7 @@ function Editar({ integrante, onListo }: { integrante: Integrante; onListo: () =
   }
 
   return (
+    <div className="space-y-6">
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-5">
       <dl className="grid gap-2 text-sm">
         {integrante.correo && <div><dt className="eyebrow">Correo</dt><dd className="break-all">{integrante.correo}</dd></div>}
@@ -68,6 +71,8 @@ function Editar({ integrante, onListo }: { integrante: Integrante; onListo: () =
       )}
       <Button type="submit" className="w-full" disabled={!isDirty || guardar.isPending}>{guardar.isPending ? 'Guardando…' : 'Guardar'}</Button>
     </form>
+      <RestablecerContrasena id={integrante.id} nombre={integrante.nombre} />
+    </div>
   )
 }
 
@@ -76,6 +81,7 @@ export function EquipoPage() {
   const [q, setQ] = useState('')
   const [rol, setRol] = useState('')
   const [abierto, setAbierto] = useState<Integrante | null>(null)
+  const [nuevo, setNuevo] = useState(false)
 
   const filas = useMemo(() => {
     const t = q.trim().toLowerCase()
@@ -84,7 +90,11 @@ export function EquipoPage() {
 
   return (
     <>
-      <PageHeader title="Equipo" description="Quien se registra entra como mayorista pendiente. Solo el administrador de Elite Sport asigna roles: bodeguero, vendedor del local o mayorista del sector." />
+      <PageHeader
+        title="Equipo"
+        description="Quien se registra entra como mayorista pendiente. Solo el administrador de Elite Sport asigna roles y crea cuentas con acceso: bodeguero, vendedor del local o mayorista del sector."
+        actions={<Button onClick={() => setNuevo(true)}><UserPlus /> Nuevo usuario</Button>}
+      />
       <div className="mb-4 grid gap-3 sm:grid-cols-[1fr_14rem]">
         <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar por nombre, negocio o correo" aria-label="Buscar personas" />
         <Select value={rol} onChange={(e) => setRol(e.target.value)} aria-label="Filtrar por rol">
@@ -110,6 +120,13 @@ export function EquipoPage() {
           </TBody>
         </Table>
       )}
+      <Sheet open={nuevo} onOpenChange={setNuevo}>
+        {nuevo && (
+          <SheetContent title="Nuevo usuario" description="Crea la cuenta ya aprobada y con su rol. Tú defines la contraseña temporal.">
+            <NuevoUsuario onListo={() => setNuevo(false)} />
+          </SheetContent>
+        )}
+      </Sheet>
       <Sheet open={!!abierto} onOpenChange={(o) => !o && setAbierto(null)}>
         {abierto && (
           <SheetContent title={abierto.nombre || 'Persona'} description={abierto.negocio ?? undefined}>

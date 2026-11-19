@@ -8,12 +8,28 @@ import {
   resultadoSolicitudSchema,
   resultadoVentaSchema,
   type IntegranteValues,
+  type NuevoUsuarioValues,
 } from '../schemas'
 import type { z } from 'zod'
 
 export type VistaBodega = 'por_despachar' | 'en_poder' | 'web' | 'historial'
 export type PedidoBodega = z.infer<typeof listaBodegaSchema>[number]
 export type ParEnPoder = z.infer<typeof paresEnPoderSchema>[number]
+
+/** Fotos (miniatura de 480 px) por producto y color, para reconocer el par de un vistazo. */
+export async function fotosPorColor(): Promise<Record<string, string>> {
+  const { data, error } = await supabase.from('imagenes_producto').select('producto_id, color, url, url_miniatura, orden').order('orden')
+  if (error) throw error
+  const m: Record<string, string> = {}
+  for (const i of data) {
+    const src = i.url_miniatura ?? i.url
+    m[`${i.producto_id}|${i.color}`] ??= src
+    m[`${i.producto_id}|`] ??= src
+  }
+  return m
+}
+
+export const claveFoto = (productoId: string, color: string) => `${productoId}|${color}`
 
 // ============ Bodeguero (sin precios) ============
 export async function listarPedidosBodega(vista: VistaBodega): Promise<PedidoBodega[]> {
@@ -274,3 +290,21 @@ export async function marcarPagoCierre(pedidoId: string, pagado: boolean): Promi
   const { error } = await supabase.rpc('marcar_pago_consignacion', { p_pedido: pedidoId, p_pagado: pagado })
   if (error) throw error
 }
+
+// ============ Altas y claves (funcion segura del servidor, solo admin) ============
+async function invocarGestion(cuerpo: Record<string, unknown>): Promise<{ id?: string }> {
+  const { data, error } = await supabase.functions.invoke('gestionar-usuarios', { body: cuerpo })
+  if (error) {
+    // La funcion responde { error: "mensaje" } con el motivo; se muestra tal cual.
+    const ctx = (error as { context?: unknown }).context
+    if (ctx instanceof Response) {
+      const j = (await ctx.json().catch(() => null)) as { error?: string } | null
+      if (j?.error) throw new Error(j.error)
+    }
+    throw new Error('No se pudo completar la acción. Intenta de nuevo.')
+  }
+  return data as { id?: string }
+}
+
+export const crearUsuario = (v: NuevoUsuarioValues) => invocarGestion({ accion: 'crear', ...v, estado: 'aprobado' })
+export const cambiarContrasenaUsuario = (id: string, contrasena: string) => invocarGestion({ accion: 'contrasena', id, contrasena })

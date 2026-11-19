@@ -278,6 +278,7 @@ export type Database = {
         Returns: { mayorista_id: string; ultimo_pedido: string | null; vence_en: string }[]
       }
       ajustar_stock: { Args: { p_delta: number; p_nota: string; p_variante: string }; Returns: undefined }
+      contar_pendientes_bodega: { Args: Record<PropertyKey, never>; Returns: Json }
       cancelar_pedido: { Args: { p_pedido: string }; Returns: undefined }
       cerrar_pedido_bodega: { Args: { p_lineas: Json; p_pedido: string }; Returns: Json }
       confirmar_pedido: { Args: { p_pedido: string }; Returns: undefined }

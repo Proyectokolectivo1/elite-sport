@@ -10,3 +10,15 @@ test-results
 
 # Archivos de video optimizados para subir desde el panel (no van al repositorio)
 media/
+
+video/node_modules
+video/salida
+video/capturas/salida
+video/voz/audio
+video/remotion/public/audio
+video/remotion/public/clips
+dist-video
+video/capturas/.resultados
+
+video/prueba
+video/verif

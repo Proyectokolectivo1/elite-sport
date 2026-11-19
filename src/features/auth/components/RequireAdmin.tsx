@@ -17,7 +17,7 @@ interface Props {
  * Guard por rol. Sin sesión va al ingreso; con un rol aprobado distinto va a su propia pantalla de inicio.
  * Una cuenta sin rol del panel (pendiente, rechazada) ve el aviso de cuenta no autorizada.
  */
-export function RequirePanel({ roles = ROLES_PANEL, login = '/admin/login' }: Props) {
+export function RequirePanel({ roles = ROLES_PANEL, login = '/ingresar' }: Props) {
   const { session, perfil, cargando } = useAuth()
   const location = useLocation()
   const [tarda, setTarda] = useState(false)

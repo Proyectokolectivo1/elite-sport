@@ -5,11 +5,14 @@ import { inventarioKeys } from '@/features/inventario/hooks/useInventario'
 import { pedidosKey } from '@/features/pedidos/hooks/usePedidos'
 import {
   actualizarIntegrante,
+  cambiarContrasenaUsuario,
+  crearUsuario,
   cuentasSector,
   marcarPagoCierre,
   cancelarPedidoBodega,
   cerrarEntrega,
   despacharPedido,
+  fotosPorColor,
   entregarPedidoWeb,
   listarEquipo,
   listarPedidosBodega,
@@ -21,7 +24,7 @@ import {
   solicitarABodega,
   type VistaBodega,
 } from '../api/bodega'
-import type { IntegranteValues } from '../schemas'
+import type { IntegranteValues, NuevoUsuarioValues } from '../schemas'
 
 export const bodegaKeys = {
   todo: ['bodega'] as const,
@@ -146,3 +149,24 @@ export function useMarcarPago() {
     onSuccess: () => void qc.invalidateQueries({ queryKey: bodegaKeys.todo }),
   })
 }
+
+/** Fotos por producto y color. Se piden una vez y se reutilizan 10 minutos. */
+export function useFotosPares() {
+  const q = useQuery({ queryKey: ['fotos-pares'], queryFn: fotosPorColor, staleTime: 10 * 60_000 })
+  const fotos = q.data ?? {}
+  return (productoId: string, color: string): string | null => fotos[`${productoId}|${color}`] ?? fotos[`${productoId}|`] ?? null
+}
+
+export function useCrearUsuario() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (v: NuevoUsuarioValues) => crearUsuario(v),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: bodegaKeys.equipo })
+      void qc.invalidateQueries({ queryKey: ['mayoristas'] })
+    },
+  })
+}
+
+export const useCambiarContrasena = () =>
+  useMutation({ mutationFn: (v: { id: string; contrasena: string }) => cambiarContrasenaUsuario(v.id, v.contrasena) })

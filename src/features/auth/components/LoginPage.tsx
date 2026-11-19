@@ -54,6 +54,7 @@ export function LoginPage({ destinoPorDefecto = '/admin', pie }: Props) {
           <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"><ArrowLeft className="size-4" /> Volver a la tienda</Link>
           <div>
             <h1 className="text-5xl">Ingresar</h1>
+            <p className="mt-2 text-sm text-muted-foreground">Mayoristas, equipo y administración entran con su correo y llegan a su panel.</p>
           </div>
           <div>
             <Label htmlFor="email">Correo</Label>

@@ -44,12 +44,11 @@ function Marco() {
                   titulo: 'Mayoristas',
                   items: [
                     { to: '/registro', label: 'Solicitar ser mayorista', detalle: 'Compra a precio mayorista y arma tu propia sección de venta.' },
-                    { to: '/ingresar', label: 'Ingreso de mayoristas', detalle: 'Para cuentas ya aprobadas.' },
                   ],
                 },
                 {
-                  titulo: 'Administración',
-                  items: [{ to: '/admin/login', label: 'Ingreso del administrador', detalle: 'Solo para el equipo de Elite Sport.' }],
+                  titulo: 'Acceso',
+                  items: [{ to: '/ingresar', label: 'Ingresar', detalle: 'Mayoristas, equipo y administración entran aquí con su correo y llegan a su panel.' }],
                 },
               ]
             : []),

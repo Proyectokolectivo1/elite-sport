@@ -9,7 +9,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TBody, TD, TH, THead, TR } from '@/components/ui/table'
 import { toast } from '@/components/ui/toast'
 import type { ParEnPoder } from '@/features/bodega/api/bodega'
-import { useCancelarPedidoBodega, useMisParesEnPoder, useMisVentasHoy, useRegistrarVentaLocal } from '@/features/bodega/hooks/useBodega'
+import { FotoPar } from '@/features/bodega/components/FotoPar'
+import { useCancelarPedidoBodega, useFotosPares, useMisParesEnPoder, useMisVentasHoy, useRegistrarVentaLocal } from '@/features/bodega/hooks/useBodega'
 import { mensajeError } from '@/lib/errors'
 import { formatMoney, useMoneyStore } from '@/lib/money'
 import { cn } from '@/lib/utils'
@@ -31,6 +32,7 @@ export function VenderLocalPage() {
   const { data: ventas = [] } = useMisVentasHoy()
   const registrar = useRegistrarVentaLocal()
   const anular = useCancelarPedidoBodega()
+  const foto = useFotosPares()
 
   const [q, setQ] = useState('')
   const [lineas, setLineas] = useState<LineaVenta[]>([])
@@ -52,6 +54,11 @@ export function VenderLocalPage() {
     return [...m.entries()]
   }, [pares, q])
 
+  const parDe = useMemo(() => new Map(pares.map((p) => [p.variante_id, p])), [pares])
+  const fotoDeLinea = (varianteId: string) => {
+    const p = parDe.get(varianteId)
+    return p ? foto(p.producto_id, p.color) : null
+  }
   const total = totalVenta(lineas)
   const vigentes = ventas.filter((v) => v.estado !== 'cancelado')
   const totalHoy = vigentes.reduce((s, v) => s + v.total, 0)
@@ -104,26 +111,36 @@ export function VenderLocalPage() {
           {isLoading ? <Skeleton className="h-48 w-full" /> : productos.length === 0 ? (
             <EmptyState title="No tienes pares para vender" description="Pide mercancía a bodega desde Mi mercancía." />
           ) : (
-            <div className="space-y-4">
-              {productos.map(([id, g]) => (
-                <div key={id} className="rounded-xl border border-border bg-card p-4">
-                  <h2 className="text-2xl">{g.nombre}</h2>
-                  <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-5">
-                    {g.pares.map((p) => {
-                      const enVenta = lineas.find((l) => l.varianteId === p.variante_id)?.cantidad ?? 0
-                      const libres = p.en_poder - enVenta
-                      return (
-                        <button key={p.variante_id} type="button" disabled={libres <= 0} onClick={() => agregar(p)} aria-label={`${p.color} talla ${p.talla}, quedan ${libres}`}
-                          className="relative rounded-lg border border-input px-2 py-2 text-left transition-colors hover:border-foreground disabled:cursor-not-allowed disabled:opacity-40">
-                          <span className="block text-base font-semibold tabular-nums">{p.talla}</span>
-                          <span className="block truncate text-[0.6875rem] text-muted-foreground">{p.color} · {libres}</span>
-                          {enVenta > 0 && <span className="absolute -right-1.5 -top-1.5 grid min-w-5 place-items-center rounded-full bg-signal px-1 text-[0.6875rem] font-bold text-signal-foreground">{enVenta}</span>}
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-              ))}
+            <div className="grid grid-cols-[repeat(auto-fill,minmax(min(100%,22rem),1fr))] gap-4">
+              {productos.flatMap(([id, g]) => {
+                const colores = [...new Set(g.pares.map((p) => p.color))]
+                return colores.map((color) => {
+                  const pares = g.pares.filter((p) => p.color === color)
+                  return (
+                    <article key={`${id}-${color}`} aria-label={`${g.nombre}, ${color}`} className="flex gap-4 rounded-xl border border-border bg-card p-3">
+                      <FotoPar src={foto(id, color)} alt={`${g.nombre} ${color}`} className="size-32 sm:size-40" />
+                      <div className="min-w-0 flex-1">
+                        <h2 className="truncate text-2xl leading-tight">{g.nombre}</h2>
+                        <p className="text-sm text-muted-foreground">{color}</p>
+                        <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-4">
+                          {pares.map((p) => {
+                            const enVenta = lineas.find((l) => l.varianteId === p.variante_id)?.cantidad ?? 0
+                            const libres = p.en_poder - enVenta
+                            return (
+                              <button key={p.variante_id} type="button" disabled={libres <= 0} onClick={() => agregar(p)} aria-label={`${p.color} talla ${p.talla}, quedan ${libres}`}
+                                className="relative rounded-lg border border-input px-2 py-2 text-center transition-colors hover:border-foreground disabled:cursor-not-allowed disabled:opacity-40">
+                                <span className="block text-lg font-semibold tabular-nums leading-none">{p.talla}</span>
+                                <span className="mt-1 block text-[0.6875rem] text-muted-foreground">quedan {libres}</span>
+                                {enVenta > 0 && <span className="absolute -right-1.5 -top-1.5 grid min-w-5 place-items-center rounded-full bg-signal px-1 text-[0.6875rem] font-bold text-signal-foreground">{enVenta}</span>}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    </article>
+                  )
+                })
+              })}
             </div>
           )}
         </section>
@@ -135,7 +152,8 @@ export function VenderLocalPage() {
               {lineas.map((l) => (
                 <li key={l.varianteId} className="space-y-2 py-3">
                   <div className="flex items-start justify-between gap-2">
-                    <p className="min-w-0 text-sm font-semibold">{l.nombre}<span className="block text-xs font-normal text-muted-foreground">{l.color} · talla {l.talla}</span></p>
+                    <FotoPar src={fotoDeLinea(l.varianteId)} className="size-16" />
+                    <p className="min-w-0 flex-1 text-sm font-semibold">{l.nombre}<span className="block text-xs font-normal text-muted-foreground">{l.color} · talla {l.talla}</span></p>
                     <Button type="button" variant="ghost" size="icon-sm" aria-label={`Quitar ${l.nombre}`} onClick={() => setLineas((x) => x.filter((y) => y.varianteId !== l.varianteId))}><Trash2 /></Button>
                   </div>
                   <div className="flex items-center justify-between gap-3">

@@ -18,9 +18,12 @@ test.describe('rutas protegidas y registro', () => {
     }
   })
 
-  test('/admin sin sesión redirige al ingreso de administración', async ({ page }) => {
+  test('/admin sin sesión redirige al ingreso único', async ({ page }) => {
     await page.goto('/admin/productos')
-    await expect(page).toHaveURL(/\/admin\/login/)
+    await expect(page).toHaveURL(/\/ingresar/)
+    // El enlace antiguo del administrador sigue funcionando.
+    await page.goto('/admin/login')
+    await expect(page).toHaveURL(/\/ingresar$/)
   })
 
   test('/mayorista y /cuenta sin sesión redirigen a ingresar', async ({ page }) => {

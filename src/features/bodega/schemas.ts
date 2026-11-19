@@ -66,3 +66,27 @@ export type IntegranteValues = z.infer<typeof integranteSchema>
 
 export const notaPedidoSchema = z.object({ nota: z.string().max(500, 'Máximo 500 caracteres') })
 export type NotaPedidoValues = z.infer<typeof notaPedidoSchema>
+
+/** Alta de una persona con acceso, hecha por el admin. La clave es temporal: la persona puede cambiarla luego. */
+export const nuevoUsuarioSchema = z.object({
+  nombre: z.string().trim().min(2, 'Ingresa el nombre'),
+  correo: z.string().trim().email('Correo no válido'),
+  contrasena: z.string().min(8, 'Mínimo 8 caracteres'),
+  rol: z.enum(['mayorista', 'mayorista_sector', 'bodeguero', 'vendedor']),
+  negocio: z.string().trim().max(120),
+  telefono: z.string().trim().max(30),
+  cedula_ruc: z.string().trim().max(20),
+  ciudad: z.string().trim().max(80),
+})
+export type NuevoUsuarioValues = z.infer<typeof nuevoUsuarioSchema>
+
+export const nuevaContrasenaUsuarioSchema = z.object({ contrasena: z.string().min(8, 'Mínimo 8 caracteres') })
+export type NuevaContrasenaUsuarioValues = z.infer<typeof nuevaContrasenaUsuarioSchema>
+
+/** Clave temporal legible: 10 caracteres sin letras que se confunden (0/O, 1/l/I). */
+export function generarContrasena(): string {
+  const letras = 'abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789'
+  const bytes = new Uint32Array(10)
+  crypto.getRandomValues(bytes)
+  return Array.from(bytes, (b) => letras[b % letras.length]).join('')
+}

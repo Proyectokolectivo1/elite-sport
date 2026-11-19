@@ -163,3 +163,9 @@
 
 ## Rol solo por el admin; bodeguero solo en la tienda principal
 - Auditado en la base: ya se cumplia. Se agrego `supabase/tests/roles_solo_admin.sql` (bodeguero y vendedor, 20 comprobaciones, todo OK) y se aclaro el texto de Equipo. Sin cambios de esquema.
+
+## Vendedor con fotos, avisos, ingreso unico y altas por el admin
+- **Fotos del par:** Vender muestra una tarjeta por producto y color con la foto grande (miniatura de 480 px) y las tallas con lo que queda; la linea de la venta, "En mi poder" y "Pedir a bodega" tambien llevan foto. Las fotos se piden una vez y se reutilizan 10 min (`useFotosPares`).
+- **Avisos de pedidos nuevos (admin y bodeguero):** insignia en el menu, contador en el titulo de la pestana "(3) Elite Sport" y tono suave de dos notas que suena solo al aparecer algo nuevo; boton para silenciarlo. Sin ventanas emergentes. Consulta cada 30 s solo conteos: admin con consultas HEAD, bodeguero con la RPC `contar_pendientes_bodega` (migracion 0017, prueba `supabase/tests/avisos_bodega.sql`).
+- **Un solo ingreso:** el menu publico tiene "Ingresar" para todos los roles; `/admin/login` redirige a `/ingresar` y los guards mandan alli.
+- **Altas por el admin:** Equipo > "Nuevo usuario" crea la cuenta ya aprobada y con su rol, con contrasena temporal generada o escrita por el admin (se entrega una vez); cada persona tiene "Restablecer contrasena". Lo hace la Edge Function `gestionar-usuarios` (`supabase/functions/gestionar-usuarios/index.ts`, `verify_jwt` activo y comprobacion de admin aprobado; la clave de servicio nunca sale del servidor). Un anonimo recibe 401.

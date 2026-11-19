@@ -210,6 +210,94 @@ test.describe('panel por rol', () => {
     expect(marcas[0]).toEqual({ p_pedido: 'ped-70', p_pagado: true })
   })
 
+  test('el bodeguero ve en el menú y en la pestaña cuántos pedidos esperan', async ({ page }) => {
+    await entrarComo(page, 'bodeguero')
+    await page.route('**/rest/v1/rpc/contar_pendientes_bodega', (r) => r.fulfill({ json: { por_despachar: 2, en_poder: 1, web: 1 } }))
+    await page.goto('/admin/bodega')
+    const menu = page.getByRole('navigation').first()
+    await expect(menu.getByRole('link', { name: /^(2\s*Despachos|Despachos\s*2)$/ })).toBeVisible()
+    await expect(menu.getByRole('link', { name: /^(1\s*Pedidos web|Pedidos web\s*1)$/ })).toBeVisible()
+    await expect(page).toHaveTitle('(3) Elite Sport')
+    // Se puede silenciar el tono; sin ventanas emergentes.
+    await page.getByRole('button', { name: 'Silenciar avisos' }).click()
+    await expect(page.getByRole('button', { name: 'Activar sonido de avisos' })).toBeVisible()
+  })
+
+  test('el admin ve en el menú los pedidos y mayoristas por atender', async ({ page }) => {
+    await entrarComo(page, 'admin')
+    await page.route('**/rest/v1/pedidos*', (r) => r.fulfill({ status: 200, headers: { 'content-range': '0-0/3', 'access-control-expose-headers': 'content-range' }, json: [] }))
+    await page.goto('/admin')
+    const menu = page.getByRole('navigation').first()
+    await expect(menu.getByRole('link', { name: /^(3\s*Pedidos|Pedidos\s*3)$/ })).toBeVisible()
+    await expect(menu.getByRole('link', { name: /^(3\s*Bodega|Bodega\s*3)$/ })).toBeVisible()
+  })
+
+  test('el vendedor reconoce cada par por su foto al vender', async ({ page }) => {
+    await entrarComo(page, 'vendedor')
+    await page.route('**/rest/v1/rpc/mis_pares_en_poder', (r) =>
+      r.fulfill({ json: [
+        { variante_id: 'v1', producto_id: 'p1', producto: 'Runner Pro Veloz', color: 'Negro', talla: '41', talla_orden: 41, en_poder: 2, precio: 89.9 },
+        { variante_id: 'v2', producto_id: 'p1', producto: 'Runner Pro Veloz', color: 'Blanco', talla: '40', talla_orden: 40, en_poder: 1, precio: 89.9 },
+      ] }),
+    )
+    const foto = (c: string) => `data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 10"><rect width="10" height="10" fill="${c}"/></svg>`)}`
+    await page.route('**/rest/v1/imagenes_producto*', (r) =>
+      r.fulfill({ json: [
+        { producto_id: 'p1', color: 'Negro', url: foto('black'), url_miniatura: foto('black'), orden: 0 },
+        { producto_id: 'p1', color: 'Blanco', url: foto('white'), url_miniatura: foto('white'), orden: 1 },
+      ] }),
+    )
+    await page.goto('/admin/local/vender')
+    const negro = page.getByRole('article', { name: 'Runner Pro Veloz, Negro' })
+    await expect(negro.getByRole('img', { name: 'Runner Pro Veloz Negro' })).toBeVisible()
+    await expect(page.getByRole('article', { name: 'Runner Pro Veloz, Blanco' }).getByRole('img', { name: 'Runner Pro Veloz Blanco' })).toBeVisible()
+    // La foto de la talla elegida acompaña a la línea de la venta.
+    await negro.getByRole('button', { name: /talla 41, quedan 2/ }).click()
+    await expect(page.getByRole('complementary', { name: 'Venta actual' }).locator('img')).toHaveCount(1)
+    const caja = await negro.getByRole('img').boundingBox()
+    expect(caja && caja.width >= 120).toBe(true)
+  })
+
+  test('el admin crea una cuenta con acceso y recibe los datos para entregarlos', async ({ page }) => {
+    await entrarComo(page, 'admin')
+    const cuerpos: Record<string, unknown>[] = []
+    await page.route('**/functions/v1/gestionar-usuarios', (r) => {
+      if (r.request().method() === 'OPTIONS') return r.fulfill({ status: 200, headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*' } })
+      cuerpos.push(r.request().postDataJSON())
+      return r.fulfill({ status: 200, headers: { 'access-control-allow-origin': '*' }, json: { ok: true, id: 'u-nuevo' } })
+    })
+    await page.goto('/admin/equipo')
+    await page.getByRole('button', { name: 'Nuevo usuario' }).click()
+    await page.getByRole('button', { name: 'Crear cuenta con acceso' }).click()
+    await expect(page.getByText('Ingresa el nombre')).toBeVisible()
+    expect(cuerpos).toHaveLength(0)
+    await page.getByLabel('Nombre completo').fill('Carlos Bodega')
+    await page.getByLabel('Correo (será su usuario)').fill('carlos@correo.com')
+    const clave = await page.getByLabel('Contraseña temporal').inputValue()
+    expect(clave).toHaveLength(10)
+    await page.getByRole('button', { name: 'Crear cuenta con acceso' }).click()
+    await expect.poll(() => cuerpos.length).toBe(1)
+    expect(cuerpos[0]).toMatchObject({ accion: 'crear', correo: 'carlos@correo.com', rol: 'bodeguero', estado: 'aprobado', contrasena: clave })
+    const aviso = page.getByRole('status').filter({ hasText: 'Cuenta creada y aprobada' })
+    await expect(aviso).toBeVisible()
+    await expect(page.getByText(clave, { exact: true })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Copiar mensaje completo' })).toBeVisible()
+  })
+
+  test('si la función rechaza el alta, el motivo se muestra en el formulario', async ({ page }) => {
+    await entrarComo(page, 'admin')
+    await page.route('**/functions/v1/gestionar-usuarios', (r) => {
+      if (r.request().method() === 'OPTIONS') return r.fulfill({ status: 200, headers: { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*' } })
+      return r.fulfill({ status: 409, headers: { 'access-control-allow-origin': '*' }, json: { error: 'Ese correo ya tiene una cuenta.' } })
+    })
+    await page.goto('/admin/equipo')
+    await page.getByRole('button', { name: 'Nuevo usuario' }).click()
+    await page.getByLabel('Nombre completo').fill('Ana')
+    await page.getByLabel('Correo (será su usuario)').fill('ana@correo.com')
+    await page.getByRole('button', { name: 'Crear cuenta con acceso' }).click()
+    await expect(page.getByText('Ese correo ya tiene una cuenta.')).toBeVisible()
+  })
+
   test('el mayorista del sector tiene su propio panel', async ({ page }) => {
     await entrarComo(page, 'mayorista_sector')
     await page.goto('/cuenta')

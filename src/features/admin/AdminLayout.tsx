@@ -13,9 +13,12 @@ import {
   Truck,
   UserCog,
   Users,
+  Volume2,
+  VolumeX,
   Wallet,
   Warehouse,
 } from 'lucide-react'
+import { useState } from 'react'
 import { PanelLayout, type PanelNavItem } from '@/components/layout/PanelLayout'
 import { ThemeProvider } from '@/components/theme/ThemeProvider'
 import { Button } from '@/components/ui/button'
@@ -24,6 +27,8 @@ import { cerrarSesion } from '@/features/auth/api/auth'
 import { useAuth } from '@/features/auth/hooks/AuthProvider'
 import type { Rol } from '@/features/auth/roles'
 import { useConfiguracion } from '@/features/configuracion/hooks/useConfiguracion'
+import { guardarSonido, sonarAviso, sonidoActivo } from '@/features/avisos/sonido'
+import { useAvisos } from '@/features/avisos/useAvisos'
 
 const NAV_ADMIN: PanelNavItem[] = [
   { to: '/admin', label: 'Resumen', icon: LayoutDashboard, end: true },
@@ -63,17 +68,46 @@ export function AdminLayout() {
   const { data } = useConfiguracion()
   const { perfil } = useAuth()
   const panel = (perfil && POR_ROL[perfil.rol]) || { nav: [], seccion: 'Panel' }
+  const { pendientes, total } = useAvisos(perfil?.rol === 'admin' || perfil?.rol === 'bodeguero' || perfil?.rol === 'vendedor' ? perfil.rol : undefined)
+  const [sonido, setSonido] = useState(sonidoActivo)
+  // Insignia con lo que espera atencion en cada seccion.
+  const cuenta: Record<string, number> =
+    perfil?.rol === 'admin'
+      ? { '/admin/pedidos': pendientes.pedidos, '/admin/bodega': pendientes.bodega, '/admin/mayoristas': pendientes.mayoristas }
+      : perfil?.rol === 'bodeguero'
+        ? { '/admin/bodega': pendientes.bodega, '/admin/bodega/web': pendientes.web }
+        : {}
+  const nav = panel.nav.map((i) => (cuenta[i.to] ? { ...i, badge: cuenta[i.to] } : i))
   return (
     <ThemeProvider>
       <Toaster />
       <PanelLayout
         nombre={data?.nombre_negocio ?? 'Elite Sport'}
         seccion={panel.seccion}
-        nav={panel.nav}
+        nav={nav}
         acciones={
+          <>
+            {(perfil?.rol === 'admin' || perfil?.rol === 'bodeguero') && (
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label={sonido ? 'Silenciar avisos' : 'Activar sonido de avisos'}
+                aria-pressed={sonido}
+                title={total > 0 ? `${total} por atender` : 'Sin pendientes'}
+                onClick={() => {
+                  const nuevo = !sonido
+                  setSonido(nuevo)
+                  guardarSonido(nuevo)
+                  if (nuevo) sonarAviso()
+                }}
+              >
+                {sonido ? <Volume2 /> : <VolumeX />}
+              </Button>
+            )}
           <Button variant="ghost" size="icon-sm" aria-label="Cerrar sesión" onClick={() => void cerrarSesion()}>
             <LogOut />
           </Button>
+          </>
         }
       />
     </ThemeProvider>

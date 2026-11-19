@@ -14,6 +14,7 @@ import { mensajeError } from '@/lib/errors'
 import { cn } from '@/lib/utils'
 import { useSolicitarABodega } from '../hooks/useBodega'
 import { notaPedidoSchema, type NotaPedidoValues } from '../schemas'
+import { FotoPar } from './FotoPar'
 
 /** Elige productos y tallas con stock en bodega y envía el pedido. No muestra precios: los fija el servidor. */
 export function PedirABodega({ onEnviado }: { onEnviado?: () => void }) {
@@ -70,7 +71,7 @@ export function PedirABodega({ onEnviado }: { onEnviado?: () => void }) {
                 <li key={p.id}>
                   <button type="button" aria-pressed={elegido === p.id} onClick={() => { setElegido(p.id); setColor('') }}
                     className={cn('flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-colors', elegido === p.id ? 'border-foreground bg-card' : 'border-border hover:border-foreground')}>
-                    <span className="size-12 shrink-0 overflow-hidden rounded-lg bg-muted">{p.imagenes[0] && <img src={p.imagenes[0].miniatura ?? p.imagenes[0].url} alt="" className="size-full object-cover" loading="lazy" decoding="async" width={96} height={96} />}</span>
+                    <FotoPar src={p.imagenes[0] ? (p.imagenes[0].miniatura ?? p.imagenes[0].url) : null} className="size-20" />
                     <span className="min-w-0">
                       <span className="block truncate font-semibold">{p.nombre}</span>
                       <span className="block text-xs text-muted-foreground">{stock} pares en bodega</span>
@@ -84,7 +85,13 @@ export function PedirABodega({ onEnviado }: { onEnviado?: () => void }) {
 
         {producto && (
           <div className="mt-6 rounded-xl border border-border bg-card p-4">
-            <h2 className="text-2xl">{producto.nombre}</h2>
+            <div className="flex items-start gap-4">
+              <FotoPar src={(() => { const i = producto.imagenes.find((x) => x.color === colorActivo) ?? producto.imagenes[0]; return i ? (i.miniatura ?? i.url) : null })()} alt={`${producto.nombre} ${colorActivo}`} className="size-28 sm:size-36" />
+              <div>
+                <h2 className="text-2xl">{producto.nombre}</h2>
+                <p className="text-sm text-muted-foreground">{colorActivo}</p>
+              </div>
+            </div>
             {colores.length > 1 && (
               <div className="mt-3 flex flex-wrap gap-2">
                 {colores.map((c) => (
