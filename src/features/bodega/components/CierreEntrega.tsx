@@ -1,14 +1,13 @@
 import { useMemo, useState } from 'react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { toast } from '@/components/ui/toast'
 import { mensajeError } from '@/lib/errors'
-import { cn } from '@/lib/utils'
 import type { PedidoBodega } from '../api/bodega'
 import { useCerrarEntrega, useDevolucion, useFotoDeVariante } from '../hooks/useBodega'
+import { Contador } from './Contador'
 import { FotoPar } from './FotoPar'
 import { partesLinea } from './partesLinea'
-import { conVendidos, cuadreEntrega, cuadreLinea, pendiente, valoresIniciales, vendidosSinRegistrar, type LineaEntrega, type ValorCierre } from '../logica'
+import { conDevueltos, conVendidos, cuadreEntrega, cuadreLinea, maxDevueltos, pendiente, valoresIniciales, vendidosSinRegistrar, type LineaEntrega, type ValorCierre } from '../logica'
 
 const hora = new Intl.DateTimeFormat('es-EC', { timeStyle: 'short' })
 
@@ -39,8 +38,9 @@ export function CierreEntrega({ pedido }: { pedido: PedidoBodega }) {
   const enPoder = lineas.reduce((s, l) => s + pendiente(l), 0)
   const devueltosAhora = lineas.reduce((s, l) => s + (valores[l.id]?.devueltos ?? 0), 0)
 
+  // Vendidos y regresan se completan entre sí: lo que no se vendió regresa, y viceversa.
   function poner(l: LineaEntrega, campo: keyof ValorCierre, n: number) {
-    setValores((v) => ({ ...v, [l.id]: campo === 'vendidos' ? conVendidos(l, n) : { vendidos: v[l.id]?.vendidos ?? l.vendida, devueltos: Math.trunc(n) || 0 } }))
+    setValores((v) => ({ ...v, [l.id]: campo === 'vendidos' ? conVendidos(l, n) : conDevueltos(l, n) }))
   }
 
   function cerrarEntrega() {
@@ -106,18 +106,33 @@ export function CierreEntrega({ pedido }: { pedido: PedidoBodega }) {
                   {l.devuelta > 0 && <> · ya regresaron {l.devuelta}</>}
                 </p>
                 {c.mensaje && <p className="text-sm text-destructive">{c.mensaje}</p>}
+                {l.vendida > 0 && (
+                  <p className="text-sm text-muted-foreground">
+                    {maxDevueltos(l) === 0
+                      ? 'Todo lo entregado ya está registrado como vendido: solo falta cerrar la entrega.'
+                      : `${l.vendida === 1 ? '1 par ya está registrado' : `${l.vendida} pares ya están registrados`} como vendido y no puede regresar.`}
+                  </p>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-3 sm:flex">
-                <label className="text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-                  Vendidos
-                  <Input type="number" min={l.vendida} inputMode="numeric" aria-label={`Vendidos de ${l.descripcion}`} aria-invalid={!c.ok}
-                    className={cn('mt-1 h-11 text-right text-base sm:w-24', !c.ok && 'border-destructive')} value={v?.vendidos ?? ''} onChange={(e) => poner(l, 'vendidos', Number(e.target.value))} />
-                </label>
-                <label className="text-xs font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-                  Regresan
-                  <Input type="number" min={0} inputMode="numeric" aria-label={`Regresan de ${l.descripcion}`} aria-invalid={!c.ok}
-                    className={cn('mt-1 h-11 text-right text-base sm:w-24', !c.ok && 'border-destructive')} value={v?.devueltos ?? ''} onChange={(e) => poner(l, 'devueltos', Number(e.target.value))} />
-                </label>
+                <Contador
+                  etiqueta="Vendidos"
+                  ariaLabel={`Vendidos de ${l.descripcion}`}
+                  valor={v?.vendidos ?? l.vendida}
+                  min={l.vendida}
+                  max={l.entregada - l.devuelta}
+                  invalido={!c.ok}
+                  onChange={(n) => poner(l, 'vendidos', n)}
+                />
+                <Contador
+                  etiqueta="Regresan"
+                  ariaLabel={`Regresan de ${l.descripcion}`}
+                  valor={v?.devueltos ?? 0}
+                  min={0}
+                  max={maxDevueltos(l)}
+                  invalido={!c.ok}
+                  onChange={(n) => poner(l, 'devueltos', n)}
+                />
               </div>
             </li>
           )

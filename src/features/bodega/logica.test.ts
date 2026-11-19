@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { conVendidos, cuadreEntrega, cuadreLinea, pendiente, valoresIniciales, vendidosSinRegistrar, type LineaEntrega } from './logica'
+import { conDevueltos, conVendidos, cuadreEntrega, cuadreLinea, pendiente, valoresIniciales, vendidosSinRegistrar, maxDevueltos, type LineaEntrega } from './logica'
 
 const linea: LineaEntrega = { id: 'd1', entregada: 4, vendida: 2, devuelta: 1 }
 
@@ -35,5 +35,16 @@ describe('cierre de una entrega de bodega', () => {
   it('cuenta los vendidos que el vendedor no registró', () => {
     expect(vendidosSinRegistrar([linea], { d1: { vendidos: 3, devueltos: 0 } })).toBe(1)
     expect(vendidosSinRegistrar([linea], { d1: { vendidos: 2, devueltos: 1 } })).toBe(0)
+  })
+
+  it('al cambiar los que regresan completa los vendidos y la línea cuadra', () => {
+    const l: LineaEntrega = { id: 'd2', entregada: 6, vendida: 1, devuelta: 0 }
+    expect(maxDevueltos(l)).toBe(5)
+    expect(conDevueltos(l, 2)).toEqual({ vendidos: 4, devueltos: 2 })
+    expect(conDevueltos(l, 9)).toEqual({ vendidos: 1, devueltos: 5 })
+    expect(conDevueltos(l, -1)).toEqual({ vendidos: 6, devueltos: 0 })
+    expect(cuadreLinea(l, conDevueltos(l, 3)).ok).toBe(true)
+    // Todo lo entregado ya se registró como vendido: no queda nada por devolver.
+    expect(maxDevueltos({ id: 'd3', entregada: 1, vendida: 1, devuelta: 0 })).toBe(0)
   })
 })

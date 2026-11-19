@@ -197,3 +197,8 @@
 - Boton de papelera en cada fila de Productos (y "Eliminar" en la ficha) con confirmacion. RPC `eliminar_producto` (solo admin, migracion `0024_eliminar_producto.sql`): sin historial borra la fila; con pedidos, ingresos o movimientos marca `productos.eliminado_en`, lo oculta y libera su slug. Los pedidos, entregas de bodega y movimientos se conservan.
 - Un producto eliminado no aparece en Productos, Ingreso, Precios, tienda ni Inventario (`existencias_variantes` lo excluye); su ficha por URL muestra "Producto eliminado".
 - Migracion 0024 aplicada el 2026-11-19; prueba revertida OK (8): sin historial se borra; con pedidos queda marcado, sale del inventario y de la tienda, conserva sus 5 lineas de pedido y libera el slug; no se elimina dos veces; el bodeguero no elimina.
+
+## Cierre del dia: vendidos y regresan (2026-11-19)
+- Los campos Vendidos y Regresan son contadores -/+ con campo editable (`bodega/components/Contador.tsx`): se pueden vaciar al escribir y al enfocarlos se selecciona el valor, asi escribir "1" ya no deja "10".
+- Vendidos y Regresan se completan entre si (`conDevueltos` en `bodega/logica.ts`): la linea siempre cuadra y "Cerrar entrega" queda habilitado. Lo ya registrado como vendido por el vendedor no puede regresar, y se explica en la linea.
+- El servidor ya funcionaba (cierre de la entrega #10 probado y revertido). Pruebas: `logica.test.ts` y `Contador.test.tsx`.

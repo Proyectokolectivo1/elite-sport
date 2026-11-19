@@ -28,6 +28,17 @@ export function conVendidos(l: LineaEntrega, vendidos: number): ValorCierre {
   return { vendidos: v, devueltos: l.entregada - l.devuelta - v }
 }
 
+/** Pares que todavía se pueden marcar como devueltos (lo registrado como vendido ya no regresa). */
+export function maxDevueltos(l: LineaEntrega): number {
+  return Math.max(0, l.entregada - l.devuelta - l.vendida)
+}
+
+/** Al cambiar los que regresan, los vendidos se completan con el resto: la línea siempre cuadra. */
+export function conDevueltos(l: LineaEntrega, devueltos: number): ValorCierre {
+  const d = Math.max(0, Math.min(maxDevueltos(l), Math.trunc(devueltos) || 0))
+  return { vendidos: l.entregada - l.devuelta - d, devueltos: d }
+}
+
 export interface ResultadoCuadre {
   ok: boolean
   mensaje: string | null
