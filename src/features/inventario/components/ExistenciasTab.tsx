@@ -7,6 +7,7 @@ import { Dialog, DialogClose, DialogContent } from '@/components/ui/dialog'
 import { EmptyState } from '@/components/ui/empty-state'
 import { FieldError, Input, Label } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useAuth } from '@/features/auth/hooks/AuthProvider'
 import { mensajeError } from '@/lib/errors'
 import { cn } from '@/lib/utils'
 import type { Existencia } from '../api/inventario'
@@ -44,6 +45,7 @@ function Talla({ e, onClick }: { e: Existencia; onClick: () => void }) {
 }
 
 export function ExistenciasTab() {
+  const { esAdmin } = useAuth()
   const { data = [], isLoading } = useExistencias()
   const { data: fotos = {} } = useMiniaturas()
   const ajustar = useAjustarStock()
@@ -147,7 +149,7 @@ export function ExistenciasTab() {
       </div>
 
       {filas.length === 0 ? (
-        <EmptyState title="Sin resultados" description={productos.length === 0 ? 'Registra un ingreso para que aparezcan aquí.' : 'Prueba con otra búsqueda o quita el filtro.'} />
+        <EmptyState title="Sin resultados" description={productos.length === 0 ? (esAdmin ? 'Registra un ingreso para que aparezcan aquí.' : 'Aún no hay mercancía ingresada.') : 'Prueba con otra búsqueda o quita el filtro.'} />
       ) : (
         <ul className="grid gap-3 lg:grid-cols-2">
           {filas.map((p) => (
@@ -220,9 +222,11 @@ export function ExistenciasTab() {
                   </section>
                 ))}
                 <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border pt-4">
-                  <Link to={`/admin/inventario?tab=ingreso&producto=${detalle.productoId}`} className="text-sm underline underline-offset-4 hover:text-foreground" onClick={() => setAbierto(null)}>
-                    Ingresar mercancía de este producto
-                  </Link>
+                  {esAdmin ? (
+                    <Link to={`/admin/inventario?tab=ingreso&producto=${detalle.productoId}`} className="text-sm underline underline-offset-4 hover:text-foreground" onClick={() => setAbierto(null)}>
+                      Ingresar mercancía de este producto
+                    </Link>
+                  ) : <span />}
                   <DialogClose render={<Button variant="outline" />}>Cerrar</DialogClose>
                 </div>
               </div>

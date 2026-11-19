@@ -16,8 +16,8 @@ const TABS = [
 
 type TabId = (typeof TABS)[number]['id']
 
-// El bodeguero no ve el libro de movimientos ni edita los surtidos de caja.
-const SOLO_ADMIN: readonly TabId[] = ['movimientos', 'surtidos']
+// Solo el administrador ingresa mercancía. El bodeguero tampoco ve el libro de movimientos ni edita los surtidos de caja.
+const SOLO_ADMIN: readonly TabId[] = ['ingreso', 'movimientos', 'surtidos']
 
 export function InventarioPage() {
   const [params, setParams] = useSearchParams()

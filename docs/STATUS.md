@@ -176,3 +176,7 @@
 - Los carritos usan un tope por talla (`TOPE_MINORISTA` 10, `TOPE_MAYORISTA` 200); el servidor valida el stock al crear el pedido. `solicitar_a_bodega` ya no dice cuantos pares hay en el error.
 - Migraciones: `0018_ocultar_stock.sql` **aplicada el 2026-11-18** (verificado: admin y bodeguero ven 23 filas en la vista; mayorista, sector y vendedor 0; anon sin permiso). `0019_bloquear_columna_stock.sql` **aplicada tras el despliegue**: anon y cualquier rol autenticado reciben "permission denied" al leer `variantes_producto.stock`; el numero solo sale de `existencias_variantes` (admin y bodeguero). Tipos de `database.ts` contrastados con los generados.
 - **Pendiente de decision:** el bodeguero sigue viendo cantidades (Inventario y despacho en Bodega).
+
+## Ingreso de mercancia solo por el admin (2026-11-19)
+- El bodeguero ya no ve la pestana "Ingresar mercancia" ni el enlace "Ingresar mercancia de este producto" en Existencias; sigue con Existencias y ajustes de stock (conteos), despachos y cierre.
+- Migracion `0020_ingreso_solo_admin.sql`: `registrar_ingreso_inventario` exige `es_admin()` (antes `es_personal_bodega()`). **Aplicada el 2026-11-19.** Prueba `supabase/tests/bodega_por_rol.sql` actualizada y ejecutada: 54 comprobaciones OK (el admin registra el ingreso, el bodeguero recibe "No autorizado"; las lecturas de stock de la prueba usan `existencias_variantes` tras la 0019).
