@@ -226,6 +226,15 @@ export type Database = {
           { foreignKeyName: 'productos_marca_id_fkey'; columns: ['marca_id']; isOneToOne: false; referencedRelation: 'marcas'; referencedColumns: ['id'] },
         ]
       }
+      tallas_producto: {
+        Row: { pares_caja: number; producto_id: string; talla_id: string }
+        Insert: { pares_caja?: number; producto_id: string; talla_id: string }
+        Update: { pares_caja?: number; producto_id?: string; talla_id?: string }
+        Relationships: [
+          { foreignKeyName: 'tallas_producto_producto_id_fkey'; columns: ['producto_id']; isOneToOne: false; referencedRelation: 'productos'; referencedColumns: ['id'] },
+          { foreignKeyName: 'tallas_producto_talla_id_fkey'; columns: ['talla_id']; isOneToOne: false; referencedRelation: 'tallas'; referencedColumns: ['id'] },
+        ]
+      }
       tallas: {
         Row: { etiqueta: string; grupo: Enum<'grupo_talla'>; id: string; orden: number }
         Insert: { etiqueta: string; grupo: Enum<'grupo_talla'>; id?: string; orden: number }
@@ -287,6 +296,7 @@ export type Database = {
         Returns: { mayorista_id: string; ultimo_pedido: string | null; vence_en: string }[]
       }
       ajustar_stock: { Args: { p_delta: number; p_nota: string; p_variante: string }; Returns: undefined }
+      configurar_tallas_producto: { Args: { p_producto: string; p_tallas: Json }; Returns: undefined }
       contar_pendientes_bodega: { Args: Record<PropertyKey, never>; Returns: Json }
       cancelar_pedido: { Args: { p_pedido: string }; Returns: undefined }
       cerrar_pedido_bodega: { Args: { p_lineas: Json; p_pedido: string }; Returns: Json }

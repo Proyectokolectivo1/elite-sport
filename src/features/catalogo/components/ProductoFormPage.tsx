@@ -12,8 +12,10 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs } from '@/components/ui/tabs'
 import { toast } from '@/components/ui/toast'
 import { mensajeError } from '@/lib/errors'
-import { useEliminarProducto, useGuardarProducto, useOpciones, useProducto } from '../hooks/useCatalogo'
-import { GRUPOS, productoSchema, type ProductoValues } from '../schemas'
+import { useEliminarProducto, useGuardarProducto, useGuardarTallasProducto, useOpciones, useProducto, useTallasProducto } from '../hooks/useCatalogo'
+import { GRUPOS, productoSchema, tallasModeloSchema, type ProductoValues } from '../schemas'
+import { filasModelo, RANGO_POR_GRUPO } from '../tallasModelo'
+import { TallasModelo, type TallasModeloEstado } from './TallasModelo'
 import type { TablaOpciones } from '../api/catalogo'
 import { ImagenesProducto } from './ImagenesProducto'
 import { VariantesProducto } from './VariantesProducto'
@@ -33,6 +35,12 @@ const VACIO: ProductoValues = {
   activo: true,
   destacado: false,
 }
+
+const tallasPorDefecto = (grupo: ProductoValues['grupo']): TallasModeloEstado => ({
+  desde: String(RANGO_POR_GRUPO[grupo].desde),
+  hasta: String(RANGO_POR_GRUPO[grupo].hasta),
+  pares: {},
+})
 
 function SelectOpcion({ tabla, etiqueta, id, value, onValor }: { tabla: TablaOpciones; etiqueta: string; id: string; value: string; onValor: (v: string) => void }) {
   const { data = [] } = useOpciones(tabla)
@@ -57,6 +65,11 @@ export function ProductoFormPage() {
   const navigate = useNavigate()
   const { data: producto, isLoading } = useProducto(id)
   const guardar = useGuardarProducto(id)
+  const guardarTallas = useGuardarTallasProducto()
+  const { data: tallasGuardadas, isLoading: cargandoTallas } = useTallasProducto(id)
+  const [tallas, setTallas] = useState<TallasModeloEstado>(() => tallasPorDefecto('caballero'))
+  const [tallasTocadas, setTallasTocadas] = useState(false)
+  const [erroresTallas, setErroresTallas] = useState<Partial<Record<'desde' | 'hasta' | 'pares', string>>>({})
   const eliminar = useEliminarProducto()
   const location = useLocation()
   // Al crear un producto se vuelve a montar la página con su id: llega aquí directo a la pestaña de fotos.
@@ -90,7 +103,51 @@ export function ProductoFormPage() {
     })
   }, [producto, reset])
 
+  // Carga el rango y el surtido guardados; un modelo sin configurar parte del rango sugerido de su grupo.
+  useEffect(() => {
+    if (!producto || cargandoTallas) return
+    if (tallasGuardadas && tallasGuardadas.length > 0) {
+      const nums = tallasGuardadas.map((t) => Number(t.etiqueta)).filter(Number.isFinite)
+      setTallas({
+        desde: String(Math.min(...nums)),
+        hasta: String(Math.max(...nums)),
+        pares: Object.fromEntries(tallasGuardadas.filter((t) => t.pares > 0).map((t) => [t.etiqueta, String(t.pares)])),
+      })
+    } else {
+      setTallas(tallasPorDefecto(producto.grupo))
+    }
+    setTallasTocadas(false)
+  }, [producto, tallasGuardadas, cargandoTallas])
+
+  // En un producto nuevo, mientras el admin no toque las tallas, el rango sigue al grupo elegido.
+  useEffect(() => {
+    if (!id && !tallasTocadas && sel.grupo) setTallas(tallasPorDefecto(sel.grupo))
+  }, [id, sel.grupo, tallasTocadas])
+
+  function cambiarTallas(v: TallasModeloEstado) {
+    setTallas(v)
+    setTallasTocadas(true)
+    setErroresTallas({})
+  }
+
+  function validarTallas() {
+    const r = tallasModeloSchema.safeParse({ desde: tallas.desde === '' ? undefined : Number(tallas.desde), hasta: tallas.hasta === '' ? undefined : Number(tallas.hasta), pares: tallas.pares })
+    if (r.success) {
+      setErroresTallas({})
+      return r.data
+    }
+    const e: Partial<Record<'desde' | 'hasta' | 'pares', string>> = {}
+    for (const i of r.error.issues) {
+      const k = i.path[0]
+      if ((k === 'desde' || k === 'hasta' || k === 'pares') && !e[k]) e[k] = k === 'pares' ? 'Pares por caja: usa números enteros entre 0 y 100.' : i.message
+    }
+    setErroresTallas(e)
+    return null
+  }
+
   async function onSubmit(v: ProductoValues) {
+    const t = validarTallas()
+    if (!t) return
     try {
       const nuevoId = await guardar.mutateAsync({
         ...v,
@@ -99,6 +156,10 @@ export function ProductoFormPage() {
         estilo_id: v.estilo_id || null,
         descripcion: v.descripcion.trim() || null,
       })
+      if (!id || tallasTocadas || !tallasGuardadas?.length) {
+        await guardarTallas.mutateAsync({ productoId: nuevoId, tallas: filasModelo(t.desde, t.hasta, t.pares) })
+        setTallasTocadas(false)
+      }
       if (id) {
         toast.success('Producto guardado')
       } else {
@@ -166,7 +227,7 @@ export function ProductoFormPage() {
                   <option key={g.value} value={g.value}>{g.label}</option>
                 ))}
               </Select>
-              {producto && <p className="mt-1 text-xs text-muted-foreground">No se puede cambiar: define las tallas del inventario.</p>}
+              {producto && <p className="mt-1 text-xs text-muted-foreground">No se puede cambiar: agrupa el modelo en la tienda (Dama, Caballero o Niño).</p>}
             </div>
             <SelectOpcion id="marca" value={sel.marca_id ?? ''} tabla="marcas" etiqueta="Marca" onValor={(v) => setValue('marca_id', v, { shouldDirty: true })} />
             <SelectOpcion id="categoria" value={sel.categoria_id ?? ''} tabla="categorias" etiqueta="Categoría" onValor={(v) => setValue('categoria_id', v, { shouldDirty: true })} />
@@ -197,6 +258,8 @@ export function ProductoFormPage() {
             </div>
           </div>
 
+          {id && cargandoTallas ? <Skeleton className="h-40 w-full" /> : <TallasModelo valor={tallas} onChange={cambiarTallas} errores={erroresTallas} />}
+
           <div className="flex flex-wrap gap-6">
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" className="size-4 accent-[var(--foreground)]" {...register('activo')} /> Visible en la tienda
@@ -207,8 +270,8 @@ export function ProductoFormPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-3 border-t border-border pt-5">
-            <Button type="submit" disabled={guardar.isPending || (!!id && !isDirty)}>
-              {guardar.isPending ? 'Guardando…' : id ? 'Guardar cambios' : 'Crear y subir fotos'}
+            <Button type="submit" disabled={guardar.isPending || guardarTallas.isPending || (!!id && !isDirty && !tallasTocadas && !!tallasGuardadas?.length)}>
+              {guardar.isPending || guardarTallas.isPending ? 'Guardando…' : id ? 'Guardar cambios' : 'Crear y subir fotos'}
             </Button>
             {id && (
               <Dialog>

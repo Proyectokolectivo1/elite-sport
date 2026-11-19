@@ -37,6 +37,28 @@ export async function listarTallas(): Promise<Talla[]> {
   return data
 }
 
+/** Talla del modelo con los pares que trae una caja (0 = la talla existe pero no viene en la caja). */
+export interface TallaModelo {
+  tallaId: string
+  etiqueta: string
+  orden: number
+  pares: number
+}
+
+export async function listarTallasProducto(productoId: string): Promise<TallaModelo[]> {
+  const { data, error } = await supabase.from('tallas_producto').select('talla_id, pares_caja, tallas(etiqueta, orden)').eq('producto_id', productoId)
+  if (error) throw error
+  return data
+    .map((t) => ({ tallaId: t.talla_id, etiqueta: t.tallas?.etiqueta ?? '', orden: t.tallas?.orden ?? 0, pares: t.pares_caja }))
+    .sort((a, b) => a.orden - b.orden)
+}
+
+/** Guarda el rango completo del modelo; las tallas que no existan en su grupo se crean. Solo admin. */
+export async function guardarTallasProducto(productoId: string, tallas: { etiqueta: string; pares: number }[]): Promise<void> {
+  const { error } = await supabase.rpc('configurar_tallas_producto', { p_producto: productoId, p_tallas: tallas })
+  if (error) throw error
+}
+
 export interface ProductoResumen {
   id: string
   nombre: string

@@ -180,3 +180,9 @@
 ## Ingreso de mercancia solo por el admin (2026-11-19)
 - El bodeguero ya no ve la pestana "Ingresar mercancia" ni el enlace "Ingresar mercancia de este producto" en Existencias; sigue con Existencias y ajustes de stock (conteos), despachos y cierre.
 - Migracion `0020_ingreso_solo_admin.sql`: `registrar_ingreso_inventario` exige `es_admin()` (antes `es_personal_bodega()`). **Aplicada el 2026-11-19.** Prueba `supabase/tests/bodega_por_rol.sql` actualizada y ejecutada: 54 comprobaciones OK (el admin registra el ingreso, el bodeguero recibe "No autorizado"; las lecturas de stock de la prueba usan `existencias_variantes` tras la 0019).
+
+## Tallas y surtido de caja por modelo (2026-11-19)
+- En "Datos y precios" del producto, el admin define el rango de tallas del modelo (desde/hasta, ej. 25 a 45 o 36 a 45) y cuantos pares de cada talla trae una caja. Al crear, el rango parte del sugerido por grupo (nino 22-33, dama 34-40, caballero 38-45).
+- Tabla `tallas_producto` (producto, talla, pares_caja; RLS: lee solo el admin) y RPC `configurar_tallas_producto` (solo admin): reemplaza el rango y crea en el grupo del producto las tallas que falten.
+- Ingreso de mercancia: muestra solo las tallas del modelo y el surtido por defecto es "Surtido del modelo" (luego el del ultimo ingreso, los surtidos guardados o personalizado). Un producto sin configurar sigue usando todas las tallas de su grupo.
+- Logica en `catalogo/tallasModelo.ts` con pruebas. Migracion `0021_tallas_por_producto.sql` **aplicada el 2026-11-19**; prueba `supabase/tests/tallas_por_producto.sql`: 9 comprobaciones OK (rango 25-45, reemplazo a 36-45, ingreso con talla nueva, validaciones; bodeguero y anon no configuran ni leen).

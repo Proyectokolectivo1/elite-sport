@@ -4,7 +4,7 @@ import { FieldError, Input, InputSugerencias, Label, Textarea } from '@/componen
 import { Select } from '@/components/ui/select'
 import { Table, TBody, TD, TH, THead, TR } from '@/components/ui/table'
 import { toast } from '@/components/ui/toast'
-import { useProductos, useTallas, useVariantes } from '@/features/catalogo/hooks/useCatalogo'
+import { useProductos, useTallas, useTallasProducto, useVariantes } from '@/features/catalogo/hooks/useCatalogo'
 import { mensajeError } from '@/lib/errors'
 import { cn } from '@/lib/utils'
 import { calcularLineas, paresPorCaja, totalUnidades } from '../calculo'
@@ -21,7 +21,8 @@ export function IngresoForm({ productoInicial }: { productoInicial?: string }) {
   const [tipo, setTipo] = useState<Tipo>('caja')
   const [productoId, setProductoId] = useState(productoInicial ?? '')
   const [color, setColor] = useState('')
-  // 'auto': el surtido del último ingreso de este producto (si existe); 'personalizado'; o el id de una curva guardada.
+  // 'auto': el surtido del modelo (si lo tiene), si no el del último ingreso, si no personalizado.
+  // También: 'modelo', 'ultimo', 'personalizado' o el id de un surtido guardado.
   const [fuente, setFuente] = useState<string>('auto')
   const [cajas, setCajas] = useState('1')
   const [pares, setPares] = useState<Record<string, string>>({})
@@ -33,19 +34,33 @@ export function IngresoForm({ productoInicial }: { productoInicial?: string }) {
   const { data: variantesProducto = [] } = useVariantes(productoId)
   const coloresProducto = [...new Set(variantesProducto.map((v) => v.color))]
   const { data: ultimo } = useUltimoSurtido(productoId)
+  const { data: tallasModelo = [] } = useTallasProducto(productoId || undefined)
 
   const producto = productos.find((p) => p.id === productoId)
-  const tallasGrupo = useMemo(() => tallas.filter((t) => t.grupo === producto?.grupo), [tallas, producto?.grupo])
+  // Las tallas del modelo (su rango configurado); un producto sin configurar usa todas las de su grupo.
+  const tallasGrupo = useMemo(
+    () =>
+      tallasModelo.length > 0
+        ? tallasModelo.map((t) => ({ id: t.tallaId, etiqueta: t.etiqueta }))
+        : tallas.filter((t) => t.grupo === producto?.grupo).map((t) => ({ id: t.id, etiqueta: t.etiqueta })),
+    [tallasModelo, tallas, producto?.grupo],
+  )
+  const surtidoModelo = useMemo(
+    () => Object.fromEntries(tallasModelo.filter((t) => t.pares > 0).map((t) => [t.tallaId, String(t.pares)])),
+    [tallasModelo],
+  )
+  const tieneSurtidoModelo = Object.keys(surtidoModelo).length > 0
   const curvasGrupo = curvas.filter((c) => c.grupo === producto?.grupo)
   const nCajas = tipo === 'caja' ? Number(cajas) : 1
 
+  const valorFuente = fuente === 'auto' ? (tieneSurtidoModelo ? 'modelo' : ultimo ? 'ultimo' : 'personalizado') : fuente
   const paresEfectivos: Record<string, string> = useMemo(() => {
-    if (fuente === 'personalizado') return pares
-    if (fuente === 'auto') return ultimo ? Object.fromEntries(Object.entries(ultimo.pares).map(([k, v]) => [k, String(v)])) : pares
-    const c = curvas.find((x) => x.id === fuente)
+    if (valorFuente === 'personalizado') return pares
+    if (valorFuente === 'modelo') return surtidoModelo
+    if (valorFuente === 'ultimo') return ultimo ? Object.fromEntries(Object.entries(ultimo.pares).map(([k, v]) => [k, String(v)])) : pares
+    const c = curvas.find((x) => x.id === valorFuente)
     return c ? Object.fromEntries(c.detalle.map((d) => [d.talla_id, String(d.pares)])) : pares
-  }, [fuente, pares, ultimo, curvas])
-  const valorFuente = fuente === 'auto' ? (ultimo ? 'ultimo' : 'personalizado') : fuente
+  }, [valorFuente, pares, ultimo, curvas, surtidoModelo])
 
   const lineas = useMemo(
     () =>
@@ -70,11 +85,8 @@ export function IngresoForm({ productoInicial }: { productoInicial?: string }) {
 
   function elegirFuente(valor: string) {
     setTotales({})
-    if (valor === 'ultimo') setFuente('auto')
-    else {
-      setFuente(valor)
-      if (valor === 'personalizado') setPares({})
-    }
+    setFuente(valor)
+    if (valor === 'personalizado') setPares({})
   }
 
   function validar(): string | null {
@@ -146,12 +158,14 @@ export function IngresoForm({ productoInicial }: { productoInicial?: string }) {
             <div>
               <Label htmlFor="ing-curva">Surtido de la caja</Label>
               <Select id="ing-curva" value={valorFuente} onChange={(e) => elegirFuente(e.target.value)} disabled={!producto}>
+                {tieneSurtidoModelo && <option value="modelo">Surtido del modelo</option>}
                 {ultimo && <option value="ultimo">Último ingreso de este producto</option>}
                 {curvasGrupo.map((c) => (
                   <option key={c.id} value={c.id}>{c.nombre}</option>
                 ))}
                 <option value="personalizado">Personalizado</option>
               </Select>
+              {valorFuente === 'modelo' && <p className="mt-1 text-xs text-muted-foreground">Como viene la caja según la ficha del producto. Puedes cambiarlo abajo.</p>}
               {valorFuente === 'ultimo' && ultimo && (
                 <p className="mt-1 text-xs text-muted-foreground">Tomado del ingreso del {new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium' }).format(new Date(ultimo.fecha))}. Puedes cambiarlo abajo.</p>
               )}

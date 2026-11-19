@@ -7,7 +7,9 @@ import {
   crearProducto,
   eliminarImagen,
   eliminarProducto,
+  guardarTallasProducto,
   intercambiarOrden,
+  listarTallasProducto,
   listarImagenes,
   listarOpciones,
   listarProductosAdmin,
@@ -28,6 +30,7 @@ export const catalogoKeys = {
   variantes: (id: string) => ['variantes', id] as const,
   opciones: (t: TablaOpciones) => ['opciones', t] as const,
   tallas: ['tallas'] as const,
+  tallasProducto: (id: string) => ['tallas-producto', id] as const,
 }
 
 export const useProductos = () => useQuery({ queryKey: catalogoKeys.productos, queryFn: listarProductosAdmin })
@@ -47,6 +50,20 @@ export const useProducto = (id: string | undefined) =>
 export const useImagenes = (id: string) => useQuery({ queryKey: catalogoKeys.imagenes(id), queryFn: () => listarImagenes(id) })
 export const useVariantes = (id: string) => useQuery({ queryKey: catalogoKeys.variantes(id), queryFn: () => listarVariantes(id), enabled: !!id })
 export const useOpciones = (t: TablaOpciones) => useQuery({ queryKey: catalogoKeys.opciones(t), queryFn: () => listarOpciones(t), staleTime: 60_000 })
+export const useTallasProducto = (id: string | undefined) =>
+  useQuery({ queryKey: catalogoKeys.tallasProducto(id ?? ''), queryFn: () => listarTallasProducto(id as string), enabled: !!id })
+
+export function useGuardarTallasProducto() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (v: { productoId: string; tallas: { etiqueta: string; pares: number }[] }) => guardarTallasProducto(v.productoId, v.tallas),
+    onSuccess: (_r, v) => {
+      void qc.invalidateQueries({ queryKey: catalogoKeys.tallasProducto(v.productoId) })
+      void qc.invalidateQueries({ queryKey: catalogoKeys.tallas })
+    },
+  })
+}
+
 export const useTallas = () => useQuery({ queryKey: catalogoKeys.tallas, queryFn: listarTallas, staleTime: 10 * 60_000 })
 
 export function useCrearOpcion(tabla: TablaOpciones) {
