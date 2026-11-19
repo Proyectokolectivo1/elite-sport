@@ -12,8 +12,9 @@ import { NOMBRE_ROL } from '@/features/auth/roles'
 import { mensajeError } from '@/lib/errors'
 import { cn } from '@/lib/utils'
 import type { PedidoBodega, VistaBodega } from '../api/bodega'
-import { useCancelarPedidoBodega, useDespachar, usePedidosBodega, useEntregarWeb } from '../hooks/useBodega'
+import { useCancelarPedidoBodega, useDespachar, useEntregarWeb, useFotoDeVariante, usePedidosBodega } from '../hooks/useBodega'
 import { CierreEntrega } from './CierreEntrega'
+import { FotoPar } from './FotoPar'
 import { idCierre, PendientesCierre } from './PendientesCierre'
 
 const VISTAS: { id: VistaBodega; label: string; ruta: string }[] = [
@@ -61,7 +62,14 @@ function Encabezado({ p }: { p: PedidoBodega }) {
   )
 }
 
+/** Separa "Producto · Color · talla 40" para destacar la talla; si el texto no tiene ese formato, lo deja entero. */
+function partesLinea(descripcion: string) {
+  const [nombre, color, talla] = descripcion.split(' · ')
+  return talla ? { nombre, color, talla: talla.replace(/^talla\s*/i, '') } : { nombre: descripcion, color: null, talla: null }
+}
+
 function Despacho({ p }: { p: PedidoBodega }) {
+  const foto = useFotoDeVariante()
   const despachar = useDespachar()
   const cancelar = useCancelarPedidoBodega()
   const [entregar, setEntregar] = useState<Record<string, number>>(() =>
@@ -86,24 +94,33 @@ function Despacho({ p }: { p: PedidoBodega }) {
       {p.nota && <p className="rounded-md bg-muted p-3 text-sm">{p.nota}</p>}
       <ul className="divide-y divide-border">
         {p.lineas.map((l) => (
-          <li key={l.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
-            <div className="min-w-0 text-sm">
-              <p className="font-semibold">{l.descripcion}</p>
-              <p className="text-xs text-muted-foreground">Pidió {l.cantidad} · en bodega {l.stock}</p>
+          <li key={l.id} className="flex flex-col gap-4 py-4 sm:flex-row sm:items-center">
+            <FotoPar src={foto(l.variante_id)} alt={l.descripcion} className="aspect-square w-full rounded-xl sm:size-44 sm:w-44" />
+            <div className="min-w-0 flex-1 space-y-3">
+              <div>
+                <p className="font-display text-2xl font-bold uppercase leading-tight">{partesLinea(l.descripcion).nombre}</p>
+                {partesLinea(l.descripcion).color && (
+                  <p className="mt-1 flex items-center gap-3">
+                    <span className="text-muted-foreground">{partesLinea(l.descripcion).color}</span>
+                    <span className="rounded-lg bg-foreground px-3 py-1 text-xl font-bold tabular-nums text-background">Talla {partesLinea(l.descripcion).talla}</span>
+                  </p>
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground">Pidió <strong className="text-lg text-foreground tabular-nums">{l.cantidad}</strong> · en bodega {l.stock}</p>
+              <label className="flex items-center gap-3 text-sm">
+                <span className="text-muted-foreground">Entregar</span>
+                <Input
+                  type="number"
+                  min={0}
+                  max={Math.min(l.cantidad, l.stock)}
+                  inputMode="numeric"
+                  className="h-12 w-24 text-right text-lg"
+                  aria-label={`Pares a entregar de ${l.descripcion}`}
+                  value={entregar[l.id] ?? 0}
+                  onChange={(e) => setEntregar({ ...entregar, [l.id]: Number(e.target.value) })}
+                />
+              </label>
             </div>
-            <label className="flex items-center gap-2 text-sm">
-              <span className="text-muted-foreground">Entregar</span>
-              <Input
-                type="number"
-                min={0}
-                max={Math.min(l.cantidad, l.stock)}
-                inputMode="numeric"
-                className="h-10 w-20 text-right"
-                aria-label={`Pares a entregar de ${l.descripcion}`}
-                value={entregar[l.id] ?? 0}
-                onChange={(e) => setEntregar({ ...entregar, [l.id]: Number(e.target.value) })}
-              />
-            </label>
           </li>
         ))}
       </ul>
@@ -126,6 +143,7 @@ function Despacho({ p }: { p: PedidoBodega }) {
 }
 
 function PedidoWeb({ p }: { p: PedidoBodega }) {
+  const foto = useFotoDeVariante()
   const entregar = useEntregarWeb()
   return (
     <article className="space-y-3 rounded-xl border border-border bg-card p-4">
@@ -133,7 +151,11 @@ function PedidoWeb({ p }: { p: PedidoBodega }) {
       {p.cliente_direccion && <p className="text-sm"><span className="eyebrow mr-2">Dirección</span>{p.cliente_direccion}</p>}
       <ul className="divide-y divide-border text-sm">
         {p.lineas.map((l) => (
-          <li key={l.id} className="flex justify-between gap-3 py-2"><span>{l.descripcion}</span><span className="font-semibold tabular-nums">× {l.cantidad}</span></li>
+          <li key={l.id} className="flex items-center gap-4 py-3">
+            <FotoPar src={foto(l.variante_id)} alt={l.descripcion} className="size-28 rounded-xl sm:size-32" />
+            <span className="min-w-0 flex-1 text-base font-semibold">{l.descripcion}</span>
+            <span className="text-2xl font-bold tabular-nums">× {l.cantidad}</span>
+          </li>
         ))}
       </ul>
       <Button

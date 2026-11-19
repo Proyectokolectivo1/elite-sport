@@ -13,6 +13,7 @@ import {
   cerrarEntrega,
   despacharPedido,
   fotosPorColor,
+  variantesDeProducto,
   entregarPedidoWeb,
   listarEquipo,
   listarPedidosBodega,
@@ -155,6 +156,14 @@ export function useFotosPares() {
   const q = useQuery({ queryKey: ['fotos-pares'], queryFn: fotosPorColor, staleTime: 10 * 60_000 })
   const fotos = q.data ?? {}
   return (productoId: string, color: string): string | null => fotos[`${productoId}|${color}`] ?? fotos[`${productoId}|`] ?? null
+}
+
+/** Foto de la variante de una línea de pedido (por su variante_id). */
+export function useFotoDeVariante() {
+  const foto = useFotosPares()
+  const q = useQuery({ queryKey: ['variantes-producto'], queryFn: variantesDeProducto, staleTime: 10 * 60_000 })
+  const v = q.data ?? {}
+  return (varianteId: string): string | null => (v[varianteId] ? foto(v[varianteId].productoId, v[varianteId].color) : null)
 }
 
 export function useCrearUsuario() {

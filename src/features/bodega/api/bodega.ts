@@ -29,6 +29,15 @@ export async function fotosPorColor(): Promise<Record<string, string>> {
   return m
 }
 
+/** Producto y color de cada variante, para ubicar la foto de una línea de pedido. Solo admin y bodeguero. */
+export async function variantesDeProducto(): Promise<Record<string, { productoId: string; color: string }>> {
+  const { data, error } = await supabase.from('existencias_variantes').select('id, producto_id, color')
+  if (error) throw error
+  const m: Record<string, { productoId: string; color: string }> = {}
+  for (const v of data) if (v.id && v.producto_id && v.color) m[v.id] = { productoId: v.producto_id, color: v.color }
+  return m
+}
+
 export const claveFoto = (productoId: string, color: string) => `${productoId}|${color}`
 
 // ============ Bodeguero (sin precios) ============
