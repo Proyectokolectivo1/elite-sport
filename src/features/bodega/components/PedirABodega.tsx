@@ -8,6 +8,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { FieldError, Input, Label, Textarea } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from '@/components/ui/toast'
+import { TOPE_MAYORISTA } from '@/features/tienda/carrito/carritoStore'
 import { obtenerCatalogoPublico, type ProductoPublico } from '@/features/tienda/api/tienda'
 import { agregarLinea, unidadesVenta, type LineaVenta } from '@/features/ventas/ventaLogica'
 import { mensajeError } from '@/lib/errors'
@@ -16,7 +17,7 @@ import { useSolicitarABodega } from '../hooks/useBodega'
 import { notaPedidoSchema, type NotaPedidoValues } from '../schemas'
 import { FotoPar } from './FotoPar'
 
-/** Elige productos y tallas con stock en bodega y envía el pedido. No muestra precios: los fija el servidor. */
+/** Elige productos y tallas disponibles en bodega y envía el pedido. No muestra precios ni cuántos pares hay: los fija y valida el servidor. */
 export function PedirABodega({ onEnviado }: { onEnviado?: () => void }) {
   const { data: catalogo = [], isLoading } = useQuery({ queryKey: ['catalogo-publico'], queryFn: obtenerCatalogoPublico })
   const solicitar = useSolicitarABodega()
@@ -28,7 +29,7 @@ export function PedirABodega({ onEnviado }: { onEnviado?: () => void }) {
 
   const productos = useMemo(() => {
     const t = q.trim().toLowerCase()
-    return catalogo.filter((p) => p.variantes.some((v) => v.stock > 0) && (!t || `${p.nombre} ${p.marca?.nombre ?? ''}`.toLowerCase().includes(t)))
+    return catalogo.filter((p) => p.variantes.some((v) => v.disponible) && (!t || `${p.nombre} ${p.marca?.nombre ?? ''}`.toLowerCase().includes(t)))
   }, [catalogo, q])
   const producto: ProductoPublico | undefined = catalogo.find((p) => p.id === elegido)
   const colores = producto ? [...new Set(producto.variantes.map((v) => v.color))] : []
@@ -37,7 +38,7 @@ export function PedirABodega({ onEnviado }: { onEnviado?: () => void }) {
 
   function agregar(v: ProductoPublico['variantes'][number]) {
     if (!producto) return
-    setLineas((l) => agregarLinea(l, { varianteId: v.id, nombre: producto.nombre, color: v.color, talla: v.talla, precio: 0, stock: v.stock }))
+    setLineas((l) => agregarLinea(l, { varianteId: v.id, nombre: producto.nombre, color: v.color, talla: v.talla, precio: 0, stock: v.disponible ? TOPE_MAYORISTA : 0 }))
   }
   const cambiar = (id: string, cantidad: number) => setLineas((l) => l.map((x) => (x.varianteId === id ? { ...x, cantidad } : x)))
 
@@ -66,7 +67,7 @@ export function PedirABodega({ onEnviado }: { onEnviado?: () => void }) {
         ) : (
           <ul className="grid gap-2 sm:grid-cols-2">
             {productos.map((p) => {
-              const stock = p.variantes.reduce((s, v) => s + v.stock, 0)
+              const colores = new Set(p.variantes.filter((v) => v.disponible).map((v) => v.color)).size
               return (
                 <li key={p.id}>
                   <button type="button" aria-pressed={elegido === p.id} onClick={() => { setElegido(p.id); setColor('') }}
@@ -74,7 +75,7 @@ export function PedirABodega({ onEnviado }: { onEnviado?: () => void }) {
                     <FotoPar src={p.imagenes[0] ? (p.imagenes[0].miniatura ?? p.imagenes[0].url) : null} className="size-20" />
                     <span className="min-w-0">
                       <span className="block truncate font-semibold">{p.nombre}</span>
-                      <span className="block text-xs text-muted-foreground">{stock} pares en bodega</span>
+                      <span className="block text-xs text-muted-foreground">{p.marca?.nombre ?? (colores === 1 ? '1 color' : `${colores} colores`)}</span>
                     </span>
                   </button>
                 </li>
@@ -103,12 +104,10 @@ export function PedirABodega({ onEnviado }: { onEnviado?: () => void }) {
             <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
               {variantes.map((v) => {
                 const pedidos = lineas.find((l) => l.varianteId === v.id)?.cantidad ?? 0
-                const libres = v.stock - pedidos
                 return (
-                  <button key={v.id} type="button" disabled={libres <= 0} onClick={() => agregar(v)} aria-label={`Talla ${v.talla}, quedan ${libres}`}
+                  <button key={v.id} type="button" disabled={!v.disponible} onClick={() => agregar(v)} aria-label={`Talla ${v.talla}${v.disponible ? '' : ', agotada'}`}
                     className="relative h-14 rounded-lg border border-input text-base font-semibold tabular-nums transition-colors hover:border-foreground disabled:cursor-not-allowed disabled:opacity-40">
                     {v.talla}
-                    <span className="block text-[0.6875rem] font-normal text-muted-foreground">{libres}</span>
                     {pedidos > 0 && <span className="absolute -right-1.5 -top-1.5 grid min-w-5 place-items-center rounded-full bg-signal px-1 text-[0.6875rem] font-bold text-signal-foreground">{pedidos}</span>}
                   </button>
                 )

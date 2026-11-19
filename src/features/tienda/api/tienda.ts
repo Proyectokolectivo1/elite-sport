@@ -25,7 +25,8 @@ export interface VariantePublica {
   tallaId: string
   talla: string
   orden: number
-  stock: number
+  /** Si hay al menos un par. El número exacto no sale de bodega: solo lo ven admin y bodeguero. */
+  disponible: boolean
 }
 
 export interface ImagenPublica {
@@ -58,7 +59,7 @@ export interface ProductoPublico {
 // Solo las columnas que se muestran: menos datos por la red y menos trabajo para la base.
 const COLUMNAS_PRODUCTO = 'id, slug, nombre, grupo, descripcion, precio_publico, destacado, creado_en, marcas(id, nombre), categorias(id, nombre), estilos(id, nombre)'
 const COLUMNAS_IMAGEN = 'producto_id, color, url, url_miniatura, orden'
-const COLUMNAS_VARIANTE = 'id, producto_id, color, stock, talla_id, tallas(etiqueta, orden)'
+const COLUMNAS_VARIANTE = 'id, producto_id, color, disponible, talla_id, tallas(etiqueta, orden)'
 
 type FilaProducto = {
   id: string
@@ -74,7 +75,7 @@ type FilaProducto = {
   estilos: { id: string; nombre: string } | null
 }
 type FilaImagen = { producto_id: string; color: string; url: string; url_miniatura: string | null }
-type FilaVariante = { id: string; producto_id: string; color: string; stock: number; talla_id: string; tallas: { etiqueta: string; orden: number } | null }
+type FilaVariante = { id: string; producto_id: string; color: string; disponible: boolean; talla_id: string; tallas: { etiqueta: string; orden: number } | null }
 
 function armarProductos(prods: FilaProducto[], imgs: FilaImagen[], vars: FilaVariante[], precios?: Map<string, number>): ProductoPublico[] {
   const imagenes = new Map<string, ImagenPublica[]>()
@@ -83,7 +84,7 @@ function armarProductos(prods: FilaProducto[], imgs: FilaImagen[], vars: FilaVar
   for (const v of vars) {
     variantes.set(v.producto_id, [
       ...(variantes.get(v.producto_id) ?? []),
-      { id: v.id, color: v.color, tallaId: v.talla_id, talla: v.tallas?.etiqueta ?? '', orden: v.tallas?.orden ?? 0, stock: v.stock },
+      { id: v.id, color: v.color, tallaId: v.talla_id, talla: v.tallas?.etiqueta ?? '', orden: v.tallas?.orden ?? 0, disponible: v.disponible },
     ])
   }
   return prods.map((p) => ({

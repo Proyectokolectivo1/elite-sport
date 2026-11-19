@@ -16,7 +16,7 @@ import { CamposCliente } from '@/features/pedidos/components/CamposCliente'
 import { DATOS_CLIENTE_VACIOS, datosClienteSchema, datosDesdePerfil, type DatosCliente } from '@/features/pedidos/datosCliente'
 import { useConfiguracion } from '@/features/configuracion/hooks/useConfiguracion'
 import { obtenerCatalogoPublico, type ProductoPublico } from '@/features/tienda/api/tienda'
-import { totalCarrito, unidadesCarrito, useCarritoStore, type ItemCarrito } from '@/features/tienda/carrito/carritoStore'
+import { TOPE_MAYORISTA, totalCarrito, unidadesCarrito, useCarritoStore, type ItemCarrito } from '@/features/tienda/carrito/carritoStore'
 import { construirMensaje, urlWhatsApp } from '@/features/tienda/whatsapp'
 import { mensajeError } from '@/lib/errors'
 import { formatMoney, useMoneyStore } from '@/lib/money'
@@ -38,8 +38,8 @@ function ElegirTallas({ producto, costo, onCerrar }: { producto: ProductoPublico
     const { agregar } = useCarritoStore.getState()
     for (const v of producto.variantes) {
       const n = Math.floor(Number(cant[v.id]) || 0)
-      if (n > 0 && v.stock > 0) {
-        agregar(CLAVE, { varianteId: v.id, productoId: producto.id, nombre: producto.nombre, color: v.color, talla: v.talla, imagen: (producto.imagenes.find((i) => i.color === v.color) ?? producto.imagenes[0])?.miniatura ?? (producto.imagenes.find((i) => i.color === v.color) ?? producto.imagenes[0])?.url ?? null, precio: costo, stock: v.stock }, n)
+      if (n > 0 && v.disponible) {
+        agregar(CLAVE, { varianteId: v.id, productoId: producto.id, nombre: producto.nombre, color: v.color, talla: v.talla, imagen: (producto.imagenes.find((i) => i.color === v.color) ?? producto.imagenes[0])?.miniatura ?? (producto.imagenes.find((i) => i.color === v.color) ?? producto.imagenes[0])?.url ?? null, precio: costo, stock: TOPE_MAYORISTA }, n)
       }
     }
     toast.success('Agregado a tu pedido')
@@ -58,13 +58,13 @@ function ElegirTallas({ producto, costo, onCerrar }: { producto: ProductoPublico
       <ul className="divide-y divide-border rounded-xl border border-border">
         {filas.map((v) => (
           <li key={v.id} className="flex items-center justify-between gap-3 p-3">
-            <span className="tabular-nums"><strong className="text-lg">{v.talla}</strong> <span className="text-sm text-muted-foreground">· {v.stock > 0 ? `${v.stock} disponibles` : 'agotada'}</span></span>
+            <span className="tabular-nums"><strong className="text-lg">{v.talla}</strong> <span className="text-sm text-muted-foreground">· {v.disponible ? 'disponible' : 'agotada'}</span></span>
             <Input
               aria-label={`Cantidad talla ${v.talla}`}
-              type="number" min="0" max={v.stock} step="1" inputMode="numeric" placeholder="0" disabled={v.stock === 0}
+              type="number" min="0" max={TOPE_MAYORISTA} step="1" inputMode="numeric" placeholder="0" disabled={!v.disponible}
               className="h-10 w-24 text-right"
               value={cant[v.id] ?? ''}
-              onChange={(e) => setCant((c) => ({ ...c, [v.id]: String(Math.min(v.stock, Math.max(0, Math.floor(Number(e.target.value) || 0))) || '') }))}
+              onChange={(e) => setCant((c) => ({ ...c, [v.id]: String(Math.min(TOPE_MAYORISTA, Math.max(0, Math.floor(Number(e.target.value) || 0))) || '') }))}
             />
           </li>
         ))}
@@ -204,10 +204,10 @@ export function PedirPage() {
       ) : (
         <ul className="grid grid-cols-2 gap-x-4 gap-y-6 pb-24 md:grid-cols-3 lg:grid-cols-4">
           {filas.map(({ p, costo }) => {
-            const stock = p.variantes.reduce((s, v) => s + v.stock, 0)
+            const disponible = p.variantes.some((v) => v.disponible)
             return (
               <li key={p.id}>
-                <button type="button" disabled={stock === 0} onClick={() => setElegido(p)} className="group w-full text-left disabled:opacity-50">
+                <button type="button" disabled={!disponible} onClick={() => setElegido(p)} className="group w-full text-left disabled:opacity-50">
                   <div className="aspect-[4/5] overflow-hidden rounded-md bg-muted">
                     {p.imagenes[0] && <img src={p.imagenes[0].miniatura ?? p.imagenes[0].url} alt="" loading="lazy" decoding="async" width={400} height={500} className="size-full object-cover transition-transform duration-[var(--dur-slow)] group-hover:scale-[1.03]" />}
                   </div>
@@ -215,7 +215,7 @@ export function PedirPage() {
                   <p className="flex items-baseline justify-between text-sm">
                     <span><span className="eyebrow mr-1.5">Tu costo</span><Price amount={costo} size="sm" /></span>
                   </p>
-                  <p className="text-xs text-muted-foreground">PVP {formatMoney(p.pvp, moneda)} · {stock === 0 ? 'agotado' : `${stock} pares`}</p>
+                  <p className="text-xs text-muted-foreground">PVP {formatMoney(p.pvp, moneda)}{disponible ? '' : ' · agotado'}</p>
                 </button>
               </li>
             )

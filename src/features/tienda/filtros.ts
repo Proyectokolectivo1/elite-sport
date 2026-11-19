@@ -59,8 +59,8 @@ export function contarFiltros(f: Filtros): number {
   return [f.grupo, f.marca, f.estilo, f.categoria, f.talla].filter(Boolean).length + (f.min !== null ? 1 : 0) + (f.max !== null ? 1 : 0)
 }
 
-export function totalStock(p: ProductoPublico): number {
-  return p.variantes.reduce((s, v) => s + v.stock, 0)
+export function hayDisponible(p: ProductoPublico): boolean {
+  return p.variantes.some((v) => v.disponible)
 }
 
 /** Filtros de la URL en el formato que entiende la búsqueda del servidor. */

@@ -9,6 +9,7 @@ import { PageHeader } from '@/components/ui/page-header'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TBody, TD, TH, THead, TR } from '@/components/ui/table'
 import { toast } from '@/components/ui/toast'
+import { stockPorVariante } from '@/features/inventario/api/inventario'
 import { obtenerCatalogoPublico, type ProductoPublico } from '@/features/tienda/api/tienda'
 import { useAccionPedido, usePedidos } from '@/features/pedidos/hooks/usePedidos'
 import { mensajeError } from '@/lib/errors'
@@ -30,6 +31,9 @@ export function VentasPage() {
   const moneda = useMoneyStore((s) => s.config)
   const fmt = (n: number) => formatMoney(n, moneda)
   const { data: catalogo = [], isLoading } = useQuery({ queryKey: ['catalogo-publico'], queryFn: obtenerCatalogoPublico })
+  // El catálogo público no trae cuántos pares hay; el admin los lee aparte.
+  const { data: existencias } = useQuery({ queryKey: ['existencias', 'por-variante'], queryFn: stockPorVariante })
+  const stockDe = (id: string) => existencias?.get(id) ?? 0
   const { data: pedidos = [] } = usePedidos()
   const registrar = useRegistrarVenta()
   const accion = useAccionPedido()
@@ -60,7 +64,7 @@ export function VentasPage() {
 
   function agregar(v: ProductoPublico['variantes'][number]) {
     if (!producto) return
-    setLineas((l) => agregarLinea(l, { varianteId: v.id, nombre: producto.nombre, color: v.color, talla: v.talla, precio: producto.pvp, stock: v.stock }))
+    setLineas((l) => agregarLinea(l, { varianteId: v.id, nombre: producto.nombre, color: v.color, talla: v.talla, precio: producto.pvp, stock: stockDe(v.id) }))
   }
   const cambiar = (id: string, parcial: Partial<LineaVenta>) => setLineas((l) => l.map((x) => (x.varianteId === id ? { ...x, ...parcial } : x)))
 
@@ -109,7 +113,7 @@ export function VentasPage() {
           ) : (
             <ul className="grid gap-2 sm:grid-cols-2">
               {productos.map((p) => {
-                const stock = p.variantes.reduce((s, v) => s + v.stock, 0)
+                const stock = p.variantes.reduce((s, v) => s + stockDe(v.id), 0)
                 return (
                   <li key={p.id}>
                     <button
@@ -148,11 +152,12 @@ export function VentasPage() {
                   <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
                     {variantes.map((v) => {
                       const enVenta = lineas.find((l) => l.varianteId === v.id)?.cantidad ?? 0
-                      const sinStock = v.stock - enVenta <= 0
+                      const quedan = stockDe(v.id) - enVenta
+                      const sinStock = quedan <= 0
                       return (
-                        <button key={v.id} type="button" disabled={sinStock} onClick={() => agregar(v)} className="relative h-14 rounded-lg border border-input text-base font-semibold tabular-nums transition-colors hover:border-foreground disabled:cursor-not-allowed disabled:opacity-40" aria-label={`Talla ${v.talla}, quedan ${v.stock - enVenta}`}>
+                        <button key={v.id} type="button" disabled={sinStock} onClick={() => agregar(v)} className="relative h-14 rounded-lg border border-input text-base font-semibold tabular-nums transition-colors hover:border-foreground disabled:cursor-not-allowed disabled:opacity-40" aria-label={`Talla ${v.talla}, quedan ${quedan}`}>
                           {v.talla}
-                          <span className="block text-[0.6875rem] font-normal text-muted-foreground">{v.stock - enVenta}</span>
+                          <span className="block text-[0.6875rem] font-normal text-muted-foreground">{quedan}</span>
                           {enVenta > 0 && <span className="absolute -right-1.5 -top-1.5 grid min-w-5 place-items-center rounded-full bg-signal px-1 text-[0.6875rem] font-bold text-signal-foreground">{enVenta}</span>}
                         </button>
                       )

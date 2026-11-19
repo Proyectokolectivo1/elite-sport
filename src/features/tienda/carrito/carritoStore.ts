@@ -10,9 +10,13 @@ export interface ItemCarrito {
   imagen: string | null
   precio: number
   cantidad: number
-  /** Stock visto al agregar; tope de la cantidad. */
+  /** Tope de la cantidad por talla. No es el stock real (ese no sale de bodega); el servidor lo valida al enviar. */
   stock: number
 }
+
+/** Topes por talla en el carrito: el cliente de la tienda y el mayorista. */
+export const TOPE_MINORISTA = 10
+export const TOPE_MAYORISTA = 200
 
 interface CarritoState {
   /** Un carrito por tienda: no se mezclan pedidos de tiendas distintas. */

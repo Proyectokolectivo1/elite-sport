@@ -84,7 +84,7 @@ export interface Existencia {
 
 export async function listarExistencias(): Promise<Existencia[]> {
   const { data, error } = await supabase
-    .from('variantes_producto')
+    .from('existencias_variantes')
     .select('id, producto_id, color, sku, stock, productos(nombre), tallas(etiqueta, orden)')
   if (error) throw error
   return data
@@ -99,6 +99,13 @@ export async function listarExistencias(): Promise<Existencia[]> {
       stock: v.stock,
     }))
     .sort((a, b) => a.producto.localeCompare(b.producto) || a.color.localeCompare(b.color) || a.tallaOrden - b.tallaOrden)
+}
+
+/** Pares por variante (id -> stock). Solo devuelve datos a admin y bodeguero. */
+export async function stockPorVariante(): Promise<Map<string, number>> {
+  const { data, error } = await supabase.from('existencias_variantes').select('id, stock')
+  if (error) throw error
+  return new Map(data.map((v) => [v.id, v.stock]))
 }
 
 /** Primera foto (miniatura) de cada producto, para reconocerlo de un vistazo en el inventario. */

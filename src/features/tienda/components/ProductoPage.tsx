@@ -8,7 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { SizeSelector, type TallaOpcion } from '@/components/ui/size-selector'
 import { usePageMeta } from '@/lib/meta'
 import { cn } from '@/lib/utils'
-import { useCarritoStore } from '../carrito/carritoStore'
+import { TOPE_MINORISTA, useCarritoStore } from '../carrito/carritoStore'
 import { useProductoPorSlug, useProductosPagina } from '../hooks/useProductosTienda'
 import { useStore } from '../context/StoreContext'
 import { aTarjeta } from '../tarjeta'
@@ -66,9 +66,9 @@ function ProductoVista({ slug: productoSlug }: { slug: string | undefined }) {
   const fotosColor = producto.imagenes.filter((i) => i.color === color)
   const fotos = fotosColor.length > 0 ? fotosColor : producto.imagenes
   const variantesColor = producto.variantes.filter((v) => v.color === color)
-  const tallas: TallaOpcion[] = variantesColor.map((v) => ({ id: v.id, etiqueta: v.talla, stock: v.stock }))
+  const tallas: TallaOpcion[] = variantesColor.map((v) => ({ id: v.id, etiqueta: v.talla, disponible: v.disponible }))
   const variante = variantesColor.find((v) => v.id === tallaId)
-  const stockColor = (c: string) => producto.variantes.filter((v) => v.color === c).reduce((s, v) => s + v.stock, 0)
+  const colorDisponible = (c: string) => producto.variantes.some((v) => v.color === c && v.disponible)
 
   function agregar() {
     if (!variante || !producto) return
@@ -80,7 +80,7 @@ function ProductoVista({ slug: productoSlug }: { slug: string | undefined }) {
       talla: variante.talla,
       imagen: fotos[0]?.miniatura ?? fotos[0]?.url ?? null,
       precio: pr,
-      stock: variante.stock,
+      stock: TOPE_MINORISTA,
     })
     setCarritoAbierto(true)
   }
@@ -122,7 +122,7 @@ function ProductoVista({ slug: productoSlug }: { slug: string | undefined }) {
               <legend className="eyebrow mb-2">Color: <span className="text-foreground">{color}</span></legend>
               <div className="flex flex-wrap gap-2">
                 {colores.map((c) => (
-                  <button key={c} type="button" aria-pressed={color === c} disabled={stockColor(c) === 0 && producto.variantes.length > 0} onClick={() => { setColor(c); setTallaId(null); setFoto(0) }} className={cn('h-10 rounded-md border px-4 text-sm font-semibold transition-colors disabled:opacity-40', color === c ? 'border-foreground bg-foreground text-background' : 'border-input hover:border-foreground')}>
+                  <button key={c} type="button" aria-pressed={color === c} disabled={!colorDisponible(c) && producto.variantes.length > 0} onClick={() => { setColor(c); setTallaId(null); setFoto(0) }} className={cn('h-10 rounded-md border px-4 text-sm font-semibold transition-colors disabled:opacity-40', color === c ? 'border-foreground bg-foreground text-background' : 'border-input hover:border-foreground')}>
                     {c}
                   </button>
                 ))}
@@ -142,7 +142,6 @@ function ProductoVista({ slug: productoSlug }: { slug: string | undefined }) {
           <Button size="lg" className="mt-8 w-full" disabled={!variante} onClick={agregar}>
             {variante ? 'Agregar al carrito' : 'Elige una talla'}
           </Button>
-          {variante && variante.stock <= 3 && <p className="mt-2 text-sm text-warning">Quedan solo {variante.stock} pares en esta talla.</p>}
         </div>
       </div>
 

@@ -56,7 +56,7 @@ export async function listarProductosAdmin(): Promise<ProductoResumen[]> {
   const [prods, may, vars, imgs] = await Promise.all([
     supabase.from('productos').select('id, nombre, slug, grupo, precio_publico, activo, destacado, marcas(nombre), categorias(nombre)').order('creado_en', { ascending: false }),
     supabase.from('precios_mayorista').select('producto_id, precio'),
-    supabase.from('variantes_producto').select('producto_id, stock'),
+    supabase.from('existencias_variantes').select('producto_id, stock'),
     supabase.from('imagenes_producto').select('producto_id, url, orden').order('orden'),
   ])
   for (const r of [prods, may, vars, imgs]) if (r.error) throw r.error
@@ -109,7 +109,7 @@ export async function listarProductosAdminPagina(f: { q: string; grupo: string }
   const ids = filas.map((p) => p.id)
   const [may, vars, imgs] = await Promise.all([
     supabase.from('precios_mayorista').select('producto_id, precio').in('producto_id', ids),
-    supabase.from('variantes_producto').select('producto_id, stock').in('producto_id', ids),
+    supabase.from('existencias_variantes').select('producto_id, stock').in('producto_id', ids),
     supabase.from('imagenes_producto').select('producto_id, url, url_miniatura, orden').in('producto_id', ids).order('orden'),
   ])
   for (const r of [may, vars, imgs]) if (r.error) throw r.error
@@ -281,7 +281,7 @@ export interface VarianteFila {
 
 export async function listarVariantes(productoId: string): Promise<VarianteFila[]> {
   const { data, error } = await supabase
-    .from('variantes_producto')
+    .from('existencias_variantes')
     .select('id, color, sku, stock, tallas(etiqueta, orden)')
     .eq('producto_id', productoId)
   if (error) throw error

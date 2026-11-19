@@ -253,7 +253,7 @@ export type Database = {
         ]
       }
       variantes_producto: {
-        Row: { color: string; id: string; producto_id: string; sku: string; stock: number; talla_id: string }
+        Row: { color: string; disponible: boolean; id: string; producto_id: string; sku: string; stock: number; talla_id: string }
         Insert: { color: string; id?: string; producto_id: string; sku: string; stock?: number; talla_id: string }
         Update: { color?: string; id?: string; producto_id?: string; sku?: string; stock?: number; talla_id?: string }
         Relationships: [
@@ -262,7 +262,16 @@ export type Database = {
         ]
       }
     }
-    Views: { [_ in never]: never }
+    Views: {
+      /** Stock exacto: solo devuelve filas a admin y bodeguero. */
+      existencias_variantes: {
+        Row: { color: string; id: string; producto_id: string; sku: string; stock: number; talla_id: string }
+        Relationships: [
+          { foreignKeyName: 'variantes_producto_producto_id_fkey'; columns: ['producto_id']; isOneToOne: false; referencedRelation: 'productos'; referencedColumns: ['id'] },
+          { foreignKeyName: 'variantes_producto_talla_id_fkey'; columns: ['talla_id']; isOneToOne: false; referencedRelation: 'tallas'; referencedColumns: ['id'] },
+        ]
+      }
+    }
     Functions: {
       buscar_productos: {
         Args: {

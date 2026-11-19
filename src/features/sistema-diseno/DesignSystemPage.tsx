@@ -19,12 +19,12 @@ import { toast, Toaster } from '@/components/ui/toast'
 import { contrastRatio } from '@/lib/color'
 
 const TALLAS: TallaOpcion[] = [
-  { id: '35', etiqueta: '35', stock: 6 },
-  { id: '36', etiqueta: '36', stock: 0 },
-  { id: '37', etiqueta: '37', stock: 2 },
-  { id: '38', etiqueta: '38', stock: 9 },
-  { id: '39', etiqueta: '39', stock: 1 },
-  { id: '40', etiqueta: '40', stock: 12 },
+  { id: '35', etiqueta: '35', disponible: true },
+  { id: '36', etiqueta: '36', disponible: false },
+  { id: '37', etiqueta: '37', disponible: true },
+  { id: '38', etiqueta: '38', disponible: true },
+  { id: '39', etiqueta: '39', disponible: true },
+  { id: '40', etiqueta: '40', disponible: true },
 ]
 
 const PRESETS = [
@@ -143,7 +143,7 @@ function Muestra({ onPreset }: { onPreset: (p: Preset) => void }) {
       <Seccion titulo="Tallas y precio">
         <div className="max-w-md">
           <SizeSelector tallas={TALLAS} value={talla} onChange={setTalla} />
-          <p className="mt-2 text-xs text-muted-foreground">Punto ámbar: pocas unidades. Tachada: agotada.</p>
+          <p className="mt-2 text-xs text-muted-foreground">Tachada: agotada.</p>
         </div>
         <div className="mt-6 flex items-end gap-8">
           <Price amount={89.9} size="lg" />
