@@ -32,6 +32,7 @@ const ProductoFormPage = lazy(() => import('@/features/catalogo/components/Produ
 const InventarioPage = lazy(() => import('@/features/inventario/components/InventarioPage').then((m) => ({ default: m.InventarioPage })))
 const PreciosPage = lazy(() => import('@/features/precios/components/PreciosPage').then((m) => ({ default: m.PreciosPage })))
 const VentasPage = lazy(() => import('@/features/ventas/components/VentasPage').then((m) => ({ default: m.VentasPage })))
+const CajaPage = lazy(() => import('@/features/caja/components/CajaPage').then((m) => ({ default: m.CajaPage })))
 const PedidosPage = lazy(() => import('@/features/pedidos/components/PedidosPage').then((m) => ({ default: m.PedidosPage })))
 const MayoristasPage = lazy(() => import('@/features/mayoristas/components/MayoristasPage').then((m) => ({ default: m.MayoristasPage })))
 const ConfiguracionPage = lazy(() => import('@/features/configuracion/components/ConfiguracionPage').then((m) => ({ default: m.ConfiguracionPage })))
@@ -86,6 +87,7 @@ export default function App() {
                 <Route path="productos/:id" element={<ProductoFormPage />} />
                 <Route path="precios" element={<PreciosPage />} />
                 <Route path="ventas" element={<VentasPage />} />
+                <Route path="caja" element={<CajaPage />} />
                 <Route path="pedidos" element={<PedidosPage />} />
                 <Route path="mayoristas" element={<MayoristasPage />} />
                 <Route path="cobros" element={<CobrosPage />} />

@@ -337,6 +337,7 @@ export type Database = {
         }
         Returns: Json
       }
+      resumen_ventas: { Args: { p_desde: string; p_hasta: string }; Returns: Json }
       solicitar_a_bodega: { Args: { p_items: Json; p_nota?: string }; Returns: Json }
       obtener_precio_mayorista: { Args: { p_mayorista?: string; p_producto: string }; Returns: number }
       registrar_ingreso_inventario: {

@@ -1,6 +1,7 @@
 import {
   ClipboardList,
   ClipboardCheck,
+  Landmark,
   History,
   LayoutDashboard,
   LogOut,
@@ -33,6 +34,7 @@ import { useAvisos } from '@/features/avisos/useAvisos'
 const NAV_ADMIN: PanelNavItem[] = [
   { to: '/admin', label: 'Resumen', icon: LayoutDashboard, end: true },
   { to: '/admin/ventas', label: 'Ventas', icon: Store },
+  { to: '/admin/caja', label: 'Caja', icon: Landmark },
   { to: '/admin/pedidos', label: 'Pedidos', icon: ClipboardList },
   { to: '/admin/bodega', label: 'Bodega', icon: Warehouse },
   { to: '/admin/cobros', label: 'Cobros', icon: Wallet },

@@ -207,3 +207,8 @@
 - Regresan ya no se bloquea cuando el vendedor registro el par como vendido: el bodeguero puede recibirlo. Antes de recibir o cerrar se llama a la RPC `liberar_ventas_registradas` (migracion 0025), que baja `cantidad_vendida` y reduce o anula la venta del local (la mas reciente primero). El stock lo sube despues `devolver_a_bodega` / `cerrar_pedido_bodega`.
 - La pantalla avisa "Se anulara N venta registrada" cuando aplica.
 - Pendiente: aplicar la migracion 0025 en Supabase (requiere aprobacion) y desplegar.
+
+## Cierre de caja del admin (2026-11-19)
+- Nueva pagina `/admin/caja` (menu "Caja", solo admin): periodo Desde/Hasta (atajos Hoy, Ayer, 7 dias, Este mes), total general, total del local, total del sector, y un bloque por canal: Local (por quien vende, con efectivo/transferencia/tarjeta), Mayoristas del sector (por mayorista, con por cobrar), Tienda en linea, Pedidos por WhatsApp y Pedidos de mayoristas. Boton Imprimir.
+- RPC `resumen_ventas(p_desde, p_hasta)` (migracion 0026, solo admin). Cuenta mostrador entregado, cierres liquidados del sector (por fecha de cierre) y pedidos web confirmados o entregados; no cuenta anulados ni cancelados.
+- Pendiente: aplicar 0026 en Supabase (requiere aprobacion) y desplegar.
