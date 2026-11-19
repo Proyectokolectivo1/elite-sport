@@ -5,6 +5,8 @@ import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TBody, TD, TH, THead, TR } from '@/components/ui/table'
+import { FotoPar } from '@/features/bodega/components/FotoPar'
+import { useFotosPares } from '@/features/bodega/hooks/useBodega'
 import type { MotivoMovimiento } from '../api/inventario'
 import { useMovimientos } from '../hooks/useInventario'
 
@@ -22,6 +24,7 @@ const fecha = new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium', timeStyle:
 
 export function MovimientosTab() {
   const { data = [], isLoading } = useMovimientos()
+  const foto = useFotosPares()
   const [motivo, setMotivo] = useState('')
   const [q, setQ] = useState('')
 
@@ -60,10 +63,18 @@ export function MovimientosTab() {
             {filas.map((m) => (
               <TR key={m.id}>
                 <TD className="whitespace-nowrap text-muted-foreground">{fecha.format(new Date(m.creadoEn))}</TD>
-                <TD>{m.producto}<span className="block text-xs text-muted-foreground">{m.color}</span></TD>
-                <TD className="tabular-nums">{m.talla}</TD>
+                <TD>
+                  <span className="flex items-center gap-3">
+                    <FotoPar src={m.productoId ? foto(m.productoId, m.color) : null} alt={`${m.producto} ${m.color}`} className="size-24 rounded-xl sm:size-28" />
+                    <span className="min-w-0">
+                      <span className="block font-display text-lg font-bold uppercase leading-tight">{m.producto}</span>
+                      <span className="block text-sm text-muted-foreground">{m.color}</span>
+                    </span>
+                  </span>
+                </TD>
+                <TD><span className="rounded-lg bg-foreground px-2.5 py-1 text-base font-bold tabular-nums text-background">{m.talla}</span></TD>
                 <TD><Badge variant={m.delta > 0 ? 'success' : 'neutral'}>{MOTIVOS[m.motivo]}</Badge></TD>
-                <TD className={`text-right font-semibold tabular-nums ${m.delta > 0 ? 'text-success' : 'text-destructive'}`}>{m.delta > 0 ? `+${m.delta}` : m.delta}</TD>
+                <TD className={`text-right text-xl font-bold tabular-nums ${m.delta > 0 ? 'text-success' : 'text-destructive'}`}>{m.delta > 0 ? `+${m.delta}` : m.delta}</TD>
                 <TD className="max-w-[16rem] truncate text-muted-foreground">{m.nota}</TD>
               </TR>
             ))}

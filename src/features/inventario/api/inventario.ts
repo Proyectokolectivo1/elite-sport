@@ -129,6 +129,7 @@ export interface Movimiento {
   delta: number
   motivo: MotivoMovimiento
   nota: string | null
+  productoId: string
   producto: string
   color: string
   talla: string
@@ -137,7 +138,7 @@ export interface Movimiento {
 export async function listarMovimientos(limite = 300): Promise<Movimiento[]> {
   const { data, error } = await supabase
     .from('movimientos_inventario')
-    .select('id, creado_en, delta, motivo, nota, variantes_producto(color, productos(nombre), tallas(etiqueta))')
+    .select('id, creado_en, delta, motivo, nota, variantes_producto(color, producto_id, productos(nombre), tallas(etiqueta))')
     .order('creado_en', { ascending: false })
     .limit(limite)
   if (error) throw error
@@ -147,6 +148,7 @@ export async function listarMovimientos(limite = 300): Promise<Movimiento[]> {
     delta: m.delta,
     motivo: m.motivo,
     nota: m.nota,
+    productoId: m.variantes_producto?.producto_id ?? '',
     producto: m.variantes_producto?.productos?.nombre ?? '',
     color: m.variantes_producto?.color ?? '',
     talla: m.variantes_producto?.tallas?.etiqueta ?? '',
