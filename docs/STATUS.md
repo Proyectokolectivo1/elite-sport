@@ -190,5 +190,5 @@
 
 ## Categoria Unisex (2026-11-19)
 - Nuevo grupo `unisex` (migracion `0022_grupo_unisex.sql`) junto a Dama, Caballero y Nino: en la ficha del producto, en el menu y filtros de la tienda y como cuarta tarjeta en "Compra por categoria" (2 columnas en tablet, 4 en escritorio). Rango sugerido 35-45; las tallas se crean al configurar cada modelo.
-- Un producto unisex solo aparece en el filtro Unisex (no en Dama ni Caballero).
+- Un producto unisex aparece en Unisex y tambien en Dama y Caballero (migracion `0023_unisex_en_dama_y_caballero.sql`, en `buscar_productos`; tambien cuenta en sus tarjetas de "Compra por categoria"). Nino no incluye unisex. Aplicada el 2026-11-19; prueba revertida OK (aparece en Dama, Caballero y Unisex; no en Nino).
 - Migracion 0022 aplicada el 2026-11-19; prueba revertida OK: el admin crea un producto unisex, configura 35-45 (11 tallas creadas) y la busqueda publica lo filtra por Unisex.
