@@ -1,8 +1,9 @@
 import { useDeferredValue, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus } from 'lucide-react'
+import { Plus, Trash2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
-import { buttonVariants } from '@/components/ui/button'
+import { Button, buttonVariants } from '@/components/ui/button'
+import { Dialog, DialogClose, DialogContent } from '@/components/ui/dialog'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
@@ -10,9 +11,11 @@ import { PageHeader } from '@/components/ui/page-header'
 import { Price } from '@/components/ui/price'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TBody, TD, TH, THead, TR } from '@/components/ui/table'
+import { toast } from '@/components/ui/toast'
+import { mensajeError } from '@/lib/errors'
 import { cn } from '@/lib/utils'
 import { useCentinela } from '@/lib/useCentinela'
-import { useProductosPaginados } from '../hooks/useCatalogo'
+import { useEliminarProducto, useProductosPaginados } from '../hooks/useCatalogo'
 import { GRUPOS } from '../schemas'
 
 export function ProductosPage() {
@@ -24,6 +27,19 @@ export function ProductosPage() {
   const total = consulta.data?.pages[0]?.total ?? 0
   const { isLoading, error, hasNextPage, isFetchingNextPage, fetchNextPage } = consulta
   const centinela = useCentinela(() => void fetchNextPage(), !!hasNextPage && !isFetchingNextPage)
+  const eliminar = useEliminarProducto()
+  const [aBorrar, setABorrar] = useState<{ id: string; nombre: string } | null>(null)
+
+  function borrar() {
+    if (!aBorrar) return
+    eliminar.mutate(aBorrar.id, {
+      onSuccess: () => setABorrar(null),
+      onError: (e) => {
+        setABorrar(null)
+        toast.error(mensajeError(e))
+      },
+    })
+  }
 
   return (
     <>
@@ -65,6 +81,7 @@ export function ProductosPage() {
               <TH className="text-right">Mayorista</TH>
               <TH className="text-right">Stock</TH>
               <TH>Estado</TH>
+              <TH><span className="sr-only">Acciones</span></TH>
             </TR>
           </THead>
           <TBody>
@@ -91,11 +108,37 @@ export function ProductosPage() {
                     {p.destacado && <Badge variant="signal">Destacado</Badge>}
                   </div>
                 </TD>
+                <TD className="text-right">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    className="text-muted-foreground hover:text-destructive"
+                    aria-label={`Eliminar ${p.nombre}`}
+                    onClick={() => setABorrar({ id: p.id, nombre: p.nombre })}
+                  >
+                    <Trash2 />
+                  </Button>
+                </TD>
               </TR>
             ))}
           </TBody>
         </Table>
       )}
+      <Dialog open={!!aBorrar} onOpenChange={(o) => { if (!o && !eliminar.isPending) setABorrar(null) }}>
+        {aBorrar && (
+          <DialogContent
+            title={`Eliminar ${aBorrar.nombre}`}
+            description="Se borra el producto con sus fotos y tallas. No se puede deshacer. Si ya tiene mercancía ingresada, movimientos o pedidos, no se elimina: en ese caso ocúltalo desde su ficha."
+          >
+            <div className="flex justify-end gap-2">
+              <DialogClose render={<Button variant="ghost" />} disabled={eliminar.isPending}>Cancelar</DialogClose>
+              <Button variant="destructive" disabled={eliminar.isPending} onClick={borrar}>{eliminar.isPending ? 'Eliminando…' : 'Eliminar'}</Button>
+            </div>
+          </DialogContent>
+        )}
+      </Dialog>
+
       {filtrados.length > 0 && (
         <div ref={centinela} className="mt-6 flex justify-center text-sm text-muted-foreground" aria-live="polite">
           {isFetchingNextPage ? 'Cargando más…' : hasNextPage ? `Mostrando ${filtrados.length} de ${total}` : `${total} ${total === 1 ? 'producto' : 'productos'}`}

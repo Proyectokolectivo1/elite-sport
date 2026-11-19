@@ -228,6 +228,10 @@ export async function actualizarPrecios(id: string, precioPublico: number, preci
 
 export async function eliminarProducto(id: string): Promise<void> {
   const { error } = await supabase.from('productos').delete().eq('id', id)
+  // 23503: sus tallas ya tienen ingresos, movimientos o pedidos. El historial no se borra: se oculta el producto.
+  if (error?.code === '23503') {
+    throw new Error('No se puede eliminar: este producto ya tiene mercancía ingresada, movimientos o pedidos. Para sacarlo de la tienda, ábrelo y desmarca "Visible en la tienda".')
+  }
   if (error) throw error
 }
 

@@ -96,7 +96,11 @@ export function useEliminarProducto() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: eliminarProducto,
-    onSuccess: () => qc.invalidateQueries({ queryKey: catalogoKeys.productos }),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: catalogoKeys.productos })
+      void qc.invalidateQueries({ queryKey: ['productos-admin'] })
+      void qc.invalidateQueries({ queryKey: ['catalogo-publico'] })
+    },
   })
 }
 
