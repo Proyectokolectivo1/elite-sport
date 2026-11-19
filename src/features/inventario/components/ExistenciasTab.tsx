@@ -8,6 +8,8 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { FieldError, Input, Label } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAuth } from '@/features/auth/hooks/AuthProvider'
+import { FotoPar } from '@/features/bodega/components/FotoPar'
+import { useFotosPares } from '@/features/bodega/hooks/useBodega'
 import { mensajeError } from '@/lib/errors'
 import { cn } from '@/lib/utils'
 import type { Existencia } from '../api/inventario'
@@ -48,6 +50,7 @@ export function ExistenciasTab() {
   const { esAdmin } = useAuth()
   const { data = [], isLoading } = useExistencias()
   const { data: fotos = {} } = useMiniaturas()
+  const fotoColor = useFotosPares()
   const ajustar = useAjustarStock()
   const [q, setQ] = useState('')
   const [filtro, setFiltro] = useState<Filtro>('todos')
@@ -160,11 +163,11 @@ export function ExistenciasTab() {
                 aria-label={`${p.producto}: ${plural(p.total, 'par', 'pares')}. Ver tallas`}
                 className="flex w-full items-center gap-4 rounded-xl border border-border bg-card p-3 text-left transition-colors hover:border-foreground"
               >
-                <span className="grid size-16 shrink-0 place-items-center overflow-hidden rounded-lg bg-muted">
-                  {fotos[p.productoId] ? <img src={fotos[p.productoId]} alt="" loading="lazy" decoding="async" className="size-full object-cover" /> : <PackagePlus aria-hidden className="size-6 text-muted-foreground" />}
+                <span className="grid size-28 shrink-0 place-items-center overflow-hidden rounded-xl bg-muted sm:size-36">
+                  {fotos[p.productoId] ? <img src={fotos[p.productoId]} alt="" loading="lazy" decoding="async" className="size-full object-cover" /> : <PackagePlus aria-hidden className="size-8 text-muted-foreground" />}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block truncate font-semibold">{p.producto}</span>
+                  <span className="block truncate font-display text-xl font-bold uppercase leading-tight sm:text-2xl">{p.producto}</span>
                   <span className="mt-0.5 block text-sm text-muted-foreground">
                     {plural(p.colores.length, 'color', 'colores')} · {p.tallasConStock} de {plural(p.tallasTotal, 'talla', 'tallas')} con stock
                   </span>
@@ -212,9 +215,12 @@ export function ExistenciasTab() {
               <div className="space-y-6">
                 {detalle.colores.map((c) => (
                   <section key={c.color} aria-label={`Color ${c.color}`}>
-                    <h3 className="mb-2 flex items-baseline justify-between gap-3 border-b border-border pb-1.5">
-                      <span className="font-display text-2xl font-bold uppercase">{c.color}</span>
-                      <span className="text-sm text-muted-foreground tabular-nums">{plural(c.total, 'par', 'pares')}</span>
+                    <h3 className="mb-3 flex items-center gap-4 border-b border-border pb-3">
+                      <FotoPar src={fotoColor(detalle.productoId, c.color)} alt={`${detalle.producto} ${c.color}`} className="size-28 rounded-xl sm:size-36" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block font-display text-2xl font-bold uppercase">{c.color}</span>
+                        <span className="text-sm text-muted-foreground tabular-nums">{plural(c.total, 'par', 'pares')}</span>
+                      </span>
                     </h3>
                     <div className="flex flex-wrap gap-2">
                       {c.tallas.map((t) => <Talla key={t.id} e={t} onClick={() => ajustarTalla(t)} />)}
