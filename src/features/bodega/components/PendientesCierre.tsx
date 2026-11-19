@@ -4,8 +4,10 @@ import { Button } from '@/components/ui/button'
 import { NOMBRE_ROL } from '@/features/auth/roles'
 import { cn } from '@/lib/utils'
 import type { PedidoBodega } from '../api/bodega'
-import { usePedidosBodega } from '../hooks/useBodega'
+import { useFotoDeVariante, usePedidosBodega } from '../hooks/useBodega'
 import { pendiente } from '../logica'
+import { FotoPar } from './FotoPar'
+import { partesLinea } from './partesLinea'
 
 export interface GrupoCierre {
   clave: string
@@ -26,6 +28,23 @@ export function paresEnPoder(p: PedidoBodega): number {
   )
 }
 
+/** Pares que aún tiene en su poder, agrupados por variante (para mostrarlos con foto). */
+function paresPorVariante(pedidos: PedidoBodega[]) {
+  const m = new Map<string, { varianteId: string; descripcion: string; pares: number }>()
+  for (const p of pedidos) {
+    for (const l of p.lineas) {
+      const n = pendiente({ id: l.id, entregada: l.cantidad_entregada ?? 0, vendida: l.cantidad_vendida ?? 0, devuelta: l.cantidad_devuelta ?? 0 })
+      if (n <= 0) continue
+      const x = m.get(l.variante_id) ?? { varianteId: l.variante_id, descripcion: l.descripcion, pares: 0 }
+      x.pares += n
+      m.set(l.variante_id, x)
+    }
+  }
+  return [...m.values()].sort((a, b) => b.pares - a.pares)
+}
+
+const MAX_FOTOS = 8
+
 export const idCierre = (clave: string) => `cierre-${clave}`
 
 /**
@@ -33,6 +52,7 @@ export const idCierre = (clave: string) => `cierre-${clave}`
  * Una entrega de un día anterior se marca aparte: es la que más urge cuadrar.
  */
 export function PendientesCierre({ grupos }: { grupos: GrupoCierre[] }) {
+  const foto = useFotoDeVariante()
   const inicioHoy = useMemo(() => {
     const d = new Date()
     d.setHours(0, 0, 0, 0)
@@ -86,8 +106,10 @@ export function PendientesCierre({ grupos }: { grupos: GrupoCierre[] }) {
 
       {pendientes.length > 0 && (
         <ul className="divide-y divide-border">
-          {pendientes.map((g) => (
-            <li key={g.clave} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 py-3">
+          {pendientes.map((g) => {
+            const enMano = paresPorVariante(g.pedidos)
+            return (
+            <li key={g.clave} className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 py-4">
               <div className="min-w-0">
                 <p className="flex flex-wrap items-center gap-2 font-semibold">
                   {g.nombre}
@@ -103,8 +125,29 @@ export function PendientesCierre({ grupos }: { grupos: GrupoCierre[] }) {
               <Button variant="outline" size="sm" onClick={() => document.getElementById(idCierre(g.clave))?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
                 Ir al cierre
               </Button>
+              {enMano.length > 0 && (
+                <ul className="flex w-full flex-wrap gap-3" aria-label={`Pares en poder de ${g.nombre}`}>
+                  {enMano.slice(0, MAX_FOTOS).map((x) => {
+                    const partes = partesLinea(x.descripcion)
+                    return (
+                      <li key={x.varianteId} className="w-28 sm:w-36" title={x.descripcion}>
+                        <span className="relative block">
+                          <FotoPar src={foto(x.varianteId)} alt={x.descripcion} className="aspect-square w-full rounded-xl" />
+                          <span className="absolute -right-1.5 -top-1.5 grid min-w-8 place-items-center rounded-full bg-signal px-2 py-0.5 text-sm font-bold tabular-nums text-signal-foreground">× {x.pares}</span>
+                        </span>
+                        <span className="mt-1 block truncate text-xs font-semibold">{partes.nombre}</span>
+                        {partes.talla && <span className="text-xs text-muted-foreground">{partes.color} · talla {partes.talla}</span>}
+                      </li>
+                    )
+                  })}
+                  {enMano.length > MAX_FOTOS && (
+                    <li className="grid w-28 place-items-center rounded-xl border border-dashed border-border text-sm text-muted-foreground sm:w-36">+{enMano.length - MAX_FOTOS} más</li>
+                  )}
+                </ul>
+              )}
             </li>
-          ))}
+            )
+          })}
         </ul>
       )}
 
