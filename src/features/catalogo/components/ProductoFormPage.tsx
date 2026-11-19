@@ -5,6 +5,7 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogClose, DialogContent, DialogTrigger } from '@/components/ui/dialog'
+import { EmptyState } from '@/components/ui/empty-state'
 import { FieldError, Input, Label, Textarea } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { PageHeader } from '@/components/ui/page-header'
@@ -185,6 +186,15 @@ export function ProductoFormPage() {
   }
 
   if (id && isLoading) return <Skeleton className="h-96 w-full" />
+  if (producto?.eliminado_en) {
+    return (
+      <EmptyState
+        title="Producto eliminado"
+        description="Este producto se eliminó. Sus pedidos y su historial de inventario se conservan, pero ya no se puede editar."
+        action={<Link to="/admin/productos" className="underline underline-offset-4">Volver a productos</Link>}
+      />
+    )
+  }
 
   return (
     <>
@@ -276,7 +286,7 @@ export function ProductoFormPage() {
             {id && (
               <Dialog>
                 <DialogTrigger render={<Button type="button" variant="ghost" className="text-destructive" />}>Eliminar</DialogTrigger>
-                <DialogContent title="Eliminar producto" description="Se borran también sus imágenes, variantes y el stock registrado. Los pedidos que lo incluyen impiden la eliminación.">
+                <DialogContent title="Eliminar producto" description="Sale de Productos, de la tienda y del inventario. Los pedidos que ya lo incluyen se conservan con sus datos. No se puede deshacer.">
                   <div className="flex justify-end gap-2">
                     <DialogClose render={<Button variant="ghost" />}>Cancelar</DialogClose>
                     <Button variant="destructive" onClick={() => void borrar()}>Eliminar</Button>

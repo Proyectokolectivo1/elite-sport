@@ -12,6 +12,7 @@ import { Price } from '@/components/ui/price'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TBody, TD, TH, THead, TR } from '@/components/ui/table'
 import { toast } from '@/components/ui/toast'
+import { FotoPar } from '@/features/bodega/components/FotoPar'
 import { mensajeError } from '@/lib/errors'
 import { cn } from '@/lib/utils'
 import { useCentinela } from '@/lib/useCentinela'
@@ -88,13 +89,11 @@ export function ProductosPage() {
             {filtrados.map((p) => (
               <TR key={p.id}>
                 <TD>
-                  <Link to={`/admin/productos/${p.id}`} className="flex items-center gap-3 font-semibold hover:underline">
-                    <span className="size-11 shrink-0 overflow-hidden rounded-sm bg-muted">
-                      {p.imagen && <img src={p.imagen} alt="" className="size-full object-cover" loading="lazy" />}
-                    </span>
-                    <span>
-                      {p.nombre}
-                      <span className="block text-xs font-normal text-muted-foreground">{[p.marca, p.categoria].filter(Boolean).join(' · ')}</span>
+                  <Link to={`/admin/productos/${p.id}`} className="group flex items-center gap-4">
+                    <FotoPar src={p.imagen} alt={p.nombre} className="size-24 rounded-xl sm:size-28" />
+                    <span className="min-w-0">
+                      <span className="block font-display text-xl font-bold uppercase leading-tight group-hover:underline">{p.nombre}</span>
+                      <span className="mt-0.5 block text-sm text-muted-foreground">{[p.marca, p.categoria].filter(Boolean).join(' · ')}</span>
                     </span>
                   </Link>
                 </TD>
@@ -129,7 +128,7 @@ export function ProductosPage() {
         {aBorrar && (
           <DialogContent
             title={`Eliminar ${aBorrar.nombre}`}
-            description="Se borra el producto con sus fotos y tallas. No se puede deshacer. Si ya tiene mercancía ingresada, movimientos o pedidos, no se elimina: en ese caso ocúltalo desde su ficha."
+            description="Sale de Productos, de la tienda y del inventario. Los pedidos que ya lo incluyen se conservan con sus datos. No se puede deshacer."
           >
             <div className="flex justify-end gap-2">
               <DialogClose render={<Button variant="ghost" />} disabled={eliminar.isPending}>Cancelar</DialogClose>

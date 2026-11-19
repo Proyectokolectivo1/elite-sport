@@ -76,7 +76,7 @@ export interface ProductoResumen {
 
 export async function listarProductosAdmin(): Promise<ProductoResumen[]> {
   const [prods, may, vars, imgs] = await Promise.all([
-    supabase.from('productos').select('id, nombre, slug, grupo, precio_publico, activo, destacado, marcas(nombre), categorias(nombre)').order('creado_en', { ascending: false }),
+    supabase.from('productos').select('id, nombre, slug, grupo, precio_publico, activo, destacado, marcas(nombre), categorias(nombre)').is('eliminado_en', null).order('creado_en', { ascending: false }),
     supabase.from('precios_mayorista').select('producto_id, precio'),
     supabase.from('existencias_variantes').select('producto_id, stock'),
     supabase.from('imagenes_producto').select('producto_id, url, orden').order('orden'),
@@ -117,6 +117,7 @@ export async function listarProductosAdminPagina(f: { q: string; grupo: string }
   let consulta = supabase
     .from('productos')
     .select('id, nombre, slug, grupo, precio_publico, activo, destacado, marcas(nombre), categorias(nombre)', { count: 'exact' })
+    .is('eliminado_en', null)
     .order('creado_en', { ascending: false })
     .order('id')
     .range(desde, desde + limite - 1)
@@ -226,13 +227,14 @@ export async function actualizarPrecios(id: string, precioPublico: number, preci
   await guardarPrecioMayorista(id, precioMayorista)
 }
 
-export async function eliminarProducto(id: string): Promise<void> {
-  const { error } = await supabase.from('productos').delete().eq('id', id)
-  // 23503: sus tallas ya tienen ingresos, movimientos o pedidos. El historial no se borra: se oculta el producto.
-  if (error?.code === '23503') {
-    throw new Error('No se puede eliminar: este producto ya tiene mercancía ingresada, movimientos o pedidos. Para sacarlo de la tienda, ábrelo y desmarca "Visible en la tienda".')
-  }
+/**
+ * Elimina el producto. Sin historial se borra del todo; con pedidos, ingresos o movimientos queda marcado
+ * como eliminado (sale de Productos, de la tienda y del inventario) y los pedidos se conservan.
+ */
+export async function eliminarProducto(id: string): Promise<'borrado' | 'archivado'> {
+  const { data, error } = await supabase.rpc('eliminar_producto', { p_id: id })
   if (error) throw error
+  return data === 'archivado' ? 'archivado' : 'borrado'
 }
 
 // ---- Imágenes ----

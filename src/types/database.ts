@@ -207,7 +207,7 @@ export type Database = {
       productos: {
         Row: {
           activo: boolean; categoria_id: string | null; creado_en: string; descripcion: string | null; destacado: boolean
-          estilo_id: string | null; grupo: Enum<'grupo_talla'>; id: string; marca_id: string | null
+          eliminado_en: string | null; estilo_id: string | null; grupo: Enum<'grupo_talla'>; id: string; marca_id: string | null
           nombre: string; precio_publico: number; slug: string
         }
         Insert: {
@@ -297,6 +297,7 @@ export type Database = {
       }
       ajustar_stock: { Args: { p_delta: number; p_nota: string; p_variante: string }; Returns: undefined }
       configurar_tallas_producto: { Args: { p_producto: string; p_tallas: Json }; Returns: undefined }
+      eliminar_producto: { Args: { p_id: string }; Returns: string }
       contar_pendientes_bodega: { Args: Record<PropertyKey, never>; Returns: Json }
       cancelar_pedido: { Args: { p_pedido: string }; Returns: undefined }
       cerrar_pedido_bodega: { Args: { p_lineas: Json; p_pedido: string }; Returns: Json }

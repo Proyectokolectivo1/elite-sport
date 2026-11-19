@@ -100,6 +100,8 @@ export function useEliminarProducto() {
       void qc.invalidateQueries({ queryKey: catalogoKeys.productos })
       void qc.invalidateQueries({ queryKey: ['productos-admin'] })
       void qc.invalidateQueries({ queryKey: ['catalogo-publico'] })
+      void qc.invalidateQueries({ queryKey: ['existencias'] })
+      void qc.invalidateQueries({ queryKey: ['dashboard'] })
     },
   })
 }

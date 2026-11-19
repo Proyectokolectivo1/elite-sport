@@ -192,3 +192,8 @@
 - Nuevo grupo `unisex` (migracion `0022_grupo_unisex.sql`) junto a Dama, Caballero y Nino: en la ficha del producto, en el menu y filtros de la tienda y como cuarta tarjeta en "Compra por categoria" (2 columnas en tablet, 4 en escritorio). Rango sugerido 35-45; las tallas se crean al configurar cada modelo.
 - Un producto unisex aparece en Unisex y tambien en Dama y Caballero (migracion `0023_unisex_en_dama_y_caballero.sql`, en `buscar_productos`; tambien cuenta en sus tarjetas de "Compra por categoria"). Nino no incluye unisex. Aplicada el 2026-11-19; prueba revertida OK (aparece en Dama, Caballero y Unisex; no en Nino).
 - Migracion 0022 aplicada el 2026-11-19; prueba revertida OK: el admin crea un producto unisex, configura 35-45 (11 tallas creadas) y la busqueda publica lo filtra por Unisex.
+
+## Eliminar productos aunque tengan pedidos (2026-11-19)
+- Boton de papelera en cada fila de Productos (y "Eliminar" en la ficha) con confirmacion. RPC `eliminar_producto` (solo admin, migracion `0024_eliminar_producto.sql`): sin historial borra la fila; con pedidos, ingresos o movimientos marca `productos.eliminado_en`, lo oculta y libera su slug. Los pedidos, entregas de bodega y movimientos se conservan.
+- Un producto eliminado no aparece en Productos, Ingreso, Precios, tienda ni Inventario (`existencias_variantes` lo excluye); su ficha por URL muestra "Producto eliminado".
+- Migracion 0024 aplicada el 2026-11-19; prueba revertida OK (8): sin historial se borra; con pedidos queda marcado, sale del inventario y de la tienda, conserva sus 5 lineas de pedido y libera el slug; no se elimina dos veces; el bodeguero no elimina.
