@@ -1,6 +1,7 @@
 import {
   ClipboardList,
   ClipboardCheck,
+  Undo2,
   Landmark,
   History,
   LayoutDashboard,
@@ -36,6 +37,7 @@ const NAV_ADMIN: PanelNavItem[] = [
   { to: '/admin/ventas', label: 'Ventas', icon: Store },
   { to: '/admin/caja', label: 'Caja', icon: Landmark },
   { to: '/admin/pedidos', label: 'Pedidos', icon: ClipboardList },
+  { to: '/admin/devoluciones', label: 'Devoluciones', icon: Undo2 },
   { to: '/admin/bodega', label: 'Bodega', icon: Warehouse },
   { to: '/admin/cobros', label: 'Cobros', icon: Wallet },
   { to: '/admin/productos', label: 'Productos', icon: Package },

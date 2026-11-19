@@ -212,3 +212,17 @@
 - Nueva pagina `/admin/caja` (menu "Caja", solo admin): periodo Desde/Hasta (atajos Hoy, Ayer, 7 dias, Este mes), total general, total del local, total del sector, y un bloque por canal: Local (por quien vende, con efectivo/transferencia/tarjeta), Mayoristas del sector (por mayorista, con por cobrar), Tienda en linea, Pedidos por WhatsApp y Pedidos de mayoristas. Boton Imprimir.
 - RPC `resumen_ventas(p_desde, p_hasta)` (migracion 0026, solo admin). Cuenta mostrador entregado, cierres liquidados del sector (por fecha de cierre) y pedidos web confirmados o entregados; no cuenta anulados ni cancelados.
 - Pendiente: aplicar 0026 en Supabase (requiere aprobacion) y desplegar.
+
+## Anular ventas del local solo admin y bodeguero (2026-11-19)
+- El vendedor ya no ve el boton Anular en "Vender". `cancelar_pedido` (migracion 0027) permite anular una venta del local solo al admin o al bodeguero; anular no mueve inventario, solo devuelve el par al saldo del vendedor. El bodeguero tambien puede liberar pares vendidos al cierre (0025).
+- Pendiente: aplicar 0027 en Supabase (requiere aprobacion) y desplegar.
+
+## Devoluciones despues de una compra (2026-11-19)
+- Nueva pagina `/admin/devoluciones` (menu "Devoluciones", solo admin): se busca la compra (n.° de pedido, cliente o telefono), se marcan los pares que devuelve, el motivo y si vuelven al inventario; muestra el monto a devolver y el historial de devoluciones.
+- Migracion 0028: tablas `devoluciones` y `devoluciones_detalle` (RLS, solo admin lee) y RPC `registrar_devolucion`. Valida que no se devuelva mas de lo comprado, solo pedidos entregados (no entregas de bodega), y repone stock con `_aplicar_stock` (motivo `devolucion`). El pedido original no se modifica.
+- Migraciones 0025 a 0028 aplicadas en Supabase; tipos de devoluciones verificados contra los generados. Por decidir: si el Cierre de caja debe restar las devoluciones del periodo.
+
+## Carga masiva de productos desde Excel (2026-11-19)
+- Nueva pagina `/admin/productos/importar` (boton "Importar desde Excel" en Productos, solo admin). Se descarga una plantilla .xlsx con hoja Productos (listas desplegables de grupo, marcas, categorias, estilos y Si/No), hoja Instrucciones y hoja Listas; se sube llena, se revisa fila por fila (errores en rojo, datos nuevos que se crearian) y se importa. Las filas con error no se importan; las demas si.
+- Columnas: Nombre, Grupo, Marca, Categoria, Estilo, Descripcion, Precio publico, Precio mayorista, Talla desde/hasta, Pares por talla en la caja (38:2, 39:2), Activo, Destacado. Rechaza nombres ya existentes o repetidos en el archivo. Maximo 500 por archivo. Fotos e inventario se hacen despues desde la plataforma.
+- Dependencia nueva: `exceljs` (se carga solo al usar la pagina, chunk aparte). Sin migracion: usa los mismos metodos que el formulario de producto.

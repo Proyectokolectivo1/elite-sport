@@ -96,6 +96,25 @@ export type Database = {
           { foreignKeyName: 'ingresos_inventario_detalle_variante_id_fkey'; columns: ['variante_id']; isOneToOne: false; referencedRelation: 'variantes_producto'; referencedColumns: ['id'] },
         ]
       }
+      devoluciones: {
+        Row: { creado_en: string; creado_por: string | null; id: string; motivo: string; nota: string | null; numero: number; pedido_id: string; reintegrado: boolean; total: number }
+        Insert: { creado_en?: string; creado_por?: string | null; id?: string; motivo: string; nota?: string | null; numero?: never; pedido_id: string; reintegrado: boolean; total: number }
+        Update: { creado_en?: string; creado_por?: string | null; id?: string; motivo?: string; nota?: string | null; numero?: never; pedido_id?: string; reintegrado?: boolean; total?: number }
+        Relationships: [
+          { foreignKeyName: 'devoluciones_creado_por_fkey'; columns: ['creado_por']; isOneToOne: false; referencedRelation: 'perfiles'; referencedColumns: ['id'] },
+          { foreignKeyName: 'devoluciones_pedido_id_fkey'; columns: ['pedido_id']; isOneToOne: false; referencedRelation: 'pedidos'; referencedColumns: ['id'] },
+        ]
+      }
+      devoluciones_detalle: {
+        Row: { cantidad: number; descripcion: string; detalle_id: string; devolucion_id: string; id: string; precio_unitario: number; variante_id: string }
+        Insert: { cantidad: number; descripcion: string; detalle_id: string; devolucion_id: string; id?: string; precio_unitario: number; variante_id: string }
+        Update: { cantidad?: number; descripcion?: string; detalle_id?: string; devolucion_id?: string; id?: string; precio_unitario?: number; variante_id?: string }
+        Relationships: [
+          { foreignKeyName: 'devoluciones_detalle_detalle_id_fkey'; columns: ['detalle_id']; isOneToOne: false; referencedRelation: 'pedidos_detalle'; referencedColumns: ['id'] },
+          { foreignKeyName: 'devoluciones_detalle_devolucion_id_fkey'; columns: ['devolucion_id']; isOneToOne: false; referencedRelation: 'devoluciones'; referencedColumns: ['id'] },
+          { foreignKeyName: 'devoluciones_detalle_variante_id_fkey'; columns: ['variante_id']; isOneToOne: false; referencedRelation: 'variantes_producto'; referencedColumns: ['id'] },
+        ]
+      }
       movimientos_inventario: {
         Row: {
           creado_en: string; creado_por: string | null; delta: number; id: string
@@ -337,6 +356,7 @@ export type Database = {
         }
         Returns: Json
       }
+      registrar_devolucion: { Args: { p_lineas: Json; p_motivo: string; p_nota?: string; p_pedido: string; p_reintegrar: boolean }; Returns: Json }
       resumen_ventas: { Args: { p_desde: string; p_hasta: string }; Returns: Json }
       solicitar_a_bodega: { Args: { p_items: Json; p_nota?: string }; Returns: Json }
       obtener_precio_mayorista: { Args: { p_mayorista?: string; p_producto: string }; Returns: number }

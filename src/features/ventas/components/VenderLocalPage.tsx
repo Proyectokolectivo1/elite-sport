@@ -10,7 +10,7 @@ import { Table, TBody, TD, TH, THead, TR } from '@/components/ui/table'
 import { toast } from '@/components/ui/toast'
 import type { ParEnPoder } from '@/features/bodega/api/bodega'
 import { FotoPar } from '@/features/bodega/components/FotoPar'
-import { useCancelarPedidoBodega, useFotosPares, useMisParesEnPoder, useMisVentasHoy, useRegistrarVentaLocal } from '@/features/bodega/hooks/useBodega'
+import { useFotosPares, useMisParesEnPoder, useMisVentasHoy, useRegistrarVentaLocal } from '@/features/bodega/hooks/useBodega'
 import { mensajeError } from '@/lib/errors'
 import { formatMoney, useMoneyStore } from '@/lib/money'
 import { cn } from '@/lib/utils'
@@ -31,7 +31,6 @@ export function VenderLocalPage() {
   const { data: pares = [], isLoading } = useMisParesEnPoder()
   const { data: ventas = [] } = useMisVentasHoy()
   const registrar = useRegistrarVentaLocal()
-  const anular = useCancelarPedidoBodega()
   const foto = useFotosPares()
 
   const [q, setQ] = useState('')
@@ -210,7 +209,7 @@ export function VenderLocalPage() {
         </div>
         {ventas.length === 0 ? <EmptyState title="Aún no hay ventas hoy" description="Tus ventas del local aparecerán aquí." /> : (
           <Table>
-            <THead><TR><TH>N.°</TH><TH>Hora</TH><TH>Cliente</TH><TH>Pago</TH><TH className="text-right">Total</TH><TH>Estado</TH><TH><span className="sr-only">Acciones</span></TH></TR></THead>
+            <THead><TR><TH>N.°</TH><TH>Hora</TH><TH>Cliente</TH><TH>Pago</TH><TH className="text-right">Total</TH><TH>Estado</TH></TR></THead>
             <TBody>
               {ventas.map((v) => (
                 <TR key={v.id}>
@@ -220,14 +219,6 @@ export function VenderLocalPage() {
                   <TD className="capitalize">{v.metodoPago ?? ''}</TD>
                   <TD className="text-right font-semibold tabular-nums">{fmt(v.total)}</TD>
                   <TD>{v.estado === 'cancelado' ? <Badge>Anulada</Badge> : <Badge variant="success">Cobrada</Badge>}</TD>
-                  <TD className="text-right">
-                    {v.estado !== 'cancelado' && (
-                      <Button size="sm" variant="outline" disabled={anular.isPending}
-                        onClick={() => anular.mutate(v.id, { onSuccess: () => toast.success('Venta anulada. Los pares vuelven a tu poder.'), onError: (e) => toast.error(mensajeError(e)) })}>
-                        Anular
-                      </Button>
-                    )}
-                  </TD>
                 </TR>
               ))}
             </TBody>

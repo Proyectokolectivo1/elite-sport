@@ -1,6 +1,6 @@
 import { useDeferredValue, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, Trash2 } from 'lucide-react'
+import { FileSpreadsheet, Plus, Trash2 } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Dialog, DialogClose, DialogContent } from '@/components/ui/dialog'
@@ -48,9 +48,14 @@ export function ProductosPage() {
         title="Productos"
         description="Modelos, fotos por color y precios. El stock se maneja desde Inventario."
         actions={
-          <Link to="/admin/productos/nuevo" className={cn(buttonVariants())}>
-            <Plus /> Nuevo producto
-          </Link>
+          <div className="flex flex-wrap gap-2">
+            <Link to="/admin/productos/importar" className={cn(buttonVariants({ variant: 'outline' }))}>
+              <FileSpreadsheet /> Importar desde Excel
+            </Link>
+            <Link to="/admin/productos/nuevo" className={cn(buttonVariants())}>
+              <Plus /> Nuevo producto
+            </Link>
+          </div>
         }
       />
 
