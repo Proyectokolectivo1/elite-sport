@@ -19,7 +19,7 @@ import { porDevolver, resumenDevolucion } from '../logica'
 import { devolucionSchema, MOTIVOS, nombreMotivo, type DevolucionValues } from '../schemas'
 
 const fecha = new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium', timeStyle: 'short' })
-const NOMBRE_TIPO: Record<string, string> = { minorista: 'Tienda en línea', mayorista: 'Mayorista', lead_tienda: 'WhatsApp', mostrador: 'Local' }
+const NOMBRE_TIPO: Record<string, string> = { minorista: 'Tienda en línea', mayorista: 'Mayorista', lead_tienda: 'WhatsApp', mostrador: 'Local', consignacion: 'Vendedor del local' }
 const pares = (n: number) => `${n} ${n === 1 ? 'par' : 'pares'}`
 
 /** Devoluciones después de una compra. Solo las maneja el admin. */
@@ -40,7 +40,7 @@ export function DevolucionesPage() {
 
   return (
     <>
-      <PageHeader title="Devoluciones" description="Registra los pares que un cliente devuelve después de comprar. Si el par está en buen estado, vuelve al inventario." />
+      <PageHeader title="Devoluciones" description="Registra los pares que un cliente devuelve después de comprar, también de las ventas de los vendedores de los locales. Si el par está en buen estado, vuelve al inventario único de bodega." />
 
       <section aria-label="Registrar devolución" className="mb-10 grid gap-6 lg:grid-cols-[22rem_1fr]">
         <div>

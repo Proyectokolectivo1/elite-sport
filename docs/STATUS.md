@@ -262,3 +262,6 @@
 - Rol nuevo `cajero` (0034 + 0035): entra a Caja y "Por tienda" en solo lectura; el admin conserva ademas el resto. "Por tienda" tiene pestanas Por tienda / Por vendedor. `es_cajero()` y `puede_ver_caja()`; `resumen_ventas` y `reporte_ventas_locales` las usan.
 - 0034 y 0035 aplicadas; Edge Function `gestionar-usuarios` v4 (admite cajero). Verificado en la BD (revertido): pedido con precio 45, stock 16 -> 14 al entregar -> 15 al cerrar con 1 devuelto, total 45, aparece en el reporte con su local, el cajero ve el reporte pero no puede cerrar pedidos.
 - Pendiente: asignar local a los vendedores sin local; crear el usuario cajero; probar la interfaz en produccion.
+
+## Devoluciones de ventas de vendedores (2026-11-19)
+- Devoluciones admite ventas de vendedores de locales (pedido a bodega cerrado): se devuelve hasta lo vendido, al precio del vendedor, y los pares vuelven al inventario unico. Mayorista del sector sigue por Bodega. Migracion 0036 aplicada y verificada (revertido). Caja y reportes no restan devoluciones (igual que antes).

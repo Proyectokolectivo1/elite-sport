@@ -13,17 +13,18 @@ export interface PedidoDevolvible {
   lineas: LineaDevolvible[]
 }
 
-/** Pedidos ya entregados (menos las entregas de bodega), con lo que ya se devolvió de cada línea. */
+/** Pedidos entregados y ventas de vendedores ya cerradas por bodega, con lo que ya se devolvió de cada línea. */
 export async function pedidosDevolvibles(): Promise<PedidoDevolvible[]> {
   const { data, error } = await supabase
     .from('pedidos')
-    .select('id, numero, tipo, cliente_nombre, cliente_telefono, total, creado_en, pedidos_detalle!pedidos_detalle_pedido_id_fkey(id, descripcion, cantidad, precio_unitario, devoluciones_detalle(cantidad))')
-    .eq('estado', 'entregado')
-    .neq('tipo', 'consignacion')
+    .select('id, numero, tipo, cliente_nombre, cliente_telefono, total, creado_en, solicitante:perfiles!pedidos_solicitante_id_fkey(nombre, negocio, rol), pedidos_detalle!pedidos_detalle_pedido_id_fkey(id, descripcion, cantidad, cantidad_vendida, precio_unitario, devoluciones_detalle(cantidad))')
+    .or('and(estado.eq.entregado,tipo.neq.consignacion),and(estado.eq.liquidado,tipo.eq.consignacion,total.gt.0)')
     .order('creado_en', { ascending: false })
     .limit(200)
   if (error) throw error
-  return data.map((p) => ({
+  return data
+    .filter((p) => p.tipo !== 'consignacion' || p.solicitante?.rol === 'vendedor')
+    .map((p) => ({
     id: p.id,
     numero: p.numero,
     tipo: p.tipo,
@@ -34,7 +35,7 @@ export async function pedidosDevolvibles(): Promise<PedidoDevolvible[]> {
     lineas: p.pedidos_detalle.map((d) => ({
       id: d.id,
       descripcion: d.descripcion,
-      cantidad: d.cantidad,
+      cantidad: p.tipo === 'consignacion' ? (d.cantidad_vendida ?? 0) : d.cantidad,
       precio: d.precio_unitario,
       devuelta: d.devoluciones_detalle.reduce((s, x) => s + x.cantidad, 0),
     })),
