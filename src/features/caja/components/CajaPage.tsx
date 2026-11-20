@@ -21,7 +21,6 @@ export function CajaPage() {
   const { rango } = per
   const { data: resumen, isLoading, error } = useResumenVentas(rango?.desde ?? null, rango?.hasta ?? null)
   const { canales, totalGeneral, pedidosGeneral } = useMemo(() => resumirCanales(resumen?.filas ?? []), [resumen])
-  const porCerrar = resumen?.porCerrar
   const local = canales.find((c) => c.canal === 'local')
   const sector = canales.find((c) => c.canal === 'sector')
 
@@ -36,13 +35,6 @@ export function CajaPage() {
           </Button>
         }
       />
-
-      {porCerrar && porCerrar.pedidos > 0 && (
-        <p role="status" className="mb-6 rounded-lg bg-warning/10 p-3 text-sm print:hidden">
-          Hay {plural(porCerrar.pedidos)} del local por cerrar ({fmt(porCerrar.total)} al precio del vendedor). No cuentan en la caja hasta que las cierres.{' '}
-          <Link to="/admin/por-cerrar" className="font-semibold underline underline-offset-4">Cerrar ventas</Link>
-        </p>
-      )}
 
       <SelectorPeriodo p={per} id="caja" />
       {!rango && <p role="alert" className="mb-4 text-destructive">Elige un periodo válido.</p>}

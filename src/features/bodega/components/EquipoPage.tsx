@@ -25,7 +25,8 @@ const ROLES: { id: IntegranteValues['rol']; texto: string }[] = [
   { id: 'mayorista_sector', texto: 'Retira pares en bodega y liquida al cierre del día. Sin sección propia.' },
   { id: 'bodeguero', texto: 'Trabaja solo con la bodega y la tienda principal de Elite Sport: despacha, cierra el día e ingresa mercancía. No ve precios, ventas ni tiendas de mayoristas.' },
   { id: 'auxiliar_bodega', texto: 'Apoya al bodeguero: ve en vivo los pedidos que llegan a bodega, lo despachado y lo que está en poder de cada uno, para avisarle. No despacha, no cierra ni cambia nada.' },
-  { id: 'vendedor', texto: 'Trabaja en un local (Élite, KZ, Mega Moda...): pide pares a bodega y arma las ventas de su local. No ve precios mayoristas ni pedidos de otros.' },
+  { id: 'cajero', texto: 'Atiende la caja: ve lo vendido por local y por vendedor, y el cierre de caja. Solo lectura: no cambia precios, pedidos ni inventario.' },
+  { id: 'vendedor', texto: 'Trabaja en un local (Élite, KZ, Mega Moda...): pide pares a bodega con su precio de venta. El bodeguero los entrega y asienta la venta al cierre. No ve totales ni precios mayoristas.' },
 ]
 const ESTADOS: Record<IntegranteValues['estado'], string> = { pendiente: 'Pendiente', aprobado: 'Aprobado', rechazado: 'Rechazado', suspendido: 'Suspendido' }
 const TONO: Record<IntegranteValues['estado'], 'warning' | 'success' | 'neutral' | 'destructive'> = { pendiente: 'warning', aprobado: 'success', rechazado: 'neutral', suspendido: 'destructive' }
@@ -101,7 +102,7 @@ export function EquipoPage() {
     <>
       <PageHeader
         title="Equipo"
-        description="Quien se registra entra como mayorista pendiente. Solo el administrador de Elite Sport asigna roles y crea cuentas con acceso: bodeguero, auxiliar de bodega, vendedor de un local o mayorista del sector."
+        description="Quien se registra entra como mayorista pendiente. Solo el administrador de Elite Sport asigna roles y crea cuentas con acceso: bodeguero, auxiliar de bodega, cajero, vendedor de un local o mayorista del sector."
         actions={
           <>
             <Button variant="outline" onClick={() => setLocales(true)}><Store /> Locales</Button>

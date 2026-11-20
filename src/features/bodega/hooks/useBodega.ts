@@ -23,9 +23,7 @@ import {
   listarPedidosBodega,
   misEntregas,
   misParesEnPoder,
-  misVentasLocal,
   recibirDevolucion,
-  registrarVentaLocal,
   solicitarABodega,
   type VistaBodega,
 } from '../api/bodega'
@@ -98,7 +96,7 @@ export function useCancelarPedidoBodega() {
 export function useSolicitarABodega() {
   const refrescar = useRefrescar()
   return useMutation({
-    mutationFn: (v: { items: { varianteId: string; cantidad: number }[]; nota: string }) => solicitarABodega(v.items, v.nota),
+    mutationFn: (v: { items: { varianteId: string; cantidad: number; precio?: number }[]; nota: string }) => solicitarABodega(v.items, v.nota),
     onSuccess: refrescar,
   })
 }
@@ -113,26 +111,6 @@ export function useMisEntregas() {
   const { session } = useAuth()
   const uid = session?.user.id
   return useQuery({ queryKey: bodegaKeys.entregas(uid), queryFn: () => misEntregas(uid as string), enabled: !!uid, refetchInterval: 60_000 })
-}
-
-/** Ventas del vendedor desde el inicio del día. */
-export function useMisVentasHoy() {
-  const { session } = useAuth()
-  const uid = session?.user.id
-  return useQuery({
-    queryKey: bodegaKeys.ventas(uid),
-    queryFn: () => {
-      const hoy = new Date()
-      hoy.setHours(0, 0, 0, 0)
-      return misVentasLocal(uid as string, hoy)
-    },
-    enabled: !!uid,
-  })
-}
-
-export function useRegistrarVentaLocal() {
-  const refrescar = useRefrescar()
-  return useMutation({ mutationFn: registrarVentaLocal, onSuccess: refrescar })
 }
 
 export const useEquipo = () => useQuery({ queryKey: bodegaKeys.equipo, queryFn: listarEquipo })

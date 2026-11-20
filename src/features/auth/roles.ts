@@ -4,7 +4,7 @@ export type Rol = Enums<'rol_usuario'>
 export type EstadoPerfil = Enums<'estado_perfil'>
 
 /** Roles que entran por el panel /admin. */
-export const ROLES_PANEL: readonly Rol[] = ['admin', 'bodeguero', 'auxiliar_bodega', 'vendedor']
+export const ROLES_PANEL: readonly Rol[] = ['admin', 'cajero', 'bodeguero', 'auxiliar_bodega', 'vendedor']
 
 export const NOMBRE_ROL: Record<Rol, string> = {
   admin: 'Administrador',
@@ -12,6 +12,7 @@ export const NOMBRE_ROL: Record<Rol, string> = {
   mayorista_sector: 'Mayorista del sector',
   bodeguero: 'Bodeguero',
   auxiliar_bodega: 'Auxiliar de bodega',
+  cajero: 'Cajero',
   vendedor: 'Vendedor del local',
 }
 
@@ -21,6 +22,8 @@ export function inicioDeRol(rol: Rol | null | undefined, estado: EstadoPerfil | 
   switch (rol) {
     case 'admin':
       return '/admin'
+    case 'cajero':
+      return '/admin/caja'
     case 'bodeguero':
     case 'auxiliar_bodega':
       return '/admin/bodega'

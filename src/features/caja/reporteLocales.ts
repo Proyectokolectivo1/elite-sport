@@ -14,6 +14,7 @@ export const ventaLocalSchema = z.object({
   fecha: z.string(),
   local_id: z.string().nullable(),
   local: z.string().nullable(),
+  vendedor_id: z.string().nullable().optional(),
   vendedor: z.string(),
   cliente: z.string(),
   documento: z.string().nullable(),
@@ -62,13 +63,15 @@ function sumar(t: Totales, v: VentaLocal) {
 }
 
 /** Agrupa las ventas por local y, dentro de cada local, por día (los más recientes primero). */
-export function agruparPorLocal(ventas: VentaLocal[]): { locales: LocalVentas[]; general: Totales } {
+export function agruparPorLocal(ventas: VentaLocal[], modo: 'tienda' | 'vendedor' = 'tienda'): { locales: LocalVentas[]; general: Totales } {
   const general = vacio()
   const m = new Map<string, LocalVentas>()
   for (const v of ventas) {
     sumar(general, v)
-    const clave = v.local_id ?? 'sin-local'
-    const loc = m.get(clave) ?? { clave, nombre: v.local ? `Local ${v.local}` : 'Sin local asignado', dias: [], ...vacio() }
+    const porVendedor = modo === 'vendedor'
+    const clave = porVendedor ? (v.vendedor_id ?? `v-${v.vendedor}`) : (v.local_id ?? 'sin-local')
+    const nombre = porVendedor ? (v.local ? `${v.vendedor} · ${v.local}` : v.vendedor) : v.local ? `Local ${v.local}` : 'Sin local asignado'
+    const loc = m.get(clave) ?? { clave, nombre, dias: [], ...vacio() }
     sumar(loc, v)
     const dia = aFechaInput(new Date(v.fecha))
     let d = loc.dias.find((x) => x.dia === dia)

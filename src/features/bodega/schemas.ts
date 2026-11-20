@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-const rol = z.enum(['admin', 'mayorista', 'bodeguero', 'auxiliar_bodega', 'vendedor', 'mayorista_sector'])
+const rol = z.enum(['admin', 'mayorista', 'bodeguero', 'auxiliar_bodega', 'cajero', 'vendedor', 'mayorista_sector'])
 const estadoPedido = z.enum(['nuevo', 'confirmado', 'entregado', 'cancelado', 'liquidado'])
 const tipoPedido = z.enum(['minorista', 'mayorista', 'lead_tienda', 'mostrador', 'consignacion'])
 
@@ -59,7 +59,7 @@ export const resultadoVentaSchema = z.object({ id: z.string(), numero: z.number(
 export const resultadoSolicitudSchema = z.object({ id: z.string(), numero: z.number() })
 
 /** Edición de un integrante del equipo por el admin. */
-const rolEquipo = z.enum(['mayorista', 'mayorista_sector', 'bodeguero', 'auxiliar_bodega', 'vendedor'])
+const rolEquipo = z.enum(['mayorista', 'mayorista_sector', 'bodeguero', 'auxiliar_bodega', 'cajero', 'vendedor'])
 const MSJ_LOCAL = { message: 'Elige el local del vendedor', path: ['local_id'] }
 
 export const integranteSchema = z

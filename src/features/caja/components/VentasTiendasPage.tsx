@@ -27,17 +27,18 @@ function nombreDia(dia: string) {
 export function VentasTiendasPage() {
   const moneda = useMoneyStore((s) => s.config)
   const fmt: Fmt = (n) => formatMoney(n, moneda)
+  const [vista, setVista] = useState<'tienda' | 'vendedor'>('tienda')
   const per = usePeriodo()
   const { data = [], isLoading, error } = useReporteLocales(per.rango?.desde ?? null, per.rango?.hasta ?? null)
-  const { locales, general } = useMemo(() => agruparPorLocal(data), [data])
+  const { locales, general } = useMemo(() => agruparPorLocal(data, vista), [data, vista])
   const [filtro, setFiltro] = useState('todas')
   const visibles = filtro === 'todas' ? locales : locales.filter((l) => l.clave === filtro)
 
   return (
     <>
       <PageHeader
-        title="Ventas por tienda"
-        description="Solo tú ves estos totales. Ventas del local ya cerradas, por tienda y por día, con el detalle de cada venta. Cuentan el día en que las cierras."
+        title={vista === 'tienda' ? 'Ventas por tienda' : 'Ventas por vendedor'}
+        description="Ventas ya cerradas por bodega, por día y con el detalle de cada una. Cuentan el día en que bodega las cierra."
         actions={
           <Button variant="outline" onClick={() => window.print()} className="print:hidden">
             <Printer /> Imprimir
@@ -51,7 +52,7 @@ export function VentasTiendasPage() {
 
       {per.rango && !isLoading && !error && (
         data.length === 0 ? (
-          <EmptyState title="Sin ventas en este periodo" description="Las ventas del local aparecen aquí cuando las cierras en Por cerrar." />
+          <EmptyState title="Sin ventas en este periodo" description="Las ventas aparecen aquí cuando bodega cierra el pedido de un vendedor." />
         ) : (
           <>
             <section aria-label="Totales del periodo" className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -61,10 +62,19 @@ export function VentasTiendasPage() {
               <Dato etiqueta="Rebajas sobre lista" valor={fmt(general.rebaja)} />
             </section>
 
+            <Tabs
+              className="mb-4 print:hidden"
+              tabs={[{ id: 'tienda', label: 'Por tienda' }, { id: 'vendedor', label: 'Por vendedor' }]}
+              value={vista}
+              onChange={(v) => {
+                setVista(v as 'tienda' | 'vendedor')
+                setFiltro('todas')
+              }}
+            />
             {locales.length > 1 && (
               <Tabs
                 className="mb-6 print:hidden"
-                tabs={[{ id: 'todas', label: 'Todas' }, ...locales.map((l) => ({ id: l.clave, label: l.nombre.replace(/^Local /, '') }))]}
+                tabs={[{ id: 'todas', label: 'Todas' }, ...locales.map((l) => ({ id: l.clave, label: l.nombre.replace(/^Local /, '').split(' · ')[0] }))]}
                 value={filtro}
                 onChange={setFiltro}
               />
@@ -92,6 +102,7 @@ function Dato({ etiqueta, valor, destacado }: { etiqueta: string; valor: string;
 }
 
 function Pagos({ t, fmt }: { t: Totales; fmt: Fmt }) {
+  if (t.efectivo + t.transferencia + t.tarjeta === 0) return null
   return (
     <p className="text-sm tabular-nums text-muted-foreground">
       Efectivo {fmt(t.efectivo)} · Transferencia {fmt(t.transferencia)} · Tarjeta {fmt(t.tarjeta)}

@@ -31,8 +31,8 @@ const ProductosPage = lazy(() => import('@/features/catalogo/components/Producto
 const ProductoFormPage = lazy(() => import('@/features/catalogo/components/ProductoFormPage').then((m) => ({ default: m.ProductoFormPage })))
 const InventarioPage = lazy(() => import('@/features/inventario/components/InventarioPage').then((m) => ({ default: m.InventarioPage })))
 const PreciosPage = lazy(() => import('@/features/precios/components/PreciosPage').then((m) => ({ default: m.PreciosPage })))
-const VentasPorCerrarPage = lazy(() => import('@/features/ventas/components/VentasPorCerrarPage').then((m) => ({ default: m.VentasPorCerrarPage })))
 const VentasPage = lazy(() => import('@/features/ventas/components/VentasPage').then((m) => ({ default: m.VentasPage })))
+const VenderPage = lazy(() => import('@/features/ventas/components/VenderPage').then((m) => ({ default: m.VenderPage })))
 const CajaPage = lazy(() => import('@/features/caja/components/CajaPage').then((m) => ({ default: m.CajaPage })))
 const VentasTiendasPage = lazy(() => import('@/features/caja/components/VentasTiendasPage').then((m) => ({ default: m.VentasTiendasPage })))
 const DevolucionesPage = lazy(() => import('@/features/devoluciones/components/DevolucionesPage').then((m) => ({ default: m.DevolucionesPage })))
@@ -54,8 +54,6 @@ const CompartirPage = lazy(() => import('@/features/mayorista/components/Compart
 const BodegaPage = lazy(() => import('@/features/bodega/components/BodegaPage').then((m) => ({ default: m.BodegaPage })))
 const CobrosPage = lazy(() => import('@/features/bodega/components/CobrosPage').then((m) => ({ default: m.CobrosPage })))
 const EquipoPage = lazy(() => import('@/features/bodega/components/EquipoPage').then((m) => ({ default: m.EquipoPage })))
-const MiMercanciaPage = lazy(() => import('@/features/ventas/components/MiMercanciaPage').then((m) => ({ default: m.MiMercanciaPage })))
-const VenderLocalPage = lazy(() => import('@/features/ventas/components/VenderLocalPage').then((m) => ({ default: m.VenderLocalPage })))
 const cargarSector = () => import('@/features/bodega/components/SectorLayout')
 const SectorLayout = lazy(() => cargarSector().then((m) => ({ default: m.SectorLayout })))
 const SectorEnPoderPage = lazy(() => cargarSector().then((m) => ({ default: m.SectorEnPoderPage })))
@@ -92,15 +90,16 @@ export default function App() {
                 <Route path="productos/:id" element={<ProductoFormPage />} />
                 <Route path="precios" element={<PreciosPage />} />
                 <Route path="ventas" element={<VentasPage />} />
-                <Route path="por-cerrar" element={<VentasPorCerrarPage />} />
-                <Route path="caja" element={<CajaPage />} />
-                <Route path="ventas-tiendas" element={<VentasTiendasPage />} />
                 <Route path="pedidos" element={<PedidosPage />} />
                 <Route path="devoluciones" element={<DevolucionesPage />} />
                 <Route path="mayoristas" element={<MayoristasPage />} />
                 <Route path="cobros" element={<CobrosPage />} />
                 <Route path="equipo" element={<EquipoPage />} />
                 <Route path="configuracion" element={<ConfiguracionPage />} />
+              </Route>
+              <Route element={<RequirePanel roles={['admin', 'cajero']} />}>
+                <Route path="caja" element={<CajaPage />} />
+                <Route path="ventas-tiendas" element={<VentasTiendasPage />} />
               </Route>
               <Route element={<RequirePanel roles={['admin', 'bodeguero']} />}>
                 <Route path="inventario" element={<InventarioPage />} />
@@ -112,8 +111,8 @@ export default function App() {
                 <Route path="bodega/historial" element={<BodegaPage vista="historial" />} />
               </Route>
               <Route element={<RequirePanel roles={['vendedor']} />}>
-                <Route path="local" element={<MiMercanciaPage />} />
-                <Route path="local/vender" element={<VenderLocalPage />} />
+                <Route path="local" element={<VenderPage />} />
+                <Route path="local/vender" element={<Navigate to="/admin/local" replace />} />
               </Route>
             </Route>
           </Route>

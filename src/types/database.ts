@@ -366,6 +366,8 @@ export type Database = {
       es_personal_bodega: { Args: never; Returns: boolean }
       es_vendedor: { Args: never; Returns: boolean }
       es_auxiliar_bodega: { Args: never; Returns: boolean }
+      es_cajero: { Args: never; Returns: boolean }
+      puede_ver_caja: { Args: never; Returns: boolean }
       puede_ver_bodega: { Args: never; Returns: boolean }
       listar_pedidos_bodega: { Args: { p_vista: string }; Returns: Json }
       mis_pares_en_poder: { Args: never; Returns: Json }
@@ -394,7 +396,7 @@ export type Database = {
       estado_perfil: 'pendiente' | 'aprobado' | 'rechazado' | 'suspendido'
       grupo_talla: 'dama' | 'caballero' | 'nino' | 'unisex'
       motivo_movimiento: 'ingreso' | 'venta' | 'pedido_mayorista' | 'ajuste' | 'anulacion' | 'despacho' | 'devolucion'
-      rol_usuario: 'admin' | 'mayorista' | 'bodeguero' | 'vendedor' | 'mayorista_sector' | 'auxiliar_bodega'
+      rol_usuario: 'admin' | 'mayorista' | 'bodeguero' | 'vendedor' | 'mayorista_sector' | 'auxiliar_bodega' | 'cajero'
       tipo_ingreso: 'caja' | 'unidad'
       tipo_pedido: 'minorista' | 'mayorista' | 'lead_tienda' | 'mostrador' | 'consignacion'
     }

@@ -17,7 +17,7 @@ import {
   type NuevoUsuarioValues,
 } from '../schemas'
 
-const ROLES: NuevoUsuarioValues['rol'][] = ['vendedor', 'bodeguero', 'auxiliar_bodega', 'mayorista_sector', 'mayorista']
+const ROLES: NuevoUsuarioValues['rol'][] = ['vendedor', 'bodeguero', 'auxiliar_bodega', 'cajero', 'mayorista_sector', 'mayorista']
 
 /** Copia texto y confirma en el propio boton (sin ventanas emergentes). */
 function Copiar({ texto, etiqueta }: { texto: string; etiqueta: string }) {

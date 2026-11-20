@@ -256,3 +256,9 @@
 
 ## Eliminar usuarios (2026-11-19)
 - En Equipo, al editar a una persona hay un bloque "Eliminar usuario" con confirmacion. La Edge Function `gestionar-usuarios` (v3, accion `eliminar`) borra la cuenta; el historial de pedidos se conserva sin nombre. Rechaza al admin, a la propia cuenta y a quien tenga entregas de bodega o ventas abiertas (en ese caso se sugiere suspenderla). Funcion desplegada; falta publicar el frontend.
+
+## Venta por pedido a bodega y rol cajero (2026-11-19)
+- Nuevo flujo del vendedor: en "Vender" elige pares del catalogo habilitado y pone su precio por linea (referencia = precio de la pagina); bodega entrega (el stock sale del inventario central) y, al cerrar vendidos y devueltos, la venta se asienta al local y al vendedor (vendidos x precio del vendedor). Desaparecen "Mi mercancia" y "Por cerrar"; `registrar_venta_local` queda bloqueada. Las ventas del flujo anterior se conservan y no se duplican.
+- Rol nuevo `cajero` (0034 + 0035): entra a Caja y "Por tienda" en solo lectura; el admin conserva ademas el resto. "Por tienda" tiene pestanas Por tienda / Por vendedor. `es_cajero()` y `puede_ver_caja()`; `resumen_ventas` y `reporte_ventas_locales` las usan.
+- 0034 y 0035 aplicadas; Edge Function `gestionar-usuarios` v4 (admite cajero). Verificado en la BD (revertido): pedido con precio 45, stock 16 -> 14 al entregar -> 15 al cerrar con 1 devuelto, total 45, aparece en el reporte con su local, el cajero ve el reporte pero no puede cerrar pedidos.
+- Pendiente: asignar local a los vendedores sin local; crear el usuario cajero; probar la interfaz en produccion.

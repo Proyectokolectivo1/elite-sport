@@ -12,19 +12,27 @@ import { TOPE_MAYORISTA } from '@/features/tienda/carrito/carritoStore'
 import { obtenerCatalogoPublico, type ProductoPublico } from '@/features/tienda/api/tienda'
 import { agregarLinea, unidadesVenta, type LineaVenta } from '@/features/ventas/ventaLogica'
 import { mensajeError } from '@/lib/errors'
+import { formatMoney, useMoneyStore } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { useSolicitarABodega } from '../hooks/useBodega'
 import { notaPedidoSchema, type NotaPedidoValues } from '../schemas'
 import { FotoPar } from './FotoPar'
 
-/** Elige productos y tallas disponibles en bodega y envía el pedido. No muestra precios ni cuántos pares hay: los fija y valida el servidor. */
-export function PedirABodega({ onEnviado }: { onEnviado?: () => void }) {
+/**
+ * Elige productos y tallas disponibles en bodega y envía el pedido. No muestra cuántos pares hay.
+ * Con `conPrecio` (vendedor del local) cada línea lleva su precio de venta, que parte del precio de la página.
+ */
+export function PedirABodega({ onEnviado, conPrecio = false }: { onEnviado?: () => void; conPrecio?: boolean }) {
+  const moneda = useMoneyStore((s) => s.config)
+  const fmt = (n: number) => formatMoney(n, moneda)
   const { data: catalogo = [], isLoading } = useQuery({ queryKey: ['catalogo-publico'], queryFn: obtenerCatalogoPublico })
   const solicitar = useSolicitarABodega()
   const [q, setQ] = useState('')
   const [elegido, setElegido] = useState<string | null>(null)
   const [color, setColor] = useState('')
   const [lineas, setLineas] = useState<LineaVenta[]>([])
+  const [errorPrecio, setErrorPrecio] = useState<string | null>(null)
+  const referencias = useMemo(() => new Map(catalogo.flatMap((p) => p.variantes.map((v) => [v.id, p.pvp] as const))), [catalogo])
   const { register, handleSubmit, reset, formState: { errors } } = useForm<NotaPedidoValues>({ resolver: zodResolver(notaPedidoSchema), defaultValues: { nota: '' } })
 
   const productos = useMemo(() => {
@@ -38,14 +46,20 @@ export function PedirABodega({ onEnviado }: { onEnviado?: () => void }) {
 
   function agregar(v: ProductoPublico['variantes'][number]) {
     if (!producto) return
-    setLineas((l) => agregarLinea(l, { varianteId: v.id, nombre: producto.nombre, color: v.color, talla: v.talla, precio: 0, stock: v.disponible ? TOPE_MAYORISTA : 0 }))
+    setLineas((l) => agregarLinea(l, { varianteId: v.id, nombre: producto.nombre, color: v.color, talla: v.talla, precio: conPrecio ? producto.pvp : 0, stock: v.disponible ? TOPE_MAYORISTA : 0 }))
   }
   const cambiar = (id: string, cantidad: number) => setLineas((l) => l.map((x) => (x.varianteId === id ? { ...x, cantidad } : x)))
+  const cambiarPrecio = (id: string, precio: number) => setLineas((l) => l.map((x) => (x.varianteId === id ? { ...x, precio } : x)))
 
   function onSubmit(v: NotaPedidoValues) {
     if (lineas.length === 0) return
+    if (conPrecio && lineas.some((l) => !Number.isFinite(l.precio) || l.precio < 0)) {
+      setErrorPrecio('Revisa los precios: hay uno vacío o no válido.')
+      return
+    }
+    setErrorPrecio(null)
     solicitar.mutate(
-      { items: lineas.map((l) => ({ varianteId: l.varianteId, cantidad: l.cantidad })), nota: v.nota },
+      { items: lineas.map((l) => ({ varianteId: l.varianteId, cantidad: l.cantidad, ...(conPrecio && { precio: l.precio }) })), nota: v.nota },
       {
         onSuccess: (r) => {
           toast.success(`Pedido #${r.numero} enviado a bodega`)
@@ -122,7 +136,7 @@ export function PedirABodega({ onEnviado }: { onEnviado?: () => void }) {
         {lineas.length === 0 ? <p className="mt-3 text-sm text-muted-foreground">Elige un producto y toca sus tallas.</p> : (
           <ul className="mt-3 divide-y divide-border">
             {lineas.map((l) => (
-              <li key={l.varianteId} className="flex items-center justify-between gap-2 py-3">
+              <li key={l.varianteId} className="flex flex-wrap items-center justify-between gap-2 py-3">
                 <p className="min-w-0 text-sm font-semibold">{l.nombre}<span className="block text-xs font-normal text-muted-foreground">{l.color} · talla {l.talla}</span></p>
                 <div className="flex items-center gap-1">
                   <div className="inline-flex items-center rounded-lg border border-input">
@@ -132,11 +146,30 @@ export function PedirABodega({ onEnviado }: { onEnviado?: () => void }) {
                   </div>
                   <Button type="button" variant="ghost" size="icon-sm" aria-label={`Quitar ${l.nombre}`} onClick={() => setLineas((x) => x.filter((y) => y.varianteId !== l.varianteId))}><Trash2 /></Button>
                 </div>
+                {conPrecio && (
+                  <label className="flex w-full items-center justify-between gap-2 text-xs text-muted-foreground">
+                    <span>
+                      Precio c/u
+                      {referencias.get(l.varianteId) !== undefined && <span className="block">Referencia {fmt(referencias.get(l.varianteId) ?? 0)}</span>}
+                    </span>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      inputMode="decimal"
+                      aria-label={`Precio de venta de ${l.nombre} talla ${l.talla}`}
+                      className="h-9 w-28 text-right"
+                      value={Number.isFinite(l.precio) ? l.precio : ''}
+                      onChange={(e) => cambiarPrecio(l.varianteId, e.target.value === '' ? Number.NaN : Number(e.target.value))}
+                    />
+                  </label>
+                )}
               </li>
             ))}
           </ul>
         )}
         <p className="mt-4 border-t border-border pt-4 text-sm text-muted-foreground"><strong className="text-foreground tabular-nums">{unidadesVenta(lineas)}</strong> pares</p>
+        <FieldError>{errorPrecio ?? undefined}</FieldError>
         <div className="mt-3">
           <Label htmlFor="pb-nota">Nota para bodega</Label>
           <Textarea id="pb-nota" className="min-h-16" {...register('nota')} />

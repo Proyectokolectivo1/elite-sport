@@ -9,7 +9,7 @@ const CORS = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
-const ROLES = ['mayorista', 'mayorista_sector', 'bodeguero', 'auxiliar_bodega', 'vendedor'] as const
+const ROLES = ['mayorista', 'mayorista_sector', 'bodeguero', 'auxiliar_bodega', 'cajero', 'vendedor'] as const
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const ESTADOS = ['aprobado', 'pendiente', 'suspendido', 'rechazado'] as const
 

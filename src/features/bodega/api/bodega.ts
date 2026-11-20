@@ -1,12 +1,10 @@
 import { supabase } from '@/lib/supabase'
 import type { Enums } from '@/types/database'
-import type { MetodoPago, VentaEntrada } from '@/features/ventas/api/ventas'
 import {
   listaBodegaSchema,
   paresEnPoderSchema,
   resultadoCierreSchema,
   resultadoSolicitudSchema,
-  resultadoVentaSchema,
   type IntegranteValues,
   type NuevoUsuarioValues,
 } from '../schemas'
@@ -104,9 +102,9 @@ export async function cancelarPedidoBodega(pedidoId: string): Promise<void> {
 }
 
 // ============ Vendedor y mayorista del sector ============
-export async function solicitarABodega(items: { varianteId: string; cantidad: number }[], nota: string): Promise<{ numero: number }> {
+export async function solicitarABodega(items: { varianteId: string; cantidad: number; precio?: number }[], nota: string): Promise<{ numero: number }> {
   const { data, error } = await supabase.rpc('solicitar_a_bodega', {
-    p_items: items.map((i) => ({ variante_id: i.varianteId, cantidad: i.cantidad })),
+    p_items: items.map((i) => ({ variante_id: i.varianteId, cantidad: i.cantidad, ...(i.precio !== undefined && { precio: i.precio }) })),
     p_nota: nota.trim() || undefined,
   })
   if (error) throw error
@@ -172,55 +170,6 @@ export async function misEntregas(usuarioId: string): Promise<MiEntrega[]> {
       precio: d.precio_unitario,
     })),
   }))
-}
-
-export interface MiVenta {
-  id: string
-  numero: number
-  estado: Enums<'estado_pedido'>
-  cliente: string
-  metodoPago: MetodoPago | null
-  total: number
-  nota: string | null
-  creadoEn: string
-}
-
-/** Ventas del local registradas por el vendedor desde una fecha. */
-export async function misVentasLocal(usuarioId: string, desde: Date): Promise<MiVenta[]> {
-  const { data, error } = await supabase
-    .from('pedidos')
-    .select('id, numero, estado, cliente_nombre, metodo_pago, total, nota, creado_en')
-    .eq('tipo', 'mostrador')
-    .eq('solicitante_id', usuarioId)
-    .gte('creado_en', desde.toISOString())
-    .order('creado_en', { ascending: false })
-  if (error) throw error
-  return data.map((p) => ({
-    id: p.id,
-    numero: p.numero,
-    estado: p.estado,
-    cliente: p.cliente_nombre,
-    metodoPago: p.metodo_pago,
-    total: p.total,
-    nota: p.nota,
-    creadoEn: p.creado_en,
-  }))
-}
-
-/** Venta del local con pares que el vendedor tiene en su poder. No toca el stock central. */
-export async function registrarVentaLocal(v: VentaEntrada): Promise<{ numero: number; total: number }> {
-  const { data, error } = await supabase.rpc('registrar_venta_local', {
-    p_items: v.items,
-    p_metodo_pago: v.metodoPago,
-    p_cliente_nombre: v.nombre || undefined,
-    p_cliente_telefono: v.telefono || undefined,
-    p_cliente_correo: v.correo || undefined,
-    p_cliente_documento: v.documento || undefined,
-    p_nota: v.nota || undefined,
-  })
-  if (error) throw error
-  const r = resultadoVentaSchema.parse(data)
-  return { numero: r.numero, total: r.total }
 }
 
 // ============ Equipo (admin) ============

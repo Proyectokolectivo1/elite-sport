@@ -9,6 +9,7 @@ describe('inicioDeRol', () => {
     expect(inicioDeRol('mayorista', 'aprobado')).toBe('/mayorista')
     expect(inicioDeRol('mayorista_sector', 'aprobado')).toBe('/sector')
     expect(inicioDeRol('auxiliar_bodega', 'aprobado')).toBe('/admin/bodega')
+    expect(inicioDeRol('cajero', 'aprobado')).toBe('/admin/caja')
   })
 
   it('sin aprobar o sin perfil va a la pantalla de estado', () => {

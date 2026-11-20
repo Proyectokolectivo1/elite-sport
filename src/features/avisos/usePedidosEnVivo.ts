@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { escucharCambiosPedidos } from './api'
 
 /** Consultas que dependen de los pedidos: se refrescan apenas llega un aviso. */
-const CLAVES = new Set(['bodega', 'avisos', 'pedidos', 'ventas-por-cerrar', 'caja', 'dashboard', 'mis-pedidos'])
+const CLAVES = new Set(['bodega', 'avisos', 'pedidos', 'caja', 'dashboard', 'mis-pedidos'])
 
 /** Mantiene al día las listas de pedidos sin recargar la página. Agrupa los avisos que llegan juntos. */
 export function usePedidosEnVivo(activo: boolean) {

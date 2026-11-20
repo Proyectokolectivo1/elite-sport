@@ -9,7 +9,6 @@ import {
   LogOut,
   Package,
   PackageOpen,
-  ReceiptText,
   Settings,
   ShoppingBag,
   Store,
@@ -39,7 +38,6 @@ import { useLocales } from '@/features/bodega/hooks/useBodega'
 const NAV_ADMIN: PanelNavItem[] = [
   { to: '/admin', label: 'Resumen', icon: LayoutDashboard, end: true },
   { to: '/admin/ventas', label: 'Ventas', icon: Store },
-  { to: '/admin/por-cerrar', label: 'Por cerrar', icon: ReceiptText },
   { to: '/admin/caja', label: 'Caja', icon: Landmark },
   { to: '/admin/ventas-tiendas', label: 'Por tienda', icon: BarChart3 },
   { to: '/admin/pedidos', label: 'Pedidos', icon: ClipboardList },
@@ -71,15 +69,20 @@ const NAV_AUXILIAR: PanelNavItem[] = [
   { to: '/admin/bodega/historial', label: 'Historial', icon: History },
 ]
 
+const NAV_CAJERO: PanelNavItem[] = [
+  { to: '/admin/caja', label: 'Caja', icon: Landmark },
+  { to: '/admin/ventas-tiendas', label: 'Por tienda', icon: BarChart3 },
+]
+
 const NAV_VENDEDOR: PanelNavItem[] = [
-  { to: '/admin/local', label: 'Mi mercancía', icon: Warehouse, end: true },
-  { to: '/admin/local/vender', label: 'Vender', icon: Store },
+  { to: '/admin/local', label: 'Vender', icon: Store, end: true },
 ]
 
 const POR_ROL: Partial<Record<Rol, { nav: PanelNavItem[]; seccion: string }>> = {
   admin: { nav: NAV_ADMIN, seccion: 'Administración' },
   bodeguero: { nav: NAV_BODEGUERO, seccion: 'Bodega' },
   auxiliar_bodega: { nav: NAV_AUXILIAR, seccion: 'Auxiliar de bodega' },
+  cajero: { nav: NAV_CAJERO, seccion: 'Caja' },
   vendedor: { nav: NAV_VENDEDOR, seccion: 'Local' },
 }
 
