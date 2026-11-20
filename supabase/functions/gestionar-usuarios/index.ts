@@ -58,6 +58,27 @@ Deno.serve(async (req: Request) => {
     return responder({ ok: true })
   }
 
+  // 2c. Eliminar a una persona. Su historial se conserva (los pedidos quedan sin nombre), pero no puede tener nada abierto.
+  if (cuerpo.accion === 'eliminar') {
+    const id = texto(cuerpo.id, 60)
+    if (!UUID.test(id)) return fallo('Falta la persona')
+    if (id === sesion.user.id) return fallo('No puedes eliminar tu propia cuenta.', 403)
+    const { data: destino } = await admin.from('perfiles').select('rol').eq('id', id).maybeSingle()
+    if (!destino) return fallo('No encontramos a esa persona', 404)
+    if (destino.rol === 'admin') return fallo('No se puede eliminar al administrador.', 403)
+    const { count } = await admin
+      .from('pedidos')
+      .select('id', { count: 'exact', head: true })
+      .eq('solicitante_id', id)
+      .or('and(tipo.eq.consignacion,estado.in.(nuevo,entregado)),and(tipo.eq.mostrador,estado.eq.nuevo)')
+    if ((count ?? 0) > 0) {
+      return fallo('Tiene entregas de bodega o ventas abiertas. Ciérralas antes de eliminarla; si solo quieres que no entre, suspéndela.', 409)
+    }
+    const { error } = await admin.auth.admin.deleteUser(id)
+    if (error) return fallo(error.message)
+    return responder({ ok: true })
+  }
+
   // 2b. Crear un usuario con acceso.
   if (cuerpo.accion === 'crear') {
     const correo = texto(cuerpo.correo, 120).toLowerCase()

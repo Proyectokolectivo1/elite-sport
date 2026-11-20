@@ -8,6 +8,7 @@ import {
   cambiarContrasenaUsuario,
   crearLocal,
   crearUsuario,
+  eliminarUsuario,
   editarLocal,
   listarLocales,
   cuentasSector,
@@ -191,6 +192,17 @@ export function useCrearUsuario() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: (v: NuevoUsuarioValues) => crearUsuario(v),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: bodegaKeys.equipo })
+      void qc.invalidateQueries({ queryKey: ['mayoristas'] })
+    },
+  })
+}
+
+export function useEliminarUsuario() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: eliminarUsuario,
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: bodegaKeys.equipo })
       void qc.invalidateQueries({ queryKey: ['mayoristas'] })

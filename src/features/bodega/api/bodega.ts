@@ -365,4 +365,5 @@ async function invocarGestion(cuerpo: Record<string, unknown>): Promise<{ id?: s
 
 export const crearUsuario = (v: NuevoUsuarioValues) =>
   invocarGestion({ accion: 'crear', ...v, local_id: v.rol === 'vendedor' ? v.local_id : '', estado: 'aprobado' })
+export const eliminarUsuario = (id: string) => invocarGestion({ accion: 'eliminar', id })
 export const cambiarContrasenaUsuario = (id: string, contrasena: string) => invocarGestion({ accion: 'contrasena', id, contrasena })

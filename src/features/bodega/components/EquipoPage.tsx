@@ -16,7 +16,7 @@ import { etiquetaRol, NOMBRE_ROL } from '@/features/auth/roles'
 import { mensajeError } from '@/lib/errors'
 import type { Integrante } from '../api/bodega'
 import { Locales, SelectorLocal } from './Locales'
-import { NuevoUsuario, RestablecerContrasena } from './NuevoUsuario'
+import { EliminarUsuario, NuevoUsuario, RestablecerContrasena } from './NuevoUsuario'
 import { useActualizarIntegrante, useEquipo } from '../hooks/useBodega'
 import { integranteSchema, type IntegranteValues } from '../schemas'
 
@@ -79,6 +79,7 @@ function Editar({ integrante, onListo }: { integrante: Integrante; onListo: () =
       <Button type="submit" className="w-full" disabled={!isDirty || guardar.isPending}>{guardar.isPending ? 'Guardando…' : 'Guardar'}</Button>
     </form>
       <RestablecerContrasena id={integrante.id} nombre={integrante.nombre} />
+      <EliminarUsuario id={integrante.id} nombre={integrante.nombre} onListo={() => { toast.success('Usuario eliminado'); onListo() }} />
     </div>
   )
 }

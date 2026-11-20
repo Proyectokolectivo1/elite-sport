@@ -7,7 +7,7 @@ import { FieldError, Input, Label } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
 import { NOMBRE_ROL } from '@/features/auth/roles'
 import { mensajeError } from '@/lib/errors'
-import { useCambiarContrasena, useCrearUsuario } from '../hooks/useBodega'
+import { useCambiarContrasena, useCrearUsuario, useEliminarUsuario } from '../hooks/useBodega'
 import { SelectorLocal } from './Locales'
 import {
   generarContrasena,
@@ -159,5 +159,37 @@ export function RestablecerContrasena({ id, nombre }: { id: string; nombre: stri
       )}
       <Button type="submit" variant="outline" disabled={cambiar.isPending}>{cambiar.isPending ? 'Guardando…' : 'Guardar contraseña'}</Button>
     </form>
+  )
+}
+
+/** Eliminar a una persona: pide confirmación y el servidor rechaza si tiene entregas o ventas abiertas. */
+export function EliminarUsuario({ id, nombre, onListo }: { id: string; nombre: string; onListo: () => void }) {
+  const eliminar = useEliminarUsuario()
+  const [confirmar, setConfirmar] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  function onEliminar() {
+    setError(null)
+    eliminar.mutate(id, { onSuccess: onListo, onError: (e) => setError(mensajeError(e)) })
+  }
+
+  return (
+    <div className="space-y-3 border-t border-border pt-5">
+      <h3 className="text-xl">Eliminar usuario</h3>
+      <p className="text-sm text-muted-foreground">
+        {nombre || 'Esta persona'} pierde el acceso para siempre. Sus pedidos y ventas se conservan en el historial. Si solo quieres que no entre por un tiempo, cambia su estado a Suspendido.
+      </p>
+      <FieldError>{error ?? undefined}</FieldError>
+      {confirmar ? (
+        <div className="flex flex-wrap gap-2">
+          <Button type="button" variant="outline" className="text-destructive" disabled={eliminar.isPending} onClick={onEliminar}>
+            {eliminar.isPending ? 'Eliminando…' : 'Sí, eliminar'}
+          </Button>
+          <Button type="button" variant="ghost" disabled={eliminar.isPending} onClick={() => setConfirmar(false)}>No</Button>
+        </div>
+      ) : (
+        <Button type="button" variant="outline" className="text-destructive" onClick={() => setConfirmar(true)}>Eliminar usuario</Button>
+      )}
+    </div>
   )
 }
