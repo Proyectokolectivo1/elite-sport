@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, useWatch } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Check, Copy, KeyRound } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -8,6 +8,7 @@ import { Select } from '@/components/ui/select'
 import { NOMBRE_ROL } from '@/features/auth/roles'
 import { mensajeError } from '@/lib/errors'
 import { useCambiarContrasena, useCrearUsuario } from '../hooks/useBodega'
+import { SelectorLocal } from './Locales'
 import {
   generarContrasena,
   nuevaContrasenaUsuarioSchema,
@@ -16,7 +17,7 @@ import {
   type NuevoUsuarioValues,
 } from '../schemas'
 
-const ROLES: NuevoUsuarioValues['rol'][] = ['bodeguero', 'vendedor', 'mayorista_sector', 'mayorista']
+const ROLES: NuevoUsuarioValues['rol'][] = ['vendedor', 'bodeguero', 'auxiliar_bodega', 'mayorista_sector', 'mayorista']
 
 /** Copia texto y confirma en el propio boton (sin ventanas emergentes). */
 function Copiar({ texto, etiqueta }: { texto: string; etiqueta: string }) {
@@ -63,11 +64,12 @@ export function NuevoUsuario({ onListo }: { onListo: () => void }) {
   const crear = useCrearUsuario()
   const [error, setError] = useState<string | null>(null)
   const [creado, setCreado] = useState<{ correo: string; contrasena: string; rol: string } | null>(null)
-  const { register, handleSubmit, setValue, formState: { errors } } = useForm<NuevoUsuarioValues>({
+  const { register, handleSubmit, setValue, control, formState: { errors } } = useForm<NuevoUsuarioValues>({
     resolver: zodResolver(nuevoUsuarioSchema),
-    defaultValues: { nombre: '', correo: '', contrasena: generarContrasena(), rol: 'bodeguero', negocio: '', telefono: '', cedula_ruc: '', ciudad: '' },
+    defaultValues: { nombre: '', correo: '', contrasena: generarContrasena(), rol: 'vendedor', local_id: '', negocio: '', telefono: '', cedula_ruc: '', ciudad: '' },
   })
 
+  const rol = useWatch({ control, name: 'rol' })
   if (creado) return <Credenciales {...creado} onListo={onListo} />
 
   function onSubmit(v: NuevoUsuarioValues) {
@@ -96,6 +98,7 @@ export function NuevoUsuario({ onListo }: { onListo: () => void }) {
           {ROLES.map((r) => <option key={r} value={r}>{NOMBRE_ROL[r]}</option>)}
         </Select>
       </div>
+      {rol === 'vendedor' && <SelectorLocal id="nu-local" registro={register('local_id')} error={errors.local_id?.message} />}
       <div>
         <Label htmlFor="nu-clave">Contraseña temporal</Label>
         <div className="flex gap-2">

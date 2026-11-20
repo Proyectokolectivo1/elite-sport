@@ -13,6 +13,8 @@ export const filaVentasSchema = z.object({
   transferencia: z.coerce.number(),
   tarjeta: z.coerce.number(),
   por_cobrar: z.coerce.number(),
+  /** Punto físico: quiénes vendieron en ese local. */
+  detalle: z.string().nullable().optional(),
 })
 
 export const resumenVentasSchema = z.object({

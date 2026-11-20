@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/ui/empty-state'
 import { FieldError, Input } from '@/components/ui/input'
@@ -30,7 +31,7 @@ export function VentasPorCerrarPage() {
     <>
       <PageHeader
         title="Ventas por cerrar"
-        description="Los vendedores arman la venta; tú la cierras. Aquí fijas el valor final y la forma de pago. Solo al cerrarla cuenta en la caja."
+        description="Cada vendedor arma la venta con su precio; tú la cierras. Puedes ajustar el valor final y la forma de pago. Solo al cerrarla cuenta en la caja."
       />
       {error && <p role="alert" className="mb-6 text-destructive">{mensajeError(error)}</p>}
       {isLoading ? (
@@ -40,7 +41,7 @@ export function VentasPorCerrarPage() {
       ) : (
         <>
           <p className="mb-4 text-sm text-muted-foreground">
-            {ventas.length} {ventas.length === 1 ? 'venta' : 'ventas'} · <strong className="text-foreground tabular-nums">{fmt(pendiente)}</strong> a precio de lista
+            {ventas.length} {ventas.length === 1 ? 'venta' : 'ventas'} · <strong className="text-foreground tabular-nums">{fmt(pendiente)}</strong> al precio del vendedor
           </p>
           <div className="grid gap-4 lg:grid-cols-2">
             {ventas.map((v) => (
@@ -88,7 +89,10 @@ function TarjetaVenta({ venta, fmt }: { venta: VentaPorCerrar; fmt: (n: number) 
     <article aria-label={`Venta ${venta.numero}`} className="rounded-xl border border-border bg-card p-4">
       <header className="flex flex-wrap items-start justify-between gap-2">
         <div>
-          <h2 className="text-2xl leading-tight">Venta #{venta.numero}</h2>
+          <h2 className="text-2xl leading-tight">
+            Venta #{venta.numero}
+            {venta.local && <Badge variant="outline" className="ml-2 align-middle">Local {venta.local}</Badge>}
+          </h2>
           <p className="text-sm text-muted-foreground">
             {venta.vendedor} · {fecha.format(new Date(venta.creadoEn))}
           </p>
@@ -107,7 +111,8 @@ function TarjetaVenta({ venta, fmt }: { venta: VentaPorCerrar; fmt: (n: number) 
               <span className="min-w-0 flex-1">
                 {l.descripcion}
                 <span className="block text-xs text-muted-foreground">
-                  {l.cantidad} × lista {fmt(l.precio)}
+                  {l.cantidad} × vendedor {fmt(l.precio)}
+                  {l.precioLista !== null && l.precioLista !== l.precio && ` · lista ${fmt(l.precioLista)}`}
                 </span>
               </span>
               <Input
@@ -145,7 +150,7 @@ function TarjetaVenta({ venta, fmt }: { venta: VentaPorCerrar; fmt: (n: number) 
       </fieldset>
 
       <div className="mt-3 flex items-end justify-between border-t border-border pt-3">
-        <span className="text-sm text-muted-foreground">{total !== venta.total ? `Lista ${fmt(venta.total)}` : 'Total'}</span>
+        <span className="text-sm text-muted-foreground">{total !== venta.total ? `Vendedor ${fmt(venta.total)}` : 'Total'}</span>
         <span className="font-display text-3xl font-bold tabular-nums">{fmt(total)}</span>
       </div>
       <FieldError>{error ?? undefined}</FieldError>

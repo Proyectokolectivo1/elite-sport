@@ -9,7 +9,8 @@ const CORS = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
-const ROLES = ['mayorista', 'mayorista_sector', 'bodeguero', 'vendedor'] as const
+const ROLES = ['mayorista', 'mayorista_sector', 'bodeguero', 'auxiliar_bodega', 'vendedor'] as const
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 const ESTADOS = ['aprobado', 'pendiente', 'suspendido', 'rechazado'] as const
 
 const responder = (cuerpo: unknown, status = 200) =>
@@ -69,6 +70,13 @@ Deno.serve(async (req: Request) => {
     if (!nombre) return fallo('Falta el nombre.')
     if (!(ROLES as readonly string[]).includes(rol)) return fallo('El rol no es válido.')
     if (!(ESTADOS as readonly string[]).includes(estado)) return fallo('El estado no es válido.')
+    // El vendedor pertenece a un local (Élite, KZ, Mega Moda...).
+    const local = texto(cuerpo.local_id, 60)
+    if (rol === 'vendedor' && !UUID.test(local)) return fallo('Elige el local del vendedor.')
+    if (rol === 'vendedor') {
+      const { data: existe } = await admin.from('locales').select('id').eq('id', local).eq('activo', true).maybeSingle()
+      if (!existe) return fallo('Ese local no existe o está desactivado.')
+    }
 
     const datos = {
       nombre,
@@ -84,7 +92,10 @@ Deno.serve(async (req: Request) => {
       return fallo(yaExiste ? 'Ese correo ya tiene una cuenta.' : (error?.message ?? 'No se pudo crear la cuenta'), yaExiste ? 409 : 400)
     }
     // El alta crea el perfil como "mayorista pendiente": aqui se le da su rol y se aprueba.
-    const { error: errPerfil } = await admin.from('perfiles').update({ rol, estado }).eq('id', nuevo.user.id)
+    const { error: errPerfil } = await admin
+      .from('perfiles')
+      .update({ rol, estado, local_id: rol === 'vendedor' ? local : null })
+      .eq('id', nuevo.user.id)
     if (errPerfil) {
       await admin.auth.admin.deleteUser(nuevo.user.id)
       return fallo('No se pudo asignar el rol: ' + errPerfil.message, 500)

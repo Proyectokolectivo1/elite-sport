@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { NOMBRE_ROL } from '@/features/auth/roles'
+import { etiquetaRol } from '@/features/auth/roles'
 import { cn } from '@/lib/utils'
 import type { PedidoBodega } from '../api/bodega'
 import { useFotoDeVariante, usePedidosBodega } from '../hooks/useBodega'
@@ -13,6 +13,7 @@ export interface GrupoCierre {
   clave: string
   nombre: string
   rol: PedidoBodega['solicitante_rol']
+  local: string | null
   pedidos: PedidoBodega[]
 }
 
@@ -51,7 +52,7 @@ export const idCierre = (clave: string) => `cierre-${clave}`
  * Control del cierre: quién debe cerrar hoy (con cuántos pares y desde cuándo) y quién ya cerró.
  * Una entrega de un día anterior se marca aparte: es la que más urge cuadrar.
  */
-export function PendientesCierre({ grupos }: { grupos: GrupoCierre[] }) {
+export function PendientesCierre({ grupos, soloLectura = false }: { grupos: GrupoCierre[]; soloLectura?: boolean }) {
   const foto = useFotoDeVariante()
   const inicioHoy = useMemo(() => {
     const d = new Date()
@@ -73,13 +74,13 @@ export function PendientesCierre({ grupos }: { grupos: GrupoCierre[] }) {
   const totalPares = pendientes.reduce((s, g) => s + g.enPoder, 0)
 
   const cerradosHoy = useMemo(() => {
-    const m = new Map<string, { nombre: string; rol: PedidoBodega['solicitante_rol']; entregas: number; vendidos: number; devueltos: number; ultima: number }>()
+    const m = new Map<string, { nombre: string; rol: PedidoBodega['solicitante_rol']; local: string | null; entregas: number; vendidos: number; devueltos: number; ultima: number }>()
     for (const p of historial) {
       if (p.estado !== 'liquidado' || p.tipo !== 'consignacion' || !p.liquidado_en) continue
       const t = new Date(p.liquidado_en).getTime()
       if (t < inicioHoy) continue
       const k = p.solicitante_id ?? p.cliente_nombre
-      const x = m.get(k) ?? { nombre: p.solicitante_nombre ?? p.cliente_nombre, rol: p.solicitante_rol, entregas: 0, vendidos: 0, devueltos: 0, ultima: 0 }
+      const x = m.get(k) ?? { nombre: p.solicitante_nombre ?? p.cliente_nombre, rol: p.solicitante_rol, local: p.solicitante_local ?? null, entregas: 0, vendidos: 0, devueltos: 0, ultima: 0 }
       x.entregas += 1
       x.ultima = Math.max(x.ultima, t)
       for (const l of p.lineas) {
@@ -113,7 +114,7 @@ export function PendientesCierre({ grupos }: { grupos: GrupoCierre[] }) {
               <div className="min-w-0">
                 <p className="flex flex-wrap items-center gap-2 font-semibold">
                   {g.nombre}
-                  {g.rol && <Badge variant="outline">{NOMBRE_ROL[g.rol]}</Badge>}
+                  {g.rol && <Badge variant="outline">{etiquetaRol(g.rol, g.local)}</Badge>}
                   {g.anterior && <Badge variant="warning">Entrega de un día anterior</Badge>}
                 </p>
                 <p className={cn('text-sm text-muted-foreground', g.anterior && 'text-foreground')}>
@@ -123,7 +124,7 @@ export function PendientesCierre({ grupos }: { grupos: GrupoCierre[] }) {
                 </p>
               </div>
               <Button variant="outline" size="sm" onClick={() => document.getElementById(idCierre(g.clave))?.scrollIntoView({ behavior: 'smooth', block: 'start' })}>
-                Ir al cierre
+                {soloLectura ? 'Ver detalle' : 'Ir al cierre'}
               </Button>
               {enMano.length > 0 && (
                 <ul className="flex w-full flex-wrap gap-3" aria-label={`Pares en poder de ${g.nombre}`}>
@@ -159,7 +160,7 @@ export function PendientesCierre({ grupos }: { grupos: GrupoCierre[] }) {
               <li key={c.nombre} className="flex flex-wrap items-center justify-between gap-2 py-2">
                 <span className="flex flex-wrap items-center gap-2 font-semibold">
                   {c.nombre}
-                  {c.rol && <Badge variant="outline">{NOMBRE_ROL[c.rol]}</Badge>}
+                  {c.rol && <Badge variant="outline">{etiquetaRol(c.rol, c.local)}</Badge>}
                 </span>
                 <span className="tabular-nums text-muted-foreground">
                   {plural(c.entregas, 'entrega', 'entregas')} · vendidos <strong className="text-foreground">{c.vendidos}</strong> · regresaron {c.devueltos} · {hora.format(new Date(c.ultima))}

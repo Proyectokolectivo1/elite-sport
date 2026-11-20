@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { pendientesAdmin, pendientesBodeguero, type Pendientes } from './api'
 import { sonarAviso } from './sonido'
+import type { Rol } from '@/features/auth/roles'
 
 const VACIO: Pendientes = { pedidos: 0, bodega: 0, web: 0, mayoristas: 0 }
 const TITULO_BASE = 'Elite Sport'
@@ -11,8 +12,8 @@ const TITULO_BASE = 'Elite Sport'
  * Consulta cada 30 s (solo conteos) y tambien con la pestana en segundo plano.
  * Si la funcion de conteo falla (por ejemplo, aun no esta instalada), no se muestra nada.
  */
-export function useAvisos(rol: 'admin' | 'bodeguero' | 'vendedor' | undefined): { pendientes: Pendientes; total: number } {
-  const activo = rol === 'admin' || rol === 'bodeguero'
+export function useAvisos(rol: Rol | undefined): { pendientes: Pendientes; total: number } {
+  const activo = rol === 'admin' || rol === 'bodeguero' || rol === 'auxiliar_bodega'
   const { data } = useQuery({
     queryKey: ['avisos', rol],
     queryFn: rol === 'admin' ? pendientesAdmin : pendientesBodeguero,

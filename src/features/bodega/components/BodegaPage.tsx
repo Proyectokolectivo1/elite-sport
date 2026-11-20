@@ -8,7 +8,8 @@ import { PageHeader } from '@/components/ui/page-header'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs } from '@/components/ui/tabs'
 import { toast } from '@/components/ui/toast'
-import { NOMBRE_ROL } from '@/features/auth/roles'
+import { useAuth } from '@/features/auth/hooks/AuthProvider'
+import { etiquetaRol } from '@/features/auth/roles'
 import { mensajeError } from '@/lib/errors'
 import { cn } from '@/lib/utils'
 import type { PedidoBodega, VistaBodega } from '../api/bodega'
@@ -44,6 +45,13 @@ const TEXTOS: Record<VistaBodega, { titulo: string; descripcion: string; vacio: 
   historial: { titulo: 'Historial', descripcion: 'Entregas cerradas o canceladas en los últimos 7 días.', vacio: 'Sin movimientos esta semana.' },
 }
 
+// El auxiliar de bodega solo mira: avisa al bodeguero de lo que llega.
+const TEXTOS_AUXILIAR: Partial<Record<VistaBodega, { titulo: string; descripcion: string }>> = {
+  por_despachar: { titulo: 'Por despachar', descripcion: 'Pedidos que llegan a bodega, en vivo. Avisa al bodeguero para que los despache.' },
+  en_poder: { titulo: 'En poder', descripcion: 'Lo que cada vendedor y mayorista del sector tiene en su poder. El cierre lo hace el bodeguero.' },
+  web: { titulo: 'Pedidos web', descripcion: 'Pedidos confirmados por el administrador que bodega debe preparar.' },
+}
+
 const fecha = new Intl.DateTimeFormat('es-EC', { dateStyle: 'medium', timeStyle: 'short' })
 
 function Encabezado({ p }: { p: PedidoBodega }) {
@@ -56,7 +64,7 @@ function Encabezado({ p }: { p: PedidoBodega }) {
           {p.tipo !== 'consignacion' && ` · ${p.cliente_telefono}`}
         </p>
       </div>
-      {p.solicitante_rol && <Badge variant="outline">{NOMBRE_ROL[p.solicitante_rol]}</Badge>}
+      {p.solicitante_rol && <Badge variant="outline">{etiquetaRol(p.solicitante_rol, p.solicitante_local)}</Badge>}
       {p.tipo === 'mayorista' && <Badge variant="outline">Mayorista</Badge>}
       {p.tipo === 'minorista' && <Badge variant="outline">Tienda en línea</Badge>}
     </div>
@@ -137,7 +145,48 @@ function Despacho({ p }: { p: PedidoBodega }) {
   )
 }
 
-function PedidoWeb({ p }: { p: PedidoBodega }) {
+/** Pedido por despachar visto por el auxiliar: qué se pidió y cuánto hay en bodega, sin acciones. */
+function DespachoLectura({ p }: { p: PedidoBodega }) {
+  const foto = useFotoDeVariante()
+  const pares = p.lineas.reduce((s, l) => s + l.cantidad, 0)
+  return (
+    <article className="space-y-4 rounded-xl border border-border bg-card p-4">
+      <Encabezado p={p} />
+      {p.nota && <p className="rounded-md bg-muted p-3 text-sm">{p.nota}</p>}
+      <ul className="divide-y divide-border">
+        {p.lineas.map((l) => {
+          const partes = partesLinea(l.descripcion)
+          return (
+            <li key={l.id} className="flex flex-col gap-4 py-4 sm:flex-row sm:items-center">
+              <FotoPar src={foto(l.variante_id)} alt={l.descripcion} className="aspect-square w-full rounded-xl sm:size-44 sm:w-44" />
+              <div className="min-w-0 flex-1">
+                <p className="font-display text-2xl font-bold uppercase leading-tight">{partes.nombre}</p>
+                {partes.color && (
+                  <p className="mt-1 flex items-center gap-3">
+                    <span className="text-muted-foreground">{partes.color}</span>
+                    <span className="rounded-lg bg-foreground px-3 py-1 text-xl font-bold tabular-nums text-background">Talla {partes.talla}</span>
+                  </p>
+                )}
+                <p className={cn('mt-2 text-sm text-muted-foreground', l.stock < l.cantidad && 'text-destructive')}>
+                  En bodega {l.stock}
+                  {l.stock < l.cantidad && ' · no alcanza'}
+                </p>
+              </div>
+              <p className="text-sm text-muted-foreground sm:text-right">
+                Pidió <strong className="block text-4xl font-bold leading-none text-foreground tabular-nums">× {l.cantidad}</strong>
+              </p>
+            </li>
+          )
+        })}
+      </ul>
+      <p className="text-sm text-muted-foreground">
+        {pares} {pares === 1 ? 'par' : 'pares'} por despachar · lo despacha el bodeguero.
+      </p>
+    </article>
+  )
+}
+
+function PedidoWeb({ p, soloLectura }: { p: PedidoBodega; soloLectura: boolean }) {
   const foto = useFotoDeVariante()
   const entregar = useEntregarWeb()
   return (
@@ -161,13 +210,13 @@ function PedidoWeb({ p }: { p: PedidoBodega }) {
           </li>
         ))}
       </ul>
-      <Button
+      {!soloLectura && <Button
         variant="solid"
         disabled={entregar.isPending}
         onClick={() => entregar.mutate(p.id, { onSuccess: () => toast.success(`Pedido #${p.numero} entregado`), onError: (e) => toast.error(mensajeError(e)) })}
       >
         Marcar entregado
-      </Button>
+      </Button>}
     </article>
   )
 }
@@ -211,7 +260,7 @@ function Historial({ p }: { p: PedidoBodega }) {
 }
 
 /** Encabezado de cada persona en el cierre: quién es y qué se le despachó en total. */
-function ResumenGrupo({ nombre, rol, pedidos }: { nombre: string; rol: PedidoBodega['solicitante_rol']; pedidos: PedidoBodega[] }) {
+function ResumenGrupo({ nombre, rol, local, pedidos }: { nombre: string; rol: PedidoBodega['solicitante_rol']; local: string | null; pedidos: PedidoBodega[] }) {
   const foto = useFotoDeVariante()
   const resumen = useMemo(() => {
     const m = new Map<string, { varianteId: string; entregados: number; vendidos: number; devueltos: number }>()
@@ -236,7 +285,7 @@ function ResumenGrupo({ nombre, rol, pedidos }: { nombre: string; rol: PedidoBod
     <div className="mb-3">
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
         <h2 className="text-3xl">{nombre}</h2>
-        {rol && <Badge variant="outline">{NOMBRE_ROL[rol]}</Badge>}
+        {rol && <Badge variant="outline">{etiquetaRol(rol, local)}</Badge>}
       </div>
       <p className="mt-1 text-sm text-muted-foreground">
         {plural(pedidos.length, 'entrega abierta', 'entregas abiertas')} · {plural(entregados, 'par despachado', 'pares despachados')} ·{' '}
@@ -274,19 +323,21 @@ export function BodegaPage({ vista }: { vista: VistaBodega }) {
   const navigate = useNavigate()
   const { data = [], isLoading, error } = usePedidosBodega(vista)
   const [q, setQ] = useState('')
-  const t = TEXTOS[vista]
+  const { perfil } = useAuth()
+  const soloLectura = perfil?.rol === 'auxiliar_bodega'
+  const t = { ...TEXTOS[vista], ...(soloLectura ? TEXTOS_AUXILIAR[vista] : undefined) }
 
   const filas = useMemo(() => {
     const s = q.trim().toLowerCase()
-    return s ? data.filter((p) => `${p.numero} ${p.solicitante_nombre ?? ''} ${p.cliente_nombre}`.toLowerCase().includes(s)) : data
+    return s ? data.filter((p) => `${p.numero} ${p.solicitante_nombre ?? ''} ${p.solicitante_local ?? ''} ${p.cliente_nombre}`.toLowerCase().includes(s)) : data
   }, [data, q])
 
   // En el cierre se agrupa por solicitante (cada mayorista del sector o vendedor): se cuadra persona por persona.
   const grupos = useMemo(() => {
-    const m = new Map<string, { nombre: string; rol: PedidoBodega['solicitante_rol']; pedidos: PedidoBodega[] }>()
+    const m = new Map<string, { nombre: string; rol: PedidoBodega['solicitante_rol']; local: string | null; pedidos: PedidoBodega[] }>()
     for (const p of filas) {
       const k = p.solicitante_id ?? p.cliente_nombre
-      const g = m.get(k) ?? { nombre: p.solicitante_nombre ?? p.cliente_nombre, rol: p.solicitante_rol, pedidos: [] }
+      const g = m.get(k) ?? { nombre: p.solicitante_nombre ?? p.cliente_nombre, rol: p.solicitante_rol, local: p.solicitante_local ?? null, pedidos: [] }
       g.pedidos.push(p)
       m.set(k, g)
     }
@@ -311,23 +362,29 @@ export function BodegaPage({ vista }: { vista: VistaBodega }) {
 
       {vista === 'en_poder' ? (
         <div className="space-y-10">
-          <PendientesCierre grupos={grupos.map(([clave, g]) => ({ clave, ...g }))} />
-          {grupos.map(([clave, { nombre, rol, pedidos }]) => (
+          <PendientesCierre grupos={grupos.map(([clave, g]) => ({ clave, ...g }))} soloLectura={soloLectura} />
+          {grupos.map(([clave, { nombre, rol, local, pedidos }]) => (
             <section key={clave} id={idCierre(clave)} aria-label={`Entregas de ${nombre}`} className="scroll-mt-24">
-              <ResumenGrupo nombre={nombre} rol={rol} pedidos={pedidos} />
-              <div className="space-y-4">
+              <ResumenGrupo nombre={nombre} rol={rol} local={local} pedidos={pedidos} />
+              {!soloLectura && <div className="space-y-4">
                 {pedidos.map((p) => (
                   // La clave cambia si llegan ventas o devoluciones nuevas: así el formulario parte de los datos al día.
                   <CierreEntrega key={`${p.id}:${p.lineas.map((l) => `${l.cantidad_vendida}-${l.cantidad_devuelta}`).join(',')}`} pedido={p} />
                 ))}
-              </div>
+              </div>}
             </section>
           ))}
         </div>
       ) : (
         <div className={cn('grid gap-4', vista !== 'historial' && 'xl:grid-cols-2')}>
           {filas.map((p) =>
-            vista === 'por_despachar' ? <Despacho key={p.id} p={p} /> : vista === 'web' ? <PedidoWeb key={p.id} p={p} /> : <Historial key={p.id} p={p} />,
+            vista === 'por_despachar' ? (
+              soloLectura ? <DespachoLectura key={p.id} p={p} /> : <Despacho key={p.id} p={p} />
+            ) : vista === 'web' ? (
+              <PedidoWeb key={p.id} p={p} soloLectura={soloLectura} />
+            ) : (
+              <Historial key={p.id} p={p} />
+            ),
           )}
         </div>
       )}

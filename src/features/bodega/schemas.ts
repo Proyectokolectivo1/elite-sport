@@ -1,6 +1,6 @@
 import { z } from 'zod'
 
-const rol = z.enum(['admin', 'mayorista', 'bodeguero', 'vendedor', 'mayorista_sector'])
+const rol = z.enum(['admin', 'mayorista', 'bodeguero', 'auxiliar_bodega', 'vendedor', 'mayorista_sector'])
 const estadoPedido = z.enum(['nuevo', 'confirmado', 'entregado', 'cancelado', 'liquidado'])
 const tipoPedido = z.enum(['minorista', 'mayorista', 'lead_tienda', 'mostrador', 'consignacion'])
 
@@ -28,6 +28,7 @@ export const pedidoBodegaSchema = z.object({
   solicitante_id: z.string().nullable(),
   solicitante_nombre: z.string().nullable(),
   solicitante_rol: rol.nullable(),
+  solicitante_local: z.string().nullable().optional(),
   cliente_nombre: z.string(),
   cliente_telefono: z.string(),
   cliente_direccion: z.string().nullable(),
@@ -58,10 +59,16 @@ export const resultadoVentaSchema = z.object({ id: z.string(), numero: z.number(
 export const resultadoSolicitudSchema = z.object({ id: z.string(), numero: z.number() })
 
 /** Edición de un integrante del equipo por el admin. */
-export const integranteSchema = z.object({
-  rol: z.enum(['mayorista', 'mayorista_sector', 'bodeguero', 'vendedor']),
-  estado: z.enum(['pendiente', 'aprobado', 'rechazado', 'suspendido']),
-})
+const rolEquipo = z.enum(['mayorista', 'mayorista_sector', 'bodeguero', 'auxiliar_bodega', 'vendedor'])
+const MSJ_LOCAL = { message: 'Elige el local del vendedor', path: ['local_id'] }
+
+export const integranteSchema = z
+  .object({
+    rol: rolEquipo,
+    estado: z.enum(['pendiente', 'aprobado', 'rechazado', 'suspendido']),
+    local_id: z.string(),
+  })
+  .refine((v) => v.rol !== 'vendedor' || v.local_id !== '', MSJ_LOCAL)
 export type IntegranteValues = z.infer<typeof integranteSchema>
 
 export const notaPedidoSchema = z.object({ nota: z.string().max(500, 'Máximo 500 caracteres') })
@@ -72,12 +79,17 @@ export const nuevoUsuarioSchema = z.object({
   nombre: z.string().trim().min(2, 'Ingresa el nombre'),
   correo: z.string().trim().email('Correo no válido'),
   contrasena: z.string().min(8, 'Mínimo 8 caracteres'),
-  rol: z.enum(['mayorista', 'mayorista_sector', 'bodeguero', 'vendedor']),
+  rol: rolEquipo,
+  local_id: z.string(),
   negocio: z.string().trim().max(120),
   telefono: z.string().trim().max(30),
   cedula_ruc: z.string().trim().max(20),
   ciudad: z.string().trim().max(80),
-})
+}).refine((v) => v.rol !== 'vendedor' || v.local_id !== '', MSJ_LOCAL)
+
+/** Alta o cambio de nombre de un local (subtienda del punto físico). */
+export const localSchema = z.object({ nombre: z.string().trim().min(1, 'Escribe el nombre').max(60, 'Máximo 60 caracteres') })
+export type LocalValues = z.infer<typeof localSchema>
 export type NuevoUsuarioValues = z.infer<typeof nuevoUsuarioSchema>
 
 export const nuevaContrasenaUsuarioSchema = z.object({ contrasena: z.string().min(8, 'Mínimo 8 caracteres') })

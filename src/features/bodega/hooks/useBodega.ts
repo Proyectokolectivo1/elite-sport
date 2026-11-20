@@ -6,7 +6,10 @@ import { pedidosKey } from '@/features/pedidos/hooks/usePedidos'
 import {
   actualizarIntegrante,
   cambiarContrasenaUsuario,
+  crearLocal,
   crearUsuario,
+  editarLocal,
+  listarLocales,
   cuentasSector,
   marcarPagoCierre,
   cancelarPedidoBodega,
@@ -34,6 +37,7 @@ export const bodegaKeys = {
   entregas: (uid: string | undefined) => ['bodega', 'entregas', uid] as const,
   ventas: (uid: string | undefined) => ['bodega', 'ventas', uid] as const,
   equipo: ['equipo'] as const,
+  locales: ['locales'] as const,
   cobros: ['bodega', 'cobros'] as const,
 }
 
@@ -139,6 +143,21 @@ export function useActualizarIntegrante() {
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: bodegaKeys.equipo })
       void qc.invalidateQueries({ queryKey: ['mayoristas'] })
+    },
+  })
+}
+
+/** Locales del punto físico (Élite, KZ, Mega Moda...). Cambian poco: se reutilizan 10 minutos. */
+export const useLocales = (activo = true) => useQuery({ queryKey: bodegaKeys.locales, queryFn: listarLocales, staleTime: 10 * 60_000, enabled: activo })
+
+export function useGuardarLocal() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (v: { id?: string; nombre?: string; activo?: boolean }) =>
+      v.id ? editarLocal(v.id, { nombre: v.nombre, activo: v.activo }) : crearLocal(v.nombre ?? ''),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: bodegaKeys.locales })
+      void qc.invalidateQueries({ queryKey: bodegaKeys.equipo })
     },
   })
 }

@@ -1,15 +1,15 @@
-import { useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { Printer } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input, Label } from '@/components/ui/input'
 import { PageHeader } from '@/components/ui/page-header'
 import { Skeleton } from '@/components/ui/skeleton'
 import { mensajeError } from '@/lib/errors'
 import { formatMoney, useMoneyStore } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { useResumenVentas } from '../hooks/useCaja'
-import { aFechaInput, NOMBRE_CANAL, periodo, resumirCanales, type ResumenCanal } from '../logica'
+import { NOMBRE_CANAL, resumirCanales, type ResumenCanal } from '../logica'
+import { SelectorPeriodo, usePeriodo } from './SelectorPeriodo'
 
 const plural = (n: number) => `${n} ${n === 1 ? 'venta' : 'ventas'}`
 
@@ -17,27 +17,13 @@ const plural = (n: number) => `${n} ${n === 1 ? 'venta' : 'ventas'}`
 export function CajaPage() {
   const moneda = useMoneyStore((s) => s.config)
   const fmt = (n: number) => formatMoney(n, moneda)
-  const [hoy] = useState(() => aFechaInput(new Date()))
-  const [desde, setDesde] = useState(hoy)
-  const [hasta, setHasta] = useState(hoy)
-  const rango = useMemo(() => periodo(desde, hasta), [desde, hasta])
+  const per = usePeriodo()
+  const { rango } = per
   const { data: resumen, isLoading, error } = useResumenVentas(rango?.desde ?? null, rango?.hasta ?? null)
   const { canales, totalGeneral, pedidosGeneral } = useMemo(() => resumirCanales(resumen?.filas ?? []), [resumen])
   const porCerrar = resumen?.porCerrar
   const local = canales.find((c) => c.canal === 'local')
   const sector = canales.find((c) => c.canal === 'sector')
-
-  function ultimosDias(dias: number) {
-    const f = new Date()
-    f.setDate(f.getDate() - dias)
-    setDesde(aFechaInput(f))
-    setHasta(aFechaInput(dias === 1 ? f : new Date()))
-  }
-  function esteMes() {
-    const f = new Date()
-    setDesde(aFechaInput(new Date(f.getFullYear(), f.getMonth(), 1)))
-    setHasta(aFechaInput(f))
-  }
 
   return (
     <>
@@ -53,27 +39,12 @@ export function CajaPage() {
 
       {porCerrar && porCerrar.pedidos > 0 && (
         <p role="status" className="mb-6 rounded-lg bg-warning/10 p-3 text-sm print:hidden">
-          Hay {plural(porCerrar.pedidos)} del local por cerrar ({fmt(porCerrar.total)} a precio de lista). No cuentan en la caja hasta que las cierres.{' '}
+          Hay {plural(porCerrar.pedidos)} del local por cerrar ({fmt(porCerrar.total)} al precio del vendedor). No cuentan en la caja hasta que las cierres.{' '}
           <Link to="/admin/por-cerrar" className="font-semibold underline underline-offset-4">Cerrar ventas</Link>
         </p>
       )}
 
-      <section aria-label="Periodo" className="mb-6 flex flex-wrap items-end gap-3 print:hidden">
-        <div>
-          <Label htmlFor="caja-desde">Desde</Label>
-          <Input id="caja-desde" type="date" value={desde} max={hasta} onChange={(e) => setDesde(e.target.value)} />
-        </div>
-        <div>
-          <Label htmlFor="caja-hasta">Hasta</Label>
-          <Input id="caja-hasta" type="date" value={hasta} min={desde} onChange={(e) => setHasta(e.target.value)} />
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => ultimosDias(0)}>Hoy</Button>
-          <Button variant="outline" size="sm" onClick={() => ultimosDias(1)}>Ayer</Button>
-          <Button variant="outline" size="sm" onClick={() => ultimosDias(6)}>7 días</Button>
-          <Button variant="outline" size="sm" onClick={esteMes}>Este mes</Button>
-        </div>
-      </section>
+      <SelectorPeriodo p={per} id="caja" />
       {!rango && <p role="alert" className="mb-4 text-destructive">Elige un periodo válido.</p>}
       {error && <p role="alert" className="mb-4 text-destructive">{mensajeError(error)}</p>}
       {isLoading && <Skeleton className="h-64 w-full" />}
@@ -82,7 +53,7 @@ export function CajaPage() {
         <>
           <section aria-label="Totales" className="mb-8 grid gap-3 md:grid-cols-3">
             <Total etiqueta="Total general" valor={fmt(totalGeneral)} nota={plural(pedidosGeneral)} grande />
-            <Total etiqueta="Total del local" valor={fmt(local?.total ?? 0)} nota={plural(local?.pedidos ?? 0)} />
+            <Total etiqueta="Total del local" valor={fmt(local?.total ?? 0)} nota={plural(local?.pedidos ?? 0)} enlace={{ a: '/admin/ventas-tiendas', texto: 'Ver por tienda y día' }} />
             <Total etiqueta="Total del sector" valor={fmt(sector?.total ?? 0)} nota={plural(sector?.pedidos ?? 0)} />
           </section>
 
@@ -97,12 +68,17 @@ export function CajaPage() {
   )
 }
 
-function Total({ etiqueta, valor, nota, grande }: { etiqueta: string; valor: string; nota: string; grande?: boolean }) {
+function Total({ etiqueta, valor, nota, grande, enlace }: { etiqueta: string; valor: string; nota: string; grande?: boolean; enlace?: { a: string; texto: string } }) {
   return (
     <div className={cn('rounded-xl border border-border bg-card p-4', grande && 'md:border-foreground')}>
       <p className="eyebrow">{etiqueta}</p>
       <p className="mt-1 font-display text-5xl font-bold leading-none tabular-nums">{valor}</p>
       <p className="mt-2 text-sm text-muted-foreground">{nota}</p>
+      {enlace && (
+        <Link to={enlace.a} className="mt-2 inline-block text-sm font-semibold underline underline-offset-4 print:hidden">
+          {enlace.texto}
+        </Link>
+      )}
     </div>
   )
 }
@@ -142,7 +118,10 @@ function Canal({ c, fmt }: { c: ResumenCanal; fmt: (n: number) => string }) {
           {c.filas.map((f) => (
             <li key={f.clave} className="py-3">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <p className="font-semibold">{f.nombre}</p>
+                <p className="font-semibold">
+                  {f.nombre}
+                  {f.detalle && <span className="block text-xs font-normal text-muted-foreground">{f.detalle}</span>}
+                </p>
                 <p className="tabular-nums">
                   <strong className="text-lg">{fmt(f.total)}</strong>
                   <span className="ml-2 text-sm text-muted-foreground">{plural(f.pedidos)}</span>

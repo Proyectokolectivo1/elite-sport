@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { inicioDeRol, puedeEntrar, ROLES_PANEL } from './roles'
+import { etiquetaRol, inicioDeRol, puedeEntrar, ROLES_PANEL } from './roles'
 
 describe('inicioDeRol', () => {
   it('lleva cada rol aprobado a su pantalla', () => {
@@ -8,6 +8,7 @@ describe('inicioDeRol', () => {
     expect(inicioDeRol('vendedor', 'aprobado')).toBe('/admin/local')
     expect(inicioDeRol('mayorista', 'aprobado')).toBe('/mayorista')
     expect(inicioDeRol('mayorista_sector', 'aprobado')).toBe('/sector')
+    expect(inicioDeRol('auxiliar_bodega', 'aprobado')).toBe('/admin/bodega')
   })
 
   it('sin aprobar o sin perfil va a la pantalla de estado', () => {
@@ -29,5 +30,13 @@ describe('puedeEntrar', () => {
   it('una ruta solo de admin no deja pasar al bodeguero', () => {
     expect(puedeEntrar('bodeguero', 'aprobado', ['admin'])).toBe(false)
     expect(puedeEntrar('admin', 'aprobado', ['admin'])).toBe(true)
+  })
+})
+
+describe('etiquetaRol', () => {
+  it('el vendedor se nombra con su local; los demás, solo con el rol', () => {
+    expect(etiquetaRol('vendedor', 'KZ')).toBe('Vendedor del local · KZ')
+    expect(etiquetaRol('vendedor', null)).toBe('Vendedor del local')
+    expect(etiquetaRol('auxiliar_bodega', 'KZ')).toBe('Auxiliar de bodega')
   })
 })

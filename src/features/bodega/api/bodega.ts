@@ -232,13 +232,15 @@ export interface Integrante {
   telefono: string | null
   rol: Enums<'rol_usuario'>
   estado: Enums<'estado_perfil'>
+  localId: string | null
+  local: string | null
   creadoEn: string
 }
 
 export async function listarEquipo(): Promise<Integrante[]> {
   const { data, error } = await supabase
     .from('perfiles')
-    .select('id, nombre, negocio, correo, telefono, rol, estado, creado_en')
+    .select('id, nombre, negocio, correo, telefono, rol, estado, creado_en, local_id, local:locales(nombre)')
     .neq('rol', 'admin')
     .order('creado_en', { ascending: false })
     .limit(500)
@@ -251,12 +253,40 @@ export async function listarEquipo(): Promise<Integrante[]> {
     telefono: p.telefono,
     rol: p.rol,
     estado: p.estado,
+    localId: p.local_id,
+    local: p.local?.nombre ?? null,
     creadoEn: p.creado_en,
   }))
 }
 
 export async function actualizarIntegrante(id: string, v: IntegranteValues): Promise<void> {
-  const { error } = await supabase.from('perfiles').update({ rol: v.rol, estado: v.estado }).eq('id', id)
+  const { error } = await supabase
+    .from('perfiles')
+    .update({ rol: v.rol, estado: v.estado, local_id: v.rol === 'vendedor' ? v.local_id || null : null })
+    .eq('id', id)
+  if (error) throw error
+}
+
+// ============ Locales (subtiendas del punto físico) ============
+export interface Local {
+  id: string
+  nombre: string
+  activo: boolean
+}
+
+export async function listarLocales(): Promise<Local[]> {
+  const { data, error } = await supabase.from('locales').select('id, nombre, activo').order('nombre')
+  if (error) throw error
+  return data
+}
+
+export async function crearLocal(nombre: string): Promise<void> {
+  const { error } = await supabase.from('locales').insert({ nombre: nombre.trim() })
+  if (error) throw error
+}
+
+export async function editarLocal(id: string, cambios: { nombre?: string; activo?: boolean }): Promise<void> {
+  const { error } = await supabase.from('locales').update({ ...cambios, nombre: cambios.nombre?.trim() }).eq('id', id)
   if (error) throw error
 }
 
@@ -333,5 +363,6 @@ async function invocarGestion(cuerpo: Record<string, unknown>): Promise<{ id?: s
   return data as { id?: string }
 }
 
-export const crearUsuario = (v: NuevoUsuarioValues) => invocarGestion({ accion: 'crear', ...v, estado: 'aprobado' })
+export const crearUsuario = (v: NuevoUsuarioValues) =>
+  invocarGestion({ accion: 'crear', ...v, local_id: v.rol === 'vendedor' ? v.local_id : '', estado: 'aprobado' })
 export const cambiarContrasenaUsuario = (id: string, contrasena: string) => invocarGestion({ accion: 'contrasena', id, contrasena })

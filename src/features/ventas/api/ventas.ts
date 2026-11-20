@@ -32,13 +32,18 @@ export interface LineaPorCerrar {
   id: string
   descripcion: string
   cantidad: number
+  /** Precio que puso el vendedor. */
   precio: number
+  /** Precio de lista de la entrega de bodega. */
+  precioLista: number | null
 }
 
 export interface VentaPorCerrar {
   id: string
   numero: number
   vendedor: string
+  /** Local donde se hizo la venta (Élite, KZ...). */
+  local: string | null
   cliente: string
   documento: string | null
   metodoPago: MetodoPago
@@ -52,7 +57,7 @@ export interface VentaPorCerrar {
 export async function listarVentasPorCerrar(): Promise<VentaPorCerrar[]> {
   const { data, error } = await supabase
     .from('pedidos')
-    .select('id, numero, cliente_nombre, cliente_documento, metodo_pago, total, nota, creado_en, solicitante:perfiles!pedidos_solicitante_id_fkey(nombre, negocio), pedidos_detalle(id, descripcion, cantidad, precio_unitario)')
+    .select('id, numero, cliente_nombre, cliente_documento, metodo_pago, total, nota, creado_en, solicitante:perfiles!pedidos_solicitante_id_fkey(nombre, negocio), local:locales(nombre), pedidos_detalle(id, descripcion, cantidad, precio_unitario, precio_lista)')
     .eq('tipo', 'mostrador')
     .eq('estado', 'nuevo')
     .order('creado_en', { ascending: true })
@@ -62,6 +67,7 @@ export async function listarVentasPorCerrar(): Promise<VentaPorCerrar[]> {
     id: p.id,
     numero: p.numero,
     vendedor: p.solicitante?.nombre || p.solicitante?.negocio || 'Sin nombre',
+    local: p.local?.nombre ?? null,
     cliente: p.cliente_nombre,
     documento: p.cliente_documento,
     metodoPago: p.metodo_pago ?? 'efectivo',
@@ -70,7 +76,7 @@ export async function listarVentasPorCerrar(): Promise<VentaPorCerrar[]> {
     creadoEn: p.creado_en,
     lineas: [...p.pedidos_detalle]
       .sort((a, b) => a.descripcion.localeCompare(b.descripcion))
-      .map((d) => ({ id: d.id, descripcion: d.descripcion, cantidad: d.cantidad, precio: d.precio_unitario })),
+      .map((d) => ({ id: d.id, descripcion: d.descripcion, cantidad: d.cantidad, precio: d.precio_unitario, precioLista: d.precio_lista })),
   }))
 }
 

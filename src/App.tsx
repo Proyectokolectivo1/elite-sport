@@ -34,6 +34,7 @@ const PreciosPage = lazy(() => import('@/features/precios/components/PreciosPage
 const VentasPorCerrarPage = lazy(() => import('@/features/ventas/components/VentasPorCerrarPage').then((m) => ({ default: m.VentasPorCerrarPage })))
 const VentasPage = lazy(() => import('@/features/ventas/components/VentasPage').then((m) => ({ default: m.VentasPage })))
 const CajaPage = lazy(() => import('@/features/caja/components/CajaPage').then((m) => ({ default: m.CajaPage })))
+const VentasTiendasPage = lazy(() => import('@/features/caja/components/VentasTiendasPage').then((m) => ({ default: m.VentasTiendasPage })))
 const DevolucionesPage = lazy(() => import('@/features/devoluciones/components/DevolucionesPage').then((m) => ({ default: m.DevolucionesPage })))
 const ImportarProductosPage = lazy(() => import('@/features/catalogo/components/ImportarProductosPage').then((m) => ({ default: m.ImportarProductosPage })))
 const PedidosPage = lazy(() => import('@/features/pedidos/components/PedidosPage').then((m) => ({ default: m.PedidosPage })))
@@ -93,6 +94,7 @@ export default function App() {
                 <Route path="ventas" element={<VentasPage />} />
                 <Route path="por-cerrar" element={<VentasPorCerrarPage />} />
                 <Route path="caja" element={<CajaPage />} />
+                <Route path="ventas-tiendas" element={<VentasTiendasPage />} />
                 <Route path="pedidos" element={<PedidosPage />} />
                 <Route path="devoluciones" element={<DevolucionesPage />} />
                 <Route path="mayoristas" element={<MayoristasPage />} />
@@ -102,6 +104,8 @@ export default function App() {
               </Route>
               <Route element={<RequirePanel roles={['admin', 'bodeguero']} />}>
                 <Route path="inventario" element={<InventarioPage />} />
+              </Route>
+              <Route element={<RequirePanel roles={['admin', 'bodeguero', 'auxiliar_bodega']} />}>
                 <Route path="bodega" element={<BodegaPage vista="por_despachar" />} />
                 <Route path="bodega/cierre" element={<BodegaPage vista="en_poder" />} />
                 <Route path="bodega/web" element={<BodegaPage vista="web" />} />

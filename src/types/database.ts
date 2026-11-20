@@ -123,6 +123,12 @@ export type Database = {
           { foreignKeyName: 'cambios_pedidos_pedido_id_fkey'; columns: ['pedido_id']; isOneToOne: true; referencedRelation: 'pedidos'; referencedColumns: ['id'] },
         ]
       }
+      locales: {
+        Row: { activo: boolean; creado_en: string; id: string; nombre: string }
+        Insert: { activo?: boolean; creado_en?: string; id?: string; nombre: string }
+        Update: { activo?: boolean; creado_en?: string; id?: string; nombre?: string }
+        Relationships: []
+      }
       movimientos_inventario: {
         Row: {
           creado_en: string; creado_por: string | null; delta: number; id: string
@@ -147,24 +153,25 @@ export type Database = {
           cliente_nombre: string; cliente_telefono: string; creado_en: string; estado: Enum<'estado_pedido'>
           id: string; mayorista_id: string | null; moneda: string; nota: string | null; numero: number
           stock_descontado: boolean; tienda_id: string | null; tipo: Enum<'tipo_pedido'>; total: number
-          solicitante_id: string | null; despachado_por: string | null; despachado_en: string | null; liquidado_por: string | null; liquidado_en: string | null; pagado_en: string | null; pagado_por: string | null
+          solicitante_id: string | null; despachado_por: string | null; despachado_en: string | null; liquidado_por: string | null; liquidado_en: string | null; pagado_en: string | null; pagado_por: string | null; local_id: string | null
         }
         Insert: {
           cliente_correo?: string | null; cliente_direccion?: string | null; cliente_documento?: string | null; metodo_pago?: 'efectivo' | 'transferencia' | 'tarjeta' | null
           cliente_nombre: string; cliente_telefono: string; creado_en?: string; estado?: Enum<'estado_pedido'>
           id?: string; mayorista_id?: string | null; moneda: string; nota?: string | null; numero?: never
           stock_descontado?: boolean; tienda_id?: string | null; tipo: Enum<'tipo_pedido'>; total?: number
-          solicitante_id?: string | null; despachado_por?: string | null; despachado_en?: string | null; liquidado_por?: string | null; liquidado_en?: string | null; pagado_en?: string | null; pagado_por?: string | null
+          solicitante_id?: string | null; despachado_por?: string | null; despachado_en?: string | null; liquidado_por?: string | null; liquidado_en?: string | null; pagado_en?: string | null; pagado_por?: string | null; local_id?: string | null
         }
         Update: {
           cliente_correo?: string | null; cliente_direccion?: string | null; cliente_documento?: string | null; metodo_pago?: 'efectivo' | 'transferencia' | 'tarjeta' | null
           cliente_nombre?: string; cliente_telefono?: string; creado_en?: string; estado?: Enum<'estado_pedido'>
           id?: string; mayorista_id?: string | null; moneda?: string; nota?: string | null; numero?: never
           stock_descontado?: boolean; tienda_id?: string | null; tipo?: Enum<'tipo_pedido'>; total?: number
-          solicitante_id?: string | null; despachado_por?: string | null; despachado_en?: string | null; liquidado_por?: string | null; liquidado_en?: string | null; pagado_en?: string | null; pagado_por?: string | null
+          solicitante_id?: string | null; despachado_por?: string | null; despachado_en?: string | null; liquidado_por?: string | null; liquidado_en?: string | null; pagado_en?: string | null; pagado_por?: string | null; local_id?: string | null
         }
         Relationships: [
           { foreignKeyName: 'pedidos_despachado_por_fkey'; columns: ['despachado_por']; isOneToOne: false; referencedRelation: 'perfiles'; referencedColumns: ['id'] },
+          { foreignKeyName: 'pedidos_local_id_fkey'; columns: ['local_id']; isOneToOne: false; referencedRelation: 'locales'; referencedColumns: ['id'] },
           { foreignKeyName: 'pedidos_liquidado_por_fkey'; columns: ['liquidado_por']; isOneToOne: false; referencedRelation: 'perfiles'; referencedColumns: ['id'] },
           { foreignKeyName: 'pedidos_mayorista_id_fkey'; columns: ['mayorista_id']; isOneToOne: false; referencedRelation: 'perfiles'; referencedColumns: ['id'] },
           { foreignKeyName: 'pedidos_solicitante_id_fkey'; columns: ['solicitante_id']; isOneToOne: false; referencedRelation: 'perfiles'; referencedColumns: ['id'] },
@@ -174,15 +181,15 @@ export type Database = {
       pedidos_detalle: {
         Row: {
           cantidad: number; descripcion: string; id: string; pedido_id: string; precio_unitario: number; variante_id: string
-          cantidad_entregada: number | null; cantidad_vendida: number | null; cantidad_devuelta: number | null; origen_detalle_id: string | null
+          cantidad_entregada: number | null; cantidad_vendida: number | null; cantidad_devuelta: number | null; origen_detalle_id: string | null; precio_lista: number | null
         }
         Insert: {
           cantidad: number; descripcion: string; id?: string; pedido_id: string; precio_unitario: number; variante_id: string
-          cantidad_entregada?: number | null; cantidad_vendida?: number | null; cantidad_devuelta?: number | null; origen_detalle_id?: string | null
+          cantidad_entregada?: number | null; cantidad_vendida?: number | null; cantidad_devuelta?: number | null; origen_detalle_id?: string | null; precio_lista?: number | null
         }
         Update: {
           cantidad?: number; descripcion?: string; id?: string; pedido_id?: string; precio_unitario?: number; variante_id?: string
-          cantidad_entregada?: number | null; cantidad_vendida?: number | null; cantidad_devuelta?: number | null; origen_detalle_id?: string | null
+          cantidad_entregada?: number | null; cantidad_vendida?: number | null; cantidad_devuelta?: number | null; origen_detalle_id?: string | null; precio_lista?: number | null
         }
         Relationships: [
           { foreignKeyName: 'pedidos_detalle_origen_detalle_id_fkey'; columns: ['origen_detalle_id']; isOneToOne: false; referencedRelation: 'pedidos_detalle'; referencedColumns: ['id'] },
@@ -193,17 +200,19 @@ export type Database = {
       perfiles: {
         Row: {
           aprobado_en: string | null; cedula_ruc: string | null; ciudad: string | null; correo: string | null; creado_en: string; direccion: string | null; estado: Enum<'estado_perfil'>
-          id: string; motivo_estado: string | null; negocio: string | null; nombre: string; rol: Enum<'rol_usuario'>; telefono: string | null
+          id: string; motivo_estado: string | null; negocio: string | null; nombre: string; rol: Enum<'rol_usuario'>; telefono: string | null; local_id: string | null
         }
         Insert: {
           aprobado_en?: string | null; cedula_ruc?: string | null; ciudad?: string | null; correo?: string | null; creado_en?: string; direccion?: string | null; estado?: Enum<'estado_perfil'>
-          id: string; negocio?: string | null; nombre?: string; rol?: Enum<'rol_usuario'>; telefono?: string | null
+          id: string; negocio?: string | null; nombre?: string; rol?: Enum<'rol_usuario'>; telefono?: string | null; local_id?: string | null
         }
         Update: {
           aprobado_en?: string | null; cedula_ruc?: string | null; ciudad?: string | null; correo?: string | null; creado_en?: string; direccion?: string | null; estado?: Enum<'estado_perfil'>
-          id?: string; motivo_estado?: string | null; negocio?: string | null; nombre?: string; rol?: Enum<'rol_usuario'>; telefono?: string | null
+          id?: string; motivo_estado?: string | null; negocio?: string | null; nombre?: string; rol?: Enum<'rol_usuario'>; telefono?: string | null; local_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          { foreignKeyName: 'perfiles_local_id_fkey'; columns: ['local_id']; isOneToOne: false; referencedRelation: 'locales'; referencedColumns: ['id'] },
+        ]
       }
       precios_especiales_mayorista: {
         Row: { descuento_pct: number | null; id: string; mayorista_id: string; precio: number | null; producto_id: string }
@@ -356,6 +365,8 @@ export type Database = {
       es_mayorista_sector: { Args: never; Returns: boolean }
       es_personal_bodega: { Args: never; Returns: boolean }
       es_vendedor: { Args: never; Returns: boolean }
+      es_auxiliar_bodega: { Args: never; Returns: boolean }
+      puede_ver_bodega: { Args: never; Returns: boolean }
       listar_pedidos_bodega: { Args: { p_vista: string }; Returns: Json }
       mis_pares_en_poder: { Args: never; Returns: Json }
       registrar_venta_local: {
@@ -367,6 +378,7 @@ export type Database = {
       }
       registrar_devolucion: { Args: { p_lineas: Json; p_motivo: string; p_nota?: string; p_pedido: string; p_reintegrar: boolean }; Returns: Json }
       resumen_ventas: { Args: { p_desde: string; p_hasta: string }; Returns: Json }
+      reporte_ventas_locales: { Args: { p_desde: string; p_hasta: string }; Returns: Json }
       solicitar_a_bodega: { Args: { p_items: Json; p_nota?: string }; Returns: Json }
       obtener_precio_mayorista: { Args: { p_mayorista?: string; p_producto: string }; Returns: number }
       registrar_ingreso_inventario: {
@@ -382,7 +394,7 @@ export type Database = {
       estado_perfil: 'pendiente' | 'aprobado' | 'rechazado' | 'suspendido'
       grupo_talla: 'dama' | 'caballero' | 'nino' | 'unisex'
       motivo_movimiento: 'ingreso' | 'venta' | 'pedido_mayorista' | 'ajuste' | 'anulacion' | 'despacho' | 'devolucion'
-      rol_usuario: 'admin' | 'mayorista' | 'bodeguero' | 'vendedor' | 'mayorista_sector'
+      rol_usuario: 'admin' | 'mayorista' | 'bodeguero' | 'vendedor' | 'mayorista_sector' | 'auxiliar_bodega'
       tipo_ingreso: 'caja' | 'unidad'
       tipo_pedido: 'minorista' | 'mayorista' | 'lead_tienda' | 'mostrador' | 'consignacion'
     }

@@ -59,8 +59,7 @@ export function VenderLocalPage() {
     return p ? foto(p.producto_id, p.color) : null
   }
   const total = totalVenta(lineas)
-  const vigentes = ventas.filter((v) => v.estado !== 'cancelado')
-  const totalHoy = vigentes.reduce((s, v) => s + v.total, 0)
+  const listaDe = (varianteId: string) => parDe.get(varianteId)?.precio ?? null
 
   function agregar(p: ParEnPoder) {
     setLineas((l) => agregarLinea(l, { varianteId: p.variante_id, nombre: p.producto, color: p.color, talla: p.talla, precio: p.precio, stock: p.en_poder }))
@@ -69,6 +68,7 @@ export function VenderLocalPage() {
 
   function validar(): string | null {
     if (lineas.length === 0) return 'Agrega al menos un par.'
+    if (lineas.some((l) => !Number.isFinite(l.precio) || l.precio < 0)) return 'Revisa los precios: hay uno vacío o no válido.'
     if (cliente.documento && !/^([0-9]{10}|[0-9]{13})$/.test(cliente.documento.trim())) return 'La cédula o el RUC deben tener 10 o 13 dígitos.'
     if (cliente.correo && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(cliente.correo.trim())) return 'El correo no es válido.'
     return null
@@ -101,7 +101,7 @@ export function VenderLocalPage() {
 
   return (
     <>
-      <PageHeader title="Vender" description="Arma la venta con los pares que tienes en tu poder y envíala a cierre. El administrador fija el valor final y la cobra." />
+      <PageHeader title="Vender" description="Arma la venta con los pares que tienes en tu poder. Puedes ajustar el precio según la cantidad o el cliente; luego envíala a cierre y el administrador la cierra." />
 
       <div className="grid gap-8 lg:grid-cols-[1fr_26rem]">
         <section aria-label="Pares en tu poder">
@@ -154,22 +154,38 @@ export function VenderLocalPage() {
                     <p className="min-w-0 flex-1 text-sm font-semibold">{l.nombre}<span className="block text-xs font-normal text-muted-foreground">{l.color} · talla {l.talla}</span></p>
                     <Button type="button" variant="ghost" size="icon-sm" aria-label={`Quitar ${l.nombre}`} onClick={() => setLineas((x) => x.filter((y) => y.varianteId !== l.varianteId))}><Trash2 /></Button>
                   </div>
-                  <div className="flex items-center justify-between gap-3">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="inline-flex items-center rounded-lg border border-input">
                       <Button type="button" variant="ghost" size="icon-sm" aria-label="Menos" disabled={l.cantidad <= 1} onClick={() => cambiar(l.varianteId, { cantidad: l.cantidad - 1 })}><Minus /></Button>
                       <span className="w-8 text-center text-sm tabular-nums">{l.cantidad}</span>
                       <Button type="button" variant="ghost" size="icon-sm" aria-label="Más" disabled={l.cantidad >= l.stock} onClick={() => cambiar(l.varianteId, { cantidad: l.cantidad + 1 })}><Plus /></Button>
                     </div>
-                    <span className="text-sm font-semibold tabular-nums">{fmt(l.precio * l.cantidad)}</span>
+                    <label className="flex items-center gap-2 text-xs text-muted-foreground">
+                      Precio c/u
+                      <Input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        inputMode="decimal"
+                        aria-label={`Precio de venta de ${l.nombre} talla ${l.talla}`}
+                        className="h-9 w-24 text-right"
+                        value={Number.isFinite(l.precio) ? l.precio : ''}
+                        onChange={(e) => cambiar(l.varianteId, { precio: e.target.value === '' ? Number.NaN : Number(e.target.value) })}
+                      />
+                    </label>
                   </div>
+                  <p className="flex justify-between text-xs text-muted-foreground">
+                    <span>{listaDe(l.varianteId) !== null && listaDe(l.varianteId) !== l.precio ? `Lista ${fmt(listaDe(l.varianteId) ?? 0)}` : 'Precio de lista'}</span>
+                    <span className="text-sm font-semibold text-foreground tabular-nums">{Number.isFinite(l.precio) ? fmt(l.precio * l.cantidad) : '—'}</span>
+                  </p>
                 </li>
               ))}
             </ul>
           )}
 
           <div className="mt-4 flex items-end justify-between border-t border-border pt-4">
-            <span className="text-sm text-muted-foreground">{unidadesVenta(lineas)} pares · precio de lista</span>
-            <span className="font-display text-4xl font-bold tabular-nums">{fmt(total)}</span>
+            <span className="text-sm text-muted-foreground">{unidadesVenta(lineas)} pares</span>
+            <span className="font-display text-4xl font-bold tabular-nums">{Number.isFinite(total) ? fmt(total) : '—'}</span>
           </div>
 
           <fieldset className="mt-4">
@@ -204,7 +220,7 @@ export function VenderLocalPage() {
       <section className="mt-12" aria-label="Mis ventas de hoy">
         <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
           <h2 className="text-3xl">Mis ventas de hoy</h2>
-          <p className="text-sm text-muted-foreground">{vigentes.length} ventas · <strong className="text-foreground tabular-nums">{fmt(totalHoy)}</strong></p>
+          <p className="text-sm text-muted-foreground">Los totales del día los lleva el administrador.</p>
         </div>
         {ventas.length === 0 ? <EmptyState title="Aún no hay ventas hoy" description="Tus ventas del local aparecerán aquí." /> : (
           <Table>
