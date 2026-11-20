@@ -69,7 +69,6 @@ export function VenderLocalPage() {
 
   function validar(): string | null {
     if (lineas.length === 0) return 'Agrega al menos un par.'
-    if (lineas.some((l) => !Number.isFinite(l.precio) || l.precio < 0)) return 'Hay un precio no válido.'
     if (cliente.documento && !/^([0-9]{10}|[0-9]{13})$/.test(cliente.documento.trim())) return 'La cédula o el RUC deben tener 10 o 13 dígitos.'
     if (cliente.correo && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(cliente.correo.trim())) return 'El correo no es válido.'
     return null
@@ -89,7 +88,7 @@ export function VenderLocalPage() {
         documento: cliente.documento.trim(),
         nota: nota.trim(),
       })
-      toast.success(`Venta #${r.numero} registrada por ${fmt(r.total)}`)
+      toast.success(`Venta #${r.numero} enviada al administrador para el cierre`)
       setLineas([])
       setCliente({ nombre: '', documento: '', telefono: '', correo: '' })
       setConCliente(false)
@@ -102,7 +101,7 @@ export function VenderLocalPage() {
 
   return (
     <>
-      <PageHeader title="Vender" description="Registra cada venta del local con los pares que tienes en tu poder. Al cierre, el bodeguero cuadra contra estas ventas." />
+      <PageHeader title="Vender" description="Arma la venta con los pares que tienes en tu poder y envíala a cierre. El administrador fija el valor final y la cobra." />
 
       <div className="grid gap-8 lg:grid-cols-[1fr_26rem]">
         <section aria-label="Pares en tu poder">
@@ -161,7 +160,7 @@ export function VenderLocalPage() {
                       <span className="w-8 text-center text-sm tabular-nums">{l.cantidad}</span>
                       <Button type="button" variant="ghost" size="icon-sm" aria-label="Más" disabled={l.cantidad >= l.stock} onClick={() => cambiar(l.varianteId, { cantidad: l.cantidad + 1 })}><Plus /></Button>
                     </div>
-                    <Input aria-label={`Precio unitario de ${l.nombre}`} type="number" step="0.01" min="0" inputMode="decimal" className="h-9 w-28 text-right" value={Number.isFinite(l.precio) ? l.precio : ''} onChange={(e) => cambiar(l.varianteId, { precio: e.target.value === '' ? Number.NaN : Number(e.target.value) })} />
+                    <span className="text-sm font-semibold tabular-nums">{fmt(l.precio * l.cantidad)}</span>
                   </div>
                 </li>
               ))}
@@ -169,12 +168,12 @@ export function VenderLocalPage() {
           )}
 
           <div className="mt-4 flex items-end justify-between border-t border-border pt-4">
-            <span className="text-sm text-muted-foreground">{unidadesVenta(lineas)} pares</span>
+            <span className="text-sm text-muted-foreground">{unidadesVenta(lineas)} pares · precio de lista</span>
             <span className="font-display text-4xl font-bold tabular-nums">{fmt(total)}</span>
           </div>
 
           <fieldset className="mt-4">
-            <legend className="eyebrow mb-2">Forma de pago</legend>
+            <legend className="eyebrow mb-2">Forma de pago que indica el cliente</legend>
             <div role="radiogroup" className="grid grid-cols-3 gap-2">
               {PAGOS.map((p) => (
                 <button key={p.id} type="button" role="radio" aria-checked={pago === p.id} onClick={() => setPago(p.id)} className={cn('h-11 rounded-lg border text-sm font-semibold', pago === p.id ? 'border-foreground bg-foreground text-background' : 'border-input')}>{p.label}</button>
@@ -197,7 +196,7 @@ export function VenderLocalPage() {
 
           <FieldError>{error ?? undefined}</FieldError>
           <Button size="lg" className="mt-4 w-full" disabled={registrar.isPending || lineas.length === 0} onClick={() => void cobrar()}>
-            {registrar.isPending ? 'Registrando…' : `Registrar venta ${lineas.length ? fmt(total) : ''}`}
+            {registrar.isPending ? 'Enviando…' : 'Enviar a cierre'}
           </Button>
         </aside>
       </div>
@@ -218,7 +217,7 @@ export function VenderLocalPage() {
                   <TD>{v.cliente}</TD>
                   <TD className="capitalize">{v.metodoPago ?? ''}</TD>
                   <TD className="text-right font-semibold tabular-nums">{fmt(v.total)}</TD>
-                  <TD>{v.estado === 'cancelado' ? <Badge>Anulada</Badge> : <Badge variant="success">Cobrada</Badge>}</TD>
+                  <TD>{v.estado === 'cancelado' ? <Badge>Anulada</Badge> : v.estado === 'nuevo' ? <Badge variant="warning">Por cerrar</Badge> : <Badge variant="success">Cerrada</Badge>}</TD>
                 </TR>
               ))}
             </TBody>

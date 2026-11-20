@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Printer } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input, Label } from '@/components/ui/input'
@@ -20,8 +21,9 @@ export function CajaPage() {
   const [desde, setDesde] = useState(hoy)
   const [hasta, setHasta] = useState(hoy)
   const rango = useMemo(() => periodo(desde, hasta), [desde, hasta])
-  const { data = [], isLoading, error } = useResumenVentas(rango?.desde ?? null, rango?.hasta ?? null)
-  const { canales, totalGeneral, pedidosGeneral } = useMemo(() => resumirCanales(data), [data])
+  const { data: resumen, isLoading, error } = useResumenVentas(rango?.desde ?? null, rango?.hasta ?? null)
+  const { canales, totalGeneral, pedidosGeneral } = useMemo(() => resumirCanales(resumen?.filas ?? []), [resumen])
+  const porCerrar = resumen?.porCerrar
   const local = canales.find((c) => c.canal === 'local')
   const sector = canales.find((c) => c.canal === 'sector')
 
@@ -48,6 +50,13 @@ export function CajaPage() {
           </Button>
         }
       />
+
+      {porCerrar && porCerrar.pedidos > 0 && (
+        <p role="status" className="mb-6 rounded-lg bg-warning/10 p-3 text-sm print:hidden">
+          Hay {plural(porCerrar.pedidos)} del local por cerrar ({fmt(porCerrar.total)} a precio de lista). No cuentan en la caja hasta que las cierres.{' '}
+          <Link to="/admin/por-cerrar" className="font-semibold underline underline-offset-4">Cerrar ventas</Link>
+        </p>
+      )}
 
       <section aria-label="Periodo" className="mb-6 flex flex-wrap items-end gap-3 print:hidden">
         <div>

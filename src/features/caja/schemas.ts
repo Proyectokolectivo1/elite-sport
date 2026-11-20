@@ -15,6 +15,13 @@ export const filaVentasSchema = z.object({
   por_cobrar: z.coerce.number(),
 })
 
-export const resumenVentasSchema = z.object({ filas: z.array(filaVentasSchema) })
+export const resumenVentasSchema = z.object({
+  filas: z.array(filaVentasSchema),
+  por_cerrar: z.object({ pedidos: z.number(), total: z.coerce.number() }).default({ pedidos: 0, total: 0 }),
+})
 
 export type FilaVentas = z.infer<typeof filaVentasSchema>
+export interface ResumenVentas {
+  filas: FilaVentas[]
+  porCerrar: { pedidos: number; total: number }
+}

@@ -8,6 +8,7 @@ import {
   LogOut,
   Package,
   PackageOpen,
+  ReceiptText,
   Settings,
   ShoppingBag,
   Store,
@@ -35,6 +36,7 @@ import { useAvisos } from '@/features/avisos/useAvisos'
 const NAV_ADMIN: PanelNavItem[] = [
   { to: '/admin', label: 'Resumen', icon: LayoutDashboard, end: true },
   { to: '/admin/ventas', label: 'Ventas', icon: Store },
+  { to: '/admin/por-cerrar', label: 'Por cerrar', icon: ReceiptText },
   { to: '/admin/caja', label: 'Caja', icon: Landmark },
   { to: '/admin/pedidos', label: 'Pedidos', icon: ClipboardList },
   { to: '/admin/devoluciones', label: 'Devoluciones', icon: Undo2 },

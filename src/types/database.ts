@@ -320,6 +320,7 @@ export type Database = {
       contar_pendientes_bodega: { Args: Record<PropertyKey, never>; Returns: Json }
       cancelar_pedido: { Args: { p_pedido: string }; Returns: undefined }
       cerrar_pedido_bodega: { Args: { p_lineas: Json; p_pedido: string }; Returns: Json }
+      cerrar_venta_local: { Args: { p_lineas: Json; p_metodo_pago: string; p_pedido: string }; Returns: Json }
       confirmar_pedido: { Args: { p_pedido: string }; Returns: undefined }
       marcar_pago_consignacion: { Args: { p_pagado: boolean; p_pedido: string }; Returns: undefined }
       crear_pedido: {

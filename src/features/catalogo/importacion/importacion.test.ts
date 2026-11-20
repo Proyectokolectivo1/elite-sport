@@ -35,7 +35,7 @@ describe('plantilla de productos', () => {
     const filas = await leerPlantilla(lleno as ArrayBuffer)
     expect(filas).toHaveLength(1)
     expect(filas[0]).toMatchObject({ fila: 2, nombre: 'Runner Pro', grupo: 'Caballero', precio_publico: '89.9', pares: '38:1, 39:2' })
-  })
+  }, 30_000) // exceljs tarda en cargar cuando corre toda la suite
 
   it('rechaza un archivo que no es la plantilla', async () => {
     const { Workbook } = await import('exceljs')
