@@ -115,6 +115,14 @@ export type Database = {
           { foreignKeyName: 'devoluciones_detalle_variante_id_fkey'; columns: ['variante_id']; isOneToOne: false; referencedRelation: 'variantes_producto'; referencedColumns: ['id'] },
         ]
       }
+      cambios_pedidos: {
+        Row: { cambiado_en: string; estado: Enum<'estado_pedido'>; pedido_id: string; tipo: Enum<'tipo_pedido'> }
+        Insert: { cambiado_en?: string; estado: Enum<'estado_pedido'>; pedido_id: string; tipo: Enum<'tipo_pedido'> }
+        Update: { cambiado_en?: string; estado?: Enum<'estado_pedido'>; pedido_id?: string; tipo?: Enum<'tipo_pedido'> }
+        Relationships: [
+          { foreignKeyName: 'cambios_pedidos_pedido_id_fkey'; columns: ['pedido_id']; isOneToOne: true; referencedRelation: 'pedidos'; referencedColumns: ['id'] },
+        ]
+      }
       movimientos_inventario: {
         Row: {
           creado_en: string; creado_por: string | null; delta: number; id: string

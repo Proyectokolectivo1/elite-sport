@@ -6,6 +6,7 @@ import { PageHeader } from '@/components/ui/page-header'
 import { Toaster } from '@/components/ui/toast'
 import { cerrarSesion } from '@/features/auth/api/auth'
 import { useAuth } from '@/features/auth/hooks/AuthProvider'
+import { usePedidosEnVivo } from '@/features/avisos/usePedidosEnVivo'
 import { useConfiguracion } from '@/features/configuracion/hooks/useConfiguracion'
 import { EnPoderTabla } from './EnPoderTabla'
 import { MisEntregas } from './MisEntregas'
@@ -22,6 +23,7 @@ const NAV: PanelNavItem[] = [
 export function SectorLayout() {
   useConfiguracion()
   const { perfil } = useAuth()
+  usePedidosEnVivo(!!perfil)
   return (
     <ThemeProvider>
       <Toaster />

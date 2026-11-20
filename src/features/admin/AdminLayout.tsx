@@ -32,6 +32,7 @@ import type { Rol } from '@/features/auth/roles'
 import { useConfiguracion } from '@/features/configuracion/hooks/useConfiguracion'
 import { guardarSonido, sonarAviso, sonidoActivo } from '@/features/avisos/sonido'
 import { useAvisos } from '@/features/avisos/useAvisos'
+import { usePedidosEnVivo } from '@/features/avisos/usePedidosEnVivo'
 
 const NAV_ADMIN: PanelNavItem[] = [
   { to: '/admin', label: 'Resumen', icon: LayoutDashboard, end: true },
@@ -75,6 +76,7 @@ export function AdminLayout() {
   const { perfil } = useAuth()
   const panel = (perfil && POR_ROL[perfil.rol]) || { nav: [], seccion: 'Panel' }
   const { pendientes, total } = useAvisos(perfil?.rol === 'admin' || perfil?.rol === 'bodeguero' || perfil?.rol === 'vendedor' ? perfil.rol : undefined)
+  usePedidosEnVivo(!!perfil)
   const [sonido, setSonido] = useState(sonidoActivo)
   // Insignia con lo que espera atencion en cada seccion.
   const cuenta: Record<string, number> =

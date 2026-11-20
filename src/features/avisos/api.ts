@@ -34,3 +34,26 @@ export async function pendientesBodeguero(): Promise<Pendientes> {
   const d = data as { por_despachar?: number; web?: number }
   return { pedidos: 0, bodega: Number(d.por_despachar ?? 0), web: Number(d.web ?? 0), mayoristas: 0 }
 }
+
+/**
+ * Escucha por Realtime la tabla cambios_pedidos (solo id, tipo y estado). Cada aviso solo dice que algo cambió;
+ * quien escucha vuelve a pedir sus datos. Devuelve la función para dejar de escuchar.
+ */
+export function escucharCambiosPedidos(alCambiar: () => void): () => void {
+  let canal: ReturnType<typeof supabase.channel> | null = null
+  let cerrado = false
+  void supabase.realtime.setAuth().then(() => {
+    if (cerrado) return
+    canal = supabase
+      .channel('cambios-pedidos')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'cambios_pedidos' }, () => alCambiar())
+      // Al reconectar pudo perderse algún aviso: refresca una vez.
+      .subscribe((estado) => {
+        if (estado === 'SUBSCRIBED') alCambiar()
+      })
+  })
+  return () => {
+    cerrado = true
+    if (canal) void supabase.removeChannel(canal)
+  }
+}

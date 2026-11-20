@@ -233,3 +233,9 @@
 - Migracion 0029: `registrar_venta_local` ignora el precio del vendedor y deja la venta en `nuevo`; RPC nueva `cerrar_venta_local(p_pedido, p_lineas, p_metodo_pago)` solo admin (guarda `liquidado_por/en`); `cancelar_pedido` permite anular ventas por cerrar (admin o bodeguero); `liberar_ventas_registradas` tambien reduce ventas por cerrar; `resumen_ventas` cuenta el local por fecha de cierre y devuelve `por_cerrar` (Caja muestra un aviso con enlace).
 - Ninguno de los pasos mueve el inventario central. Si el bodeguero cierra la entrega antes que el admin cierre la venta, la venta sigue por cerrar y se cierra igual.
 - Migracion 0029 aplicada en Supabase y verificada (cerrar, anular por cerrar, aviso en caja; todo revertido). Falta desplegar el frontend.
+
+## Pedidos en tiempo real (2026-11-19)
+- Bodega (y admin, vendedor y mayorista del sector) ven los pedidos nuevos y los cambios de estado al instante, sin recargar. La insignia del menu y el sonido de aviso tambien se actualizan al momento.
+- Migracion 0030: tabla `cambios_pedidos` (solo pedido_id, tipo, estado, fecha; sin precios ni clientes), llenada por un trigger sobre `pedidos`, con RLS de lectura para el personal y en la publicacion `supabase_realtime`. No se usa broadcast: el proyecto aun no tiene particiones de `realtime.messages`.
+- Frontend: `escucharCambiosPedidos` (avisos/api.ts) y `usePedidosEnVivo` (montado en AdminLayout y SectorLayout) refrescan las consultas de pedidos, bodega, avisos, caja y por cerrar. Se mantiene el refresco cada 60 s como respaldo.
+- Migracion 0030 aplicada en Supabase.
