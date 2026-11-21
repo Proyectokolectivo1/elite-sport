@@ -96,7 +96,7 @@ export function useCancelarPedidoBodega() {
 export function useSolicitarABodega() {
   const refrescar = useRefrescar()
   return useMutation({
-    mutationFn: (v: { items: { varianteId: string; cantidad: number; precio?: number }[]; nota: string }) => solicitarABodega(v.items, v.nota),
+    mutationFn: (v: { items: { varianteId: string; cantidad: number; precio?: number; exhibicion?: string[] }[]; nota: string }) => solicitarABodega(v.items, v.nota),
     onSuccess: refrescar,
   })
 }

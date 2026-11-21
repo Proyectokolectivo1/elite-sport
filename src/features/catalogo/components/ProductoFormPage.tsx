@@ -13,9 +13,13 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Tabs } from '@/components/ui/tabs'
 import { toast } from '@/components/ui/toast'
 import { mensajeError } from '@/lib/errors'
+import { ExhibicionProducto } from '@/features/exhibicion/components/ExhibicionProducto'
+import { useRegistrarExhibicionProducto } from '@/features/exhibicion/hooks/useExhibicion'
+import { validarFilasExhibicion } from '@/features/exhibicion/logica'
+import type { FilaExhibicion } from '@/features/exhibicion/schemas'
 import { useEliminarProducto, useGuardarProducto, useGuardarTallasProducto, useOpciones, useProducto, useTallasProducto } from '../hooks/useCatalogo'
 import { GRUPOS, productoSchema, tallasModeloSchema, type ProductoValues } from '../schemas'
-import { filasModelo, RANGO_POR_GRUPO } from '../tallasModelo'
+import { filasModelo, generarRango, RANGO_POR_GRUPO } from '../tallasModelo'
 import { TallasModelo, type TallasModeloEstado } from './TallasModelo'
 import type { TablaOpciones } from '../api/catalogo'
 import { ImagenesProducto } from './ImagenesProducto'
@@ -67,6 +71,9 @@ export function ProductoFormPage() {
   const { data: producto, isLoading } = useProducto(id)
   const guardar = useGuardarProducto(id)
   const guardarTallas = useGuardarTallasProducto()
+  const guardarExhibicion = useRegistrarExhibicionProducto()
+  const [exhibicion, setExhibicion] = useState<FilaExhibicion[]>([])
+  const [errorExhibicion, setErrorExhibicion] = useState<string | null>(null)
   const { data: tallasGuardadas, isLoading: cargandoTallas } = useTallasProducto(id)
   const [tallas, setTallas] = useState<TallasModeloEstado>(() => tallasPorDefecto('caballero'))
   const [tallasTocadas, setTallasTocadas] = useState(false)
@@ -149,6 +156,18 @@ export function ProductoFormPage() {
   async function onSubmit(v: ProductoValues) {
     const t = validarTallas()
     if (!t) return
+    if (!id && exhibicion.length > 0) {
+      const problema = validarFilasExhibicion(exhibicion)
+      if (problema) {
+        setErrorExhibicion(problema)
+        return
+      }
+      if (exhibicion.some((f) => !generarRango(t.desde, t.hasta).includes(f.talla))) {
+        setErrorExhibicion('Una pieza de exhibición tiene una talla que no está en el rango del modelo.')
+        return
+      }
+    }
+    setErrorExhibicion(null)
     try {
       const nuevoId = await guardar.mutateAsync({
         ...v,
@@ -164,6 +183,13 @@ export function ProductoFormPage() {
       if (id) {
         toast.success('Producto guardado')
       } else {
+        if (exhibicion.length > 0) {
+          try {
+            await guardarExhibicion.mutateAsync({ productoId: nuevoId, filas: exhibicion })
+          } catch (e) {
+            toast.error(`El producto se creó, pero la exhibición no se guardó: ${mensajeError(e)}. Agrégala en Inventario > Exhibición.`)
+          }
+        }
         toast.success('Producto creado. Ahora sube sus fotos.')
         // /nuevo y /:id usan la misma instancia de la página (no se vuelve a montar): se cambia la pestaña aquí.
         setTab('imagenes')
@@ -270,6 +296,8 @@ export function ProductoFormPage() {
 
           {id && cargandoTallas ? <Skeleton className="h-40 w-full" /> : <TallasModelo valor={tallas} onChange={cambiarTallas} errores={erroresTallas} />}
 
+          {!id && <ExhibicionProducto filas={exhibicion} onChange={setExhibicion} tallas={generarRango(Number(tallas.desde), Number(tallas.hasta))} error={errorExhibicion} />}
+
           <div className="flex flex-wrap gap-6">
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" className="size-4 accent-[var(--foreground)]" {...register('activo')} /> Visible en la tienda
@@ -280,7 +308,7 @@ export function ProductoFormPage() {
           </div>
 
           <div className="flex flex-wrap items-center gap-3 border-t border-border pt-5">
-            <Button type="submit" disabled={guardar.isPending || guardarTallas.isPending || (!!id && !isDirty && !tallasTocadas && !!tallasGuardadas?.length)}>
+            <Button type="submit" disabled={guardar.isPending || guardarTallas.isPending || guardarExhibicion.isPending || (!!id && !isDirty && !tallasTocadas && !!tallasGuardadas?.length)}>
               {guardar.isPending || guardarTallas.isPending ? 'Guardando…' : id ? 'Guardar cambios' : 'Crear y subir fotos'}
             </Button>
             {id && (

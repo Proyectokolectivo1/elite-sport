@@ -15,6 +15,7 @@ import { cn } from '@/lib/utils'
 import type { PedidoBodega, VistaBodega } from '../api/bodega'
 import { useCancelarPedidoBodega, useDespachar, useEntregarWeb, useFotoDeVariante, usePedidosBodega } from '../hooks/useBodega'
 import { CierreEntrega } from './CierreEntrega'
+import { AvisoExhibicion } from '@/features/exhibicion/components/AvisoExhibicion'
 import { FotoPar } from './FotoPar'
 import { partesLinea } from './partesLinea'
 import { idCierre, PendientesCierre } from './PendientesCierre'
@@ -109,6 +110,7 @@ function Despacho({ p }: { p: PedidoBodega }) {
                   </p>
                 )}
               </div>
+              <AvisoExhibicion piezas={l.exhibicion} />
               <p className="text-sm text-muted-foreground">Pidió <strong className="text-lg text-foreground tabular-nums">{l.cantidad}</strong> · en bodega {l.stock}</p>
               <label className="flex items-center gap-3 text-sm">
                 <span className="text-muted-foreground">Entregar</span>
@@ -167,6 +169,7 @@ function DespachoLectura({ p }: { p: PedidoBodega }) {
                     <span className="rounded-lg bg-foreground px-3 py-1 text-xl font-bold tabular-nums text-background">Talla {partes.talla}</span>
                   </p>
                 )}
+                <div className="mt-2"><AvisoExhibicion piezas={l.exhibicion} /></div>
                 <p className={cn('mt-2 text-sm text-muted-foreground', l.stock < l.cantidad && 'text-destructive')}>
                   En bodega {l.stock}
                   {l.stock < l.cantidad && ' · no alcanza'}

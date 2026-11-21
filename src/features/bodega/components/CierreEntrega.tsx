@@ -5,6 +5,7 @@ import { mensajeError } from '@/lib/errors'
 import type { PedidoBodega } from '../api/bodega'
 import { useCerrarEntrega, useDevolucion, useFotoDeVariante } from '../hooks/useBodega'
 import { Contador } from './Contador'
+import { AvisoExhibicion } from '@/features/exhibicion/components/AvisoExhibicion'
 import { FotoPar } from './FotoPar'
 import { partesLinea } from './partesLinea'
 import { aLiberar, conDevueltos, conVendidos, cuadreEntrega, cuadreLinea, pendiente, repartibles, valoresIniciales, vendidosSinRegistrar, type LineaEntrega, type ValorCierre } from '../logica'
@@ -18,13 +19,14 @@ export function CierreEntrega({ pedido }: { pedido: PedidoBodega }) {
   const esVendedor = pedido.solicitante_rol === 'vendedor'
   const foto = useFotoDeVariante()
 
-  const lineas: (LineaEntrega & { descripcion: string; varianteId: string })[] = useMemo(
+  const lineas: (LineaEntrega & { descripcion: string; varianteId: string; exhibicion?: PedidoBodega['lineas'][number]['exhibicion'] })[] = useMemo(
     () =>
       pedido.lineas
         .filter((l) => (l.cantidad_entregada ?? 0) > 0)
         .map((l) => ({
           id: l.id,
           descripcion: l.descripcion,
+          exhibicion: l.exhibicion,
           varianteId: l.variante_id,
           entregada: l.cantidad_entregada ?? 0,
           vendida: l.cantidad_vendida ?? 0,
@@ -98,6 +100,7 @@ export function CierreEntrega({ pedido }: { pedido: PedidoBodega }) {
             <li key={l.id} className="grid gap-4 py-4 sm:grid-cols-[auto_1fr_auto] sm:items-center">
               <FotoPar src={foto(l.varianteId)} alt={l.descripcion} className="aspect-square w-full rounded-xl sm:size-40 sm:w-40" />
               <div className="min-w-0 space-y-2">
+                <AvisoExhibicion piezas={l.exhibicion} />
                 <p className="font-display text-2xl font-bold uppercase leading-tight">{partes.nombre}</p>
                 {partes.color && (
                   <p className="flex items-center gap-3">

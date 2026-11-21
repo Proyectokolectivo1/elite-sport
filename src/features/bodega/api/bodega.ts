@@ -102,9 +102,9 @@ export async function cancelarPedidoBodega(pedidoId: string): Promise<void> {
 }
 
 // ============ Vendedor y mayorista del sector ============
-export async function solicitarABodega(items: { varianteId: string; cantidad: number; precio?: number }[], nota: string): Promise<{ numero: number }> {
+export async function solicitarABodega(items: { varianteId: string; cantidad: number; precio?: number; exhibicion?: string[] }[], nota: string): Promise<{ numero: number }> {
   const { data, error } = await supabase.rpc('solicitar_a_bodega', {
-    p_items: items.map((i) => ({ variante_id: i.varianteId, cantidad: i.cantidad, ...(i.precio !== undefined && { precio: i.precio }) })),
+    p_items: items.map((i) => ({ variante_id: i.varianteId, cantidad: i.cantidad, ...(i.precio !== undefined && { precio: i.precio }), ...(i.exhibicion && { exhibicion: i.exhibicion }) })),
     p_nota: nota.trim() || undefined,
   })
   if (error) throw error

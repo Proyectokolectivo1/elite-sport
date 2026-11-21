@@ -369,6 +369,11 @@ export type Database = {
       es_cajero: { Args: never; Returns: boolean }
       puede_ver_caja: { Args: never; Returns: boolean }
       puede_ver_bodega: { Args: never; Returns: boolean }
+      listar_exhibiciones: { Args: never; Returns: Json }
+      exhibiciones_para_vendedor: { Args: never; Returns: Json }
+      registrar_exhibicion: { Args: { p_variante: string; p_local: string; p_pieza: Enum<'pieza_exhibicion'> }; Returns: string }
+      registrar_exhibicion_producto: { Args: { p_producto: string; p_piezas: Json }; Returns: undefined }
+      quitar_exhibicion: { Args: { p_id: string }; Returns: undefined }
       listar_pedidos_bodega: { Args: { p_vista: string }; Returns: Json }
       mis_pares_en_poder: { Args: never; Returns: Json }
       registrar_venta_local: {
@@ -395,6 +400,7 @@ export type Database = {
       estado_pedido: 'nuevo' | 'confirmado' | 'entregado' | 'cancelado' | 'liquidado'
       estado_perfil: 'pendiente' | 'aprobado' | 'rechazado' | 'suspendido'
       grupo_talla: 'dama' | 'caballero' | 'nino' | 'unisex'
+      pieza_exhibicion: 'par' | 'derecho' | 'izquierdo'
       motivo_movimiento: 'ingreso' | 'venta' | 'pedido_mayorista' | 'ajuste' | 'anulacion' | 'despacho' | 'devolucion'
       rol_usuario: 'admin' | 'mayorista' | 'bodeguero' | 'vendedor' | 'mayorista_sector' | 'auxiliar_bodega' | 'cajero'
       tipo_ingreso: 'caja' | 'unidad'

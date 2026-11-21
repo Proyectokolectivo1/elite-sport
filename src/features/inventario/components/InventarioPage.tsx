@@ -2,6 +2,7 @@ import { useSearchParams } from 'react-router-dom'
 import { PageHeader } from '@/components/ui/page-header'
 import { Tabs } from '@/components/ui/tabs'
 import { useAuth } from '@/features/auth/hooks/AuthProvider'
+import { ExhibicionTab } from '@/features/exhibicion/components/ExhibicionTab'
 import { CurvasTab } from './CurvasTab'
 import { ExistenciasTab } from './ExistenciasTab'
 import { IngresoForm } from './IngresoForm'
@@ -9,6 +10,7 @@ import { MovimientosTab } from './MovimientosTab'
 
 const TABS = [
   { id: 'existencias', label: 'Existencias' },
+  { id: 'exhibicion', label: 'Exhibición' },
   { id: 'ingreso', label: 'Ingresar mercancía' },
   { id: 'movimientos', label: 'Movimientos' },
   { id: 'surtidos', label: 'Surtidos de caja' },
@@ -35,6 +37,7 @@ export function InventarioPage() {
       <PageHeader title="Inventario" description="Un solo inventario para todas las ventas. Solo cambia con ingresos, ajustes, pedidos confirmados y entregas de bodega." />
       <Tabs className="mb-6" tabs={tabs} value={actual} onChange={cambiar} />
       {actual === 'existencias' && <ExistenciasTab />}
+      {actual === 'exhibicion' && <ExhibicionTab />}
       {actual === 'ingreso' && <IngresoForm productoInicial={params.get('producto') ?? undefined} />}
       {actual === 'movimientos' && <MovimientosTab />}
       {actual === 'surtidos' && <CurvasTab />}

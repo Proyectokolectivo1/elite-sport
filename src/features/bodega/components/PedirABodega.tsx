@@ -8,6 +8,8 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { FieldError, Input, Label, Textarea } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from '@/components/ui/toast'
+import { opcionesExhibicion, type OpcionExhibicion } from '@/features/exhibicion/logica'
+import { useExhibicionesVendedor } from '@/features/exhibicion/hooks/useExhibicion'
 import { TOPE_MAYORISTA } from '@/features/tienda/carrito/carritoStore'
 import { obtenerCatalogoPublico, type ProductoPublico } from '@/features/tienda/api/tienda'
 import { agregarLinea, unidadesVenta, type LineaVenta } from '@/features/ventas/ventaLogica'
@@ -17,6 +19,18 @@ import { cn } from '@/lib/utils'
 import { useSolicitarABodega } from '../hooks/useBodega'
 import { notaPedidoSchema, type NotaPedidoValues } from '../schemas'
 import { FotoPar } from './FotoPar'
+
+/** Par de exhibición elegido: una línea propia, con las piezas que se retiran de los locales. */
+interface LineaExhibicion {
+  clave: string
+  varianteId: string
+  nombre: string
+  color: string
+  talla: string
+  precio: number
+  ids: string[]
+  texto: string
+}
 
 /**
  * Elige productos y tallas disponibles en bodega y envía el pedido. No muestra cuántos pares hay.
@@ -32,6 +46,8 @@ export function PedirABodega({ onEnviado, conPrecio = false }: { onEnviado?: () 
   const [color, setColor] = useState('')
   const [lineas, setLineas] = useState<LineaVenta[]>([])
   const [errorPrecio, setErrorPrecio] = useState<string | null>(null)
+  const [exLineas, setExLineas] = useState<LineaExhibicion[]>([])
+  const { data: piezasExhibicion = [], refetch: recargarExhibicion } = useExhibicionesVendedor(conPrecio)
   const referencias = useMemo(() => new Map(catalogo.flatMap((p) => p.variantes.map((v) => [v.id, p.pvp] as const))), [catalogo])
   const { register, handleSubmit, reset, formState: { errors } } = useForm<NotaPedidoValues>({ resolver: zodResolver(notaPedidoSchema), defaultValues: { nota: '' } })
 
@@ -44,6 +60,26 @@ export function PedirABodega({ onEnviado, conPrecio = false }: { onEnviado?: () 
   const colorActivo = color && colores.includes(color) ? color : (colores[0] ?? '')
   const variantes = producto ? producto.variantes.filter((v) => v.color === colorActivo) : []
 
+  const usadas = useMemo(() => new Set(exLineas.flatMap((l) => l.ids)), [exLineas])
+  const exhibicionDelColor = useMemo(
+    () =>
+      variantes
+        .map((v) => {
+          const piezas = piezasExhibicion.filter((x) => x.variante_id === v.id && !usadas.has(x.id))
+          const opciones = opcionesExhibicion(piezas)
+          const enOpciones = new Set(opciones.flatMap((o) => o.ids))
+          return { variante: v, opciones, sueltas: piezas.filter((x) => !enOpciones.has(x.id)) }
+        })
+        .filter((x) => x.opciones.length > 0 || x.sueltas.length > 0),
+    [variantes, piezasExhibicion, usadas],
+  )
+
+  function agregarExhibicion(v: ProductoPublico['variantes'][number], o: OpcionExhibicion) {
+    if (!producto) return
+    setExLineas((l) => [...l, { clave: o.ids.join('-'), varianteId: v.id, nombre: producto.nombre, color: v.color, talla: v.talla, precio: producto.pvp, ids: o.ids, texto: o.texto }])
+  }
+  const cambiarPrecioEx = (clave: string, precio: number) => setExLineas((l) => l.map((x) => (x.clave === clave ? { ...x, precio } : x)))
+
   function agregar(v: ProductoPublico['variantes'][number]) {
     if (!producto) return
     setLineas((l) => agregarLinea(l, { varianteId: v.id, nombre: producto.nombre, color: v.color, talla: v.talla, precio: conPrecio ? producto.pvp : 0, stock: v.disponible ? TOPE_MAYORISTA : 0 }))
@@ -52,22 +88,32 @@ export function PedirABodega({ onEnviado, conPrecio = false }: { onEnviado?: () 
   const cambiarPrecio = (id: string, precio: number) => setLineas((l) => l.map((x) => (x.varianteId === id ? { ...x, precio } : x)))
 
   function onSubmit(v: NotaPedidoValues) {
-    if (lineas.length === 0) return
-    if (conPrecio && lineas.some((l) => !Number.isFinite(l.precio) || l.precio < 0)) {
+    if (lineas.length === 0 && exLineas.length === 0) return
+    if (conPrecio && [...lineas, ...exLineas].some((l) => !Number.isFinite(l.precio) || l.precio < 0)) {
       setErrorPrecio('Revisa los precios: hay uno vacío o no válido.')
       return
     }
     setErrorPrecio(null)
     solicitar.mutate(
-      { items: lineas.map((l) => ({ varianteId: l.varianteId, cantidad: l.cantidad, ...(conPrecio && { precio: l.precio }) })), nota: v.nota },
+      {
+        items: [
+          ...lineas.map((l) => ({ varianteId: l.varianteId, cantidad: l.cantidad, ...(conPrecio && { precio: l.precio }) })),
+          ...exLineas.map((l) => ({ varianteId: l.varianteId, cantidad: 1, precio: l.precio, exhibicion: l.ids })),
+        ],
+        nota: v.nota,
+      },
       {
         onSuccess: (r) => {
           toast.success(`Pedido #${r.numero} enviado a bodega`)
           setLineas([])
+          setExLineas([])
           reset({ nota: '' })
           onEnviado?.()
         },
-        onError: (e) => toast.error(mensajeError(e)),
+        onError: (e) => {
+          toast.error(mensajeError(e))
+          void recargarExhibicion()
+        },
       },
     )
   }
@@ -127,13 +173,39 @@ export function PedirABodega({ onEnviado, conPrecio = false }: { onEnviado?: () 
                 )
               })}
             </div>
+            {conPrecio && exhibicionDelColor.length > 0 && (
+              <div className="mt-5 rounded-lg border border-warning/50 bg-warning/10 p-3">
+                <p className="text-sm font-semibold">Pares de exhibición de esta referencia</p>
+                <p className="mb-2 text-xs text-muted-foreground">Se retiran de la exhibición del local indicado, no de bodega.</p>
+                <ul className="space-y-2">
+                  {exhibicionDelColor.flatMap(({ variante, opciones }) =>
+                    opciones.map((o) => (
+                      <li key={o.ids.join('-')} className="flex flex-wrap items-center justify-between gap-2 text-sm">
+                        <span>
+                          <strong>Talla {variante.talla}</strong> · {o.texto}
+                          {!o.propia && <span className="block text-xs text-muted-foreground">No está en tu local: búscala en la exhibición indicada.</span>}
+                        </span>
+                        <Button type="button" size="sm" variant="outline" onClick={() => agregarExhibicion(variante, o)}>Vender exhibición</Button>
+                      </li>
+                    )),
+                  )}
+                  {exhibicionDelColor.flatMap(({ variante, sueltas }) =>
+                    sueltas.map((s) => (
+                      <li key={s.id} className="text-xs text-muted-foreground">
+                        Talla {variante.talla}: {s.pieza === 'derecho' ? 'pie derecho' : 'pie izquierdo'} en {s.propia ? 'tu local' : `Local ${s.local}`}, sin su pareja: no se vende solo.
+                      </li>
+                    )),
+                  )}
+                </ul>
+              </div>
+            )}
           </div>
         )}
       </section>
 
       <form onSubmit={handleSubmit(onSubmit)} noValidate aria-label="Pedido a bodega" className="self-start rounded-xl border border-border bg-card p-4 lg:sticky lg:top-24">
         <h2 className="text-3xl">Tu pedido</h2>
-        {lineas.length === 0 ? <p className="mt-3 text-sm text-muted-foreground">Elige un producto y toca sus tallas.</p> : (
+        {lineas.length === 0 && exLineas.length === 0 ? <p className="mt-3 text-sm text-muted-foreground">Elige un producto y toca sus tallas.</p> : (
           <ul className="mt-3 divide-y divide-border">
             {lineas.map((l) => (
               <li key={l.varianteId} className="flex flex-wrap items-center justify-between gap-2 py-3">
@@ -166,16 +238,42 @@ export function PedirABodega({ onEnviado, conPrecio = false }: { onEnviado?: () 
                 )}
               </li>
             ))}
+            {exLineas.map((l) => (
+              <li key={l.clave} className="flex flex-wrap items-center justify-between gap-2 py-3">
+                <p className="min-w-0 text-sm font-semibold">
+                  {l.nombre} <span className="text-xs font-normal text-warning">exhibición</span>
+                  <span className="block text-xs font-normal text-muted-foreground">{l.color} · talla {l.talla}</span>
+                  <span className="block text-xs font-normal text-muted-foreground">{l.texto}</span>
+                </p>
+                <Button type="button" variant="ghost" size="icon-sm" aria-label={`Quitar ${l.nombre} de exhibición`} onClick={() => setExLineas((x) => x.filter((y) => y.clave !== l.clave))}><Trash2 /></Button>
+                <label className="flex w-full items-center justify-between gap-2 text-xs text-muted-foreground">
+                  <span>
+                    Precio c/u
+                    {referencias.get(l.varianteId) !== undefined && <span className="block">Referencia {fmt(referencias.get(l.varianteId) ?? 0)}</span>}
+                  </span>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    inputMode="decimal"
+                    aria-label={`Precio de venta de ${l.nombre} talla ${l.talla} de exhibición`}
+                    className="h-9 w-28 text-right"
+                    value={Number.isFinite(l.precio) ? l.precio : ''}
+                    onChange={(e) => cambiarPrecioEx(l.clave, e.target.value === '' ? Number.NaN : Number(e.target.value))}
+                  />
+                </label>
+              </li>
+            ))}
           </ul>
         )}
-        <p className="mt-4 border-t border-border pt-4 text-sm text-muted-foreground"><strong className="text-foreground tabular-nums">{unidadesVenta(lineas)}</strong> pares</p>
+        <p className="mt-4 border-t border-border pt-4 text-sm text-muted-foreground"><strong className="text-foreground tabular-nums">{unidadesVenta(lineas) + exLineas.length}</strong> pares</p>
         <FieldError>{errorPrecio ?? undefined}</FieldError>
         <div className="mt-3">
           <Label htmlFor="pb-nota">Nota para bodega</Label>
           <Textarea id="pb-nota" className="min-h-16" {...register('nota')} />
           <FieldError>{errors.nota?.message}</FieldError>
         </div>
-        <Button type="submit" size="lg" className="mt-4 w-full" disabled={solicitar.isPending || lineas.length === 0}>
+        <Button type="submit" size="lg" className="mt-4 w-full" disabled={solicitar.isPending || (lineas.length === 0 && exLineas.length === 0)}>
           {solicitar.isPending ? 'Enviando…' : 'Enviar pedido a bodega'}
         </Button>
       </form>

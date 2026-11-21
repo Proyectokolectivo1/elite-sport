@@ -14,6 +14,8 @@ export const lineaBodegaSchema = z.object({
   cantidad_vendida: z.number().nullable(),
   cantidad_devuelta: z.number().nullable(),
   stock: z.number(),
+  /** De qué local sale la pieza cuando la línea es de exhibición. */
+  exhibicion: z.array(z.object({ pieza: z.enum(['par', 'derecho', 'izquierdo']), local: z.string() })).optional(),
 })
 
 export const pedidoBodegaSchema = z.object({

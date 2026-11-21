@@ -8,6 +8,8 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { FieldError, Input, Label } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useAuth } from '@/features/auth/hooks/AuthProvider'
+import { paresEnExhibicion, soloExhibicion } from '@/features/exhibicion/logica'
+import { useExhibiciones } from '@/features/exhibicion/hooks/useExhibicion'
 import { FotoPar } from '@/features/bodega/components/FotoPar'
 import { useFotosPares } from '@/features/bodega/hooks/useBodega'
 import { mensajeError } from '@/lib/errors'
@@ -27,14 +29,14 @@ const ETIQUETA: Record<EstadoStock, { texto: string; variante: 'success' | 'warn
 const plural = (n: number, uno: string, varios: string) => `${n} ${n === 1 ? uno : varios}`
 
 /** Casilla de una talla: grande, con el número de pares. Rojo si no hay, ámbar si quedan pocas. */
-function Talla({ e, onClick }: { e: Existencia; onClick: () => void }) {
+function Talla({ e, onClick, exhibicion = 0, solo = false }: { e: Existencia; onClick: () => void; exhibicion?: number; solo?: boolean }) {
   const agotada = e.stock === 0
   const poca = !agotada && e.stock <= UMBRAL_TALLA
   return (
     <button
       type="button"
       onClick={onClick}
-      aria-label={`Talla ${e.talla}: ${plural(e.stock, 'par', 'pares')}. Ajustar`}
+      aria-label={`Talla ${e.talla}: ${plural(e.stock, 'par', 'pares')}${exhibicion > 0 ? `, ${plural(exhibicion, 'par', 'pares')} de exhibición` : ''}. Ajustar`}
       className={cn(
         'flex min-w-[4.25rem] flex-col items-center rounded-lg border px-3 py-2 text-center transition-colors hover:border-foreground',
         agotada ? 'border-border bg-muted/40 text-muted-foreground' : poca ? 'border-warning/60 bg-warning/10' : 'border-border bg-card',
@@ -42,6 +44,7 @@ function Talla({ e, onClick }: { e: Existencia; onClick: () => void }) {
     >
       <span className="text-xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">Talla {e.talla}</span>
       <span className={cn('font-display text-3xl font-bold leading-none tabular-nums', agotada && 'line-through decoration-1')}>{e.stock}</span>
+      {exhibicion > 0 && <span className={cn('mt-0.5 text-[0.6875rem] font-semibold uppercase tracking-[0.06em]', solo ? 'text-warning' : 'text-muted-foreground')}>{solo ? 'Solo exhib.' : `${exhibicion} exhib.`}</span>}
     </button>
   )
 }
@@ -50,6 +53,12 @@ export function ExistenciasTab() {
   const { esAdmin } = useAuth()
   const { data = [], isLoading } = useExistencias()
   const { data: fotos = {} } = useMiniaturas()
+  const { data: piezasExhibicion = [] } = useExhibiciones()
+  const exhibicionPorVariante = useMemo(() => {
+    const m = new Map<string, { pieza: 'par' | 'derecho' | 'izquierdo' }[]>()
+    for (const x of piezasExhibicion) m.set(x.variante_id, [...(m.get(x.variante_id) ?? []), x])
+    return m
+  }, [piezasExhibicion])
   const fotoColor = useFotosPares()
   const ajustar = useAjustarStock()
   const [q, setQ] = useState('')
@@ -223,7 +232,10 @@ export function ExistenciasTab() {
                       </span>
                     </h3>
                     <div className="flex flex-wrap gap-2">
-                      {c.tallas.map((t) => <Talla key={t.id} e={t} onClick={() => ajustarTalla(t)} />)}
+                      {c.tallas.map((t) => {
+                        const ex = exhibicionPorVariante.get(t.id) ?? []
+                        return <Talla key={t.id} e={t} onClick={() => ajustarTalla(t)} exhibicion={paresEnExhibicion(ex)} solo={soloExhibicion(t.stock, ex)} />
+                      })}
                     </div>
                   </section>
                 ))}
