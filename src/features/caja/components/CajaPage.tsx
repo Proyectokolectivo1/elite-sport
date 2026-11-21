@@ -90,7 +90,7 @@ function Canal({ c, fmt }: { c: ResumenCanal; fmt: (n: number) => string }) {
         </div>
       </div>
 
-      {c.canal === 'local' && c.efectivo + c.transferencia + c.tarjeta > 0 && (
+      {c.canal === 'local' && (c.efectivo !== 0 || c.transferencia !== 0 || c.tarjeta !== 0) && (
         <dl className="mt-4 grid grid-cols-3 gap-3 text-sm">
           <Pago etiqueta="Efectivo" valor={fmt(c.efectivo)} />
           <Pago etiqueta="Transferencia" valor={fmt(c.transferencia)} />
@@ -119,7 +119,7 @@ function Canal({ c, fmt }: { c: ResumenCanal; fmt: (n: number) => string }) {
                   <span className="ml-2 text-sm text-muted-foreground">{plural(f.pedidos)}</span>
                 </p>
               </div>
-              {c.canal === 'local' && f.efectivo + f.transferencia + f.tarjeta > 0 && (
+              {c.canal === 'local' && (f.efectivo !== 0 || f.transferencia !== 0 || f.tarjeta !== 0) && (
                 <p className="mt-1 text-sm text-muted-foreground tabular-nums">
                   Efectivo {fmt(f.efectivo)} · Transferencia {fmt(f.transferencia)} · Tarjeta {fmt(f.tarjeta)}
                 </p>

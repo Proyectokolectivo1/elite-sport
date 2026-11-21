@@ -20,6 +20,8 @@ export const ventaLocalSchema = z.object({
   documento: z.string().nullable(),
   metodo_pago: z.enum(['efectivo', 'transferencia', 'tarjeta']).nullable(),
   total: z.coerce.number(),
+  /** Devolución de una venta: el total llega en negativo y resta de la caja. */
+  devolucion: z.boolean().optional(),
   lineas: z.array(lineaSchema),
 })
 export const reporteLocalesSchema = z.array(ventaLocalSchema)
@@ -35,6 +37,8 @@ export interface Totales {
   tarjeta: number
   /** Cuánto se vendió por debajo del precio de lista (descuentos de vendedor y admin). */
   rebaja: number
+  /** Valor devuelto en el periodo (en positivo); ya está restado de `total`. */
+  devuelto: number
 }
 
 export interface DiaVentas extends Totales {
@@ -50,12 +54,18 @@ export interface LocalVentas extends Totales {
 }
 
 const redondear = (n: number) => Math.round(n * 100) / 100
-const vacio = (): Totales => ({ ventas: 0, pares: 0, total: 0, efectivo: 0, transferencia: 0, tarjeta: 0, rebaja: 0 })
+const vacio = (): Totales => ({ ventas: 0, pares: 0, total: 0, efectivo: 0, transferencia: 0, tarjeta: 0, rebaja: 0, devuelto: 0 })
 
 function sumar(t: Totales, v: VentaLocal) {
-  t.ventas += 1
   t.total = redondear(t.total + v.total)
   if (v.metodo_pago) t[v.metodo_pago] = redondear(t[v.metodo_pago] + v.total)
+  if (v.devolucion) {
+    // Una devolución no es una venta: resta pares y dinero, y no toca la rebaja.
+    t.devuelto = redondear(t.devuelto - v.total)
+    for (const l of v.lineas) t.pares -= l.cantidad
+    return
+  }
+  t.ventas += 1
   for (const l of v.lineas) {
     t.pares += l.cantidad
     if (l.precio_lista !== null && l.precio_lista > l.precio) t.rebaja = redondear(t.rebaja + (l.precio_lista - l.precio) * l.cantidad)

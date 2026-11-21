@@ -34,6 +34,30 @@ describe('ventas por local', () => {
     expect(locales[0].rebaja).toBe(0)
   })
 
+  it('las devoluciones restan dinero, forma de pago y pares, sin contar como venta', () => {
+    const { locales, general } = agruparPorLocal([
+      venta({ numero: 1 }),
+      venta({
+        numero: 2,
+        devolucion: true,
+        total: -50,
+        cliente: 'Devolución del pedido #1',
+        lineas: [{ descripcion: 'Runner · Negro · talla 40', cantidad: 1, precio: 50, precio_lista: null }],
+      }),
+    ])
+    expect(general).toMatchObject({ ventas: 1, total: 50, efectivo: 50, pares: 1, rebaja: 20, devuelto: 50 })
+    expect(locales[0]).toMatchObject({ ventas: 1, total: 50, pares: 1, devuelto: 50 })
+    expect(locales[0].dias[0]).toMatchObject({ ventas: 1, total: 50, devuelto: 50 })
+  })
+
+  it('la devolución de una venta sin forma de pago solo resta del total', () => {
+    const { general } = agruparPorLocal([
+      venta({ metodo_pago: null, total: 100 }),
+      venta({ metodo_pago: null, devolucion: true, total: -100, lineas: [{ descripcion: 'x', cantidad: 2, precio: 50, precio_lista: null }] }),
+    ])
+    expect(general).toMatchObject({ ventas: 1, total: 0, pares: 0, efectivo: 0, devuelto: 100 })
+  })
+
   it('las ventas sin local van al final', () => {
     const { locales } = agruparPorLocal([venta({ local_id: null, local: null }), venta({ local_id: 'a', local: 'Mega Moda' })])
     expect(locales.map((l) => l.nombre)).toEqual(['Local Mega Moda', 'Sin local asignado'])

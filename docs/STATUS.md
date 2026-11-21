@@ -275,4 +275,9 @@
 
 ## Revision general (2026-11-20)
 - Caja oculta el desglose de pagos cuando no hay pagos registrados (las ventas de vendedores no traen metodo de pago); se refrescan exhibicion, devoluciones y caja tras movimientos de bodega y avisos en vivo; Vender memoiza las variantes. Migracion 0039: no se pueden marcar mas pares de exhibicion que el stock de la talla.
-- Pendiente de decision: las devoluciones no restan de la caja ni del reporte por vendedor. Lint: 3 avisos antiguos (`Contador`, `ProductoFormPage`).
+- Lint: 3 avisos antiguos (`Contador`, `ProductoFormPage`).
+
+## Devoluciones restan de la caja (2026-11-20)
+- Migracion 0040 (aplicada): `resumen_ventas` y `reporte_ventas_locales` restan las devoluciones el dia en que se registran, en el mismo canal, local y vendedor de la venta original (y en el mismo metodo de pago si fue de mostrador). En "Por tienda / Por vendedor" aparecen como fila "Devolucion" con total negativo; el total neto y los pares ya las descuentan y el subtitulo muestra "devoluciones $X". No cuentan como venta ni alteran las rebajas.
+- Frontend: `reporteLocales.ts` (campo `devolucion`, `devuelto`), `VentasTiendasPage` y `CajaPage` (desglose de pagos tambien con valores negativos). Pruebas nuevas; `tsc` y tests en verde.
+- Verificado en la BD (revertido): devolver 1 par de un pedido de vendedor baja el total del local de 161 a 105 sin cambiar el conteo de pedidos y agrega la fila negativa al reporte; devolver un pedido de mostrador en efectivo resta del efectivo (50 a 0). Falta probar la interfaz en produccion.

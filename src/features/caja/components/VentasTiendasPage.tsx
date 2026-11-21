@@ -102,7 +102,7 @@ function Dato({ etiqueta, valor, destacado }: { etiqueta: string; valor: string;
 }
 
 function Pagos({ t, fmt }: { t: Totales; fmt: Fmt }) {
-  if (t.efectivo + t.transferencia + t.tarjeta === 0) return null
+  if (t.efectivo === 0 && t.transferencia === 0 && t.tarjeta === 0) return null
   return (
     <p className="text-sm tabular-nums text-muted-foreground">
       Efectivo {fmt(t.efectivo)} · Transferencia {fmt(t.transferencia)} · Tarjeta {fmt(t.tarjeta)}
@@ -119,6 +119,7 @@ function Tienda({ local, fmt }: { local: LocalVentas; fmt: Fmt }) {
           <p className="text-sm text-muted-foreground">
             {plural(local.ventas, 'venta', 'ventas')} · {plural(local.pares, 'par', 'pares')}
             {local.rebaja > 0 && <> · rebajas {fmt(local.rebaja)}</>}
+            {local.devuelto > 0 && <> · devoluciones {fmt(local.devuelto)}</>}
           </p>
         </div>
         <p className="font-display text-4xl font-bold leading-none tabular-nums">{fmt(local.total)}</p>
@@ -144,6 +145,7 @@ function Dia({ dia, fmt }: { dia: DiaVentas; fmt: Fmt }) {
             <span className="block font-semibold capitalize">{nombreDia(dia.dia)}</span>
             <span className="block text-sm text-muted-foreground">
               {plural(dia.ventas, 'venta', 'ventas')} · {plural(dia.pares, 'par', 'pares')}
+              {dia.devuelto > 0 && <> · devoluciones {fmt(dia.devuelto)}</>}
             </span>
           </span>
           <span className="flex items-center gap-2">
@@ -169,7 +171,7 @@ function Venta({ v, fmt }: { v: VentaLocal; fmt: Fmt }) {
     <li className="rounded-lg border border-border p-3">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <p className="font-semibold">
-          #{v.numero} · {hora.format(new Date(v.fecha))}
+          {v.devolucion && 'Devolución '}#{v.numero} · {hora.format(new Date(v.fecha))}
           <span className="ml-2 font-normal text-muted-foreground">{v.vendedor}</span>
         </p>
         <p className="tabular-nums">
