@@ -272,3 +272,7 @@
 - Aplicada y verificada en la BD (revertido): reserva de par completo y par armado, doble reserva rechazada, el vendedor no escribe ni registra, despacho y cierre (vendida / vuelve a exhibicion), stock correcto.
 - Pendiente: que el admin cargue las 3 piezas reales en Inventario > Exhibicion. Una devolucion posterior a la venta de una pieza de exhibicion no la regresa a la exhibicion.
 - Exhibicion al crear el producto (migracion 0038 `registrar_exhibicion_producto`, solo admin): en Nuevo producto, seccion opcional "Pares de exhibicion" con color, talla, pieza y local por fila (cada pieza puede ser de otra talla y color). Al guardar crea la talla, suma al stock los pares (completo = 1, derecho + izquierdo = 1, nota "Exhibicion") y marca el local de cada pieza; cada derecho necesita su izquierdo en la misma talla y color. Verificado en la BD (revertido): piezas en 3 locales, stock creado, rechazos de derecho sin izquierdo, talla invalida y bodeguero. Productos existentes: Inventario > Exhibicion.
+
+## Revision general (2026-11-20)
+- Caja oculta el desglose de pagos cuando no hay pagos registrados (las ventas de vendedores no traen metodo de pago); se refrescan exhibicion, devoluciones y caja tras movimientos de bodega y avisos en vivo; Vender memoiza las variantes. Migracion 0039: no se pueden marcar mas pares de exhibicion que el stock de la talla.
+- Pendiente de decision: las devoluciones no restan de la caja ni del reporte por vendedor. Lint: 3 avisos antiguos (`Contador`, `ProductoFormPage`).

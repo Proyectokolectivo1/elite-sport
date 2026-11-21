@@ -1,7 +1,7 @@
 import { CANALES, type Canal, type FilaVentas } from './schemas'
 
 export const NOMBRE_CANAL: Record<Canal, { titulo: string; descripcion: string }> = {
-  local: { titulo: 'Local', descripcion: 'Ventas del punto físico, por quien las registró.' },
+  local: { titulo: 'Local', descripcion: 'Ventas de los locales, asentadas cuando bodega cierra el pedido de cada vendedor.' },
   sector: { titulo: 'Mayoristas del sector', descripcion: 'Lo que vendió cada mayorista en sus cierres, a su precio de mayorista.' },
   web: { titulo: 'Tienda en línea', descripcion: 'Pedidos de la tienda confirmados o entregados.' },
   whatsapp: { titulo: 'Pedidos por WhatsApp', descripcion: 'Pedidos de las tiendas de los mayoristas, confirmados o entregados.' },

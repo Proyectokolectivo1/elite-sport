@@ -51,6 +51,10 @@ function useRefrescar() {
     void qc.invalidateQueries({ queryKey: catalogoKeys.productos })
     void qc.invalidateQueries({ queryKey: ['catalogo-publico'] })
     void qc.invalidateQueries({ queryKey: ['dashboard'] })
+    void qc.invalidateQueries({ queryKey: ['exhibiciones'] })
+    void qc.invalidateQueries({ queryKey: ['exhibiciones-vendedor'] })
+    void qc.invalidateQueries({ queryKey: ['devoluciones'] })
+    void qc.invalidateQueries({ queryKey: ['caja'] })
   }
 }
 

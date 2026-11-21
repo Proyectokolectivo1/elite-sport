@@ -58,7 +58,7 @@ export function PedirABodega({ onEnviado, conPrecio = false }: { onEnviado?: () 
   const producto: ProductoPublico | undefined = catalogo.find((p) => p.id === elegido)
   const colores = producto ? [...new Set(producto.variantes.map((v) => v.color))] : []
   const colorActivo = color && colores.includes(color) ? color : (colores[0] ?? '')
-  const variantes = producto ? producto.variantes.filter((v) => v.color === colorActivo) : []
+  const variantes = useMemo(() => (producto ? producto.variantes.filter((v) => v.color === colorActivo) : []), [producto, colorActivo])
 
   const usadas = useMemo(() => new Set(exLineas.flatMap((l) => l.ids)), [exLineas])
   const exhibicionDelColor = useMemo(
